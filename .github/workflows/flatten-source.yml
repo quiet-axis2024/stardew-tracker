@@ -1,0 +1,152 @@
+name: Flatten Stardew Tracker Source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/flatten-source.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  flatten:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply all existing build patches into app.jsx
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp app.jsx app.flattened.jsx
+          for patch in \
+            build_patch.py \
+            build_calendar_patch.py \
+            build_ocr_patch.py \
+            build_ocr_name_patch.py \
+            build_menu_fridge_patch.py \
+            build_fix_patch.py \
+            build_cooking_collection_patch.py \
+            build_cooking_postfix.py \
+            build_collection_cooking_patch.py \
+            build_collection_link_patch.py \
+            build_ui_share_patch.py \
+            build_tool_icon_postfix.py \
+            build_fish_guide_patch.py \
+            build_fish_guide_fix.py
+          do
+            echo "Applying $patch"
+            python3 "$patch" app.flattened.jsx
+          done
+          mv app.flattened.jsx app.jsx
+
+      - name: Validate flattened source compiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8
+          mkdir -p build
+          cat > build/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> build/entry.jsx
+          ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=/tmp/app.js
+
+      - name: Simplify Pages workflow and remove patch stack
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > .github/workflows/pages.yml <<'EOF'
+          name: Deploy Stardew Tracker to Pages
+
+          on:
+            push:
+              branches: [main]
+            workflow_dispatch:
+
+          permissions:
+            contents: read
+            actions: read
+            pages: write
+            id-token: write
+
+          concurrency:
+            group: pages
+            cancel-in-progress: true
+
+          jobs:
+            deploy:
+              environment:
+                name: github-pages
+                url: ${{ steps.deployment.outputs.page_url }}
+              runs-on: ubuntu-latest
+              steps:
+                - name: Checkout
+                  uses: actions/checkout@v4
+
+                - name: Build browser bundle
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    npm install --no-save react@18 react-dom@18 esbuild@0.25.8
+                    mkdir -p build dist
+                    cat > build/entry.jsx <<'INNER_EOF'
+                    import React from 'react';
+                    import { createRoot } from 'react-dom/client';
+                    window.React = React;
+                    window.ReactDOM = { createRoot };
+                    INNER_EOF
+                    cat app.jsx >> build/entry.jsx
+                    ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=dist/app.js
+                    cp index.html manifest.webmanifest icon.svg sw.js cloud.js dist/
+
+                - name: Configure GitHub Pages
+                  uses: actions/configure-pages@v5
+                  with:
+                    enablement: true
+
+                - name: Upload Pages artifact
+                  uses: actions/upload-pages-artifact@v3
+                  with:
+                    path: dist
+
+                - name: Deploy to GitHub Pages
+                  id: deployment
+                  uses: actions/deploy-pages@v4
+          EOF
+
+          rm -f \
+            build_patch.py \
+            build_calendar_patch.py \
+            build_ocr_patch.py \
+            build_ocr_name_patch.py \
+            build_menu_fridge_patch.py \
+            build_fix_patch.py \
+            build_cooking_collection_patch.py \
+            build_cooking_postfix.py \
+            build_collection_cooking_patch.py \
+            build_collection_link_patch.py \
+            build_ui_share_patch.py \
+            build_tool_icon_postfix.py \
+            build_fish_guide_patch.py \
+            build_fish_guide_fix.py
+          rm -f .github/workflows/flatten-source.yml
+
+      - name: Commit flattened source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No flatten changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Flatten generated tracker into app.jsx'
+          git push
