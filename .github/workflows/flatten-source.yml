@@ -7,16 +7,10 @@ on:
 
 permissions:
   contents: write
-  actions: read
-  pages: write
-  id-token: write
+  actions: write
 
 jobs:
   flatten:
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main source
@@ -51,12 +45,12 @@ jobs:
           done
           mv app.flattened.jsx app.jsx
 
-      - name: Validate and build flattened source
+      - name: Validate flattened source compiles
         shell: bash
         run: |
           set -euo pipefail
           npm install --no-save react@18 react-dom@18 esbuild@0.25.8
-          mkdir -p build dist
+          mkdir -p build
           cat > build/entry.jsx <<'EOF'
           import React from 'react';
           import { createRoot } from 'react-dom/client';
@@ -64,8 +58,7 @@ jobs:
           window.ReactDOM = { createRoot };
           EOF
           cat app.jsx >> build/entry.jsx
-          ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=dist/app.js
-          cp index.html manifest.webmanifest icon.svg sw.js cloud.js dist/
+          ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=/tmp/app.js
 
       - name: Simplify Pages workflow and remove patch stack
         shell: bash
@@ -75,9 +68,9 @@ jobs:
           name: Deploy Stardew Tracker to Pages
 
           on:
+            workflow_dispatch:
             push:
               branches: [main]
-            workflow_dispatch:
 
           permissions:
             contents: read
@@ -158,16 +151,10 @@ jobs:
           git commit -m 'Flatten generated tracker into app.jsx'
           git push origin HEAD:main
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
-      - name: Upload flattened Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-      - name: Deploy flattened tracker
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Dispatch Pages deployment
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run pages.yml --ref main
