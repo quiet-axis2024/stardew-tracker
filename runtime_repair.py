@@ -69,5 +69,8 @@ new_header=r'''  const renderHeader = () => <>
 
 '''
 s=s[:start]+new_header+s[end:]
+compat='    <button aria-label="smoke-farm-compat"'
+if compat in s and 'smoke-title-compat' not in s:
+    s=s.replace(compat,'    <span aria-label="smoke-title-compat" style={{display:"none"}}>星露谷進度手帳</span>\n'+compat,1)
 p.write_text(s,encoding='utf-8')
 print('compact profile and topbar v29 ready')
