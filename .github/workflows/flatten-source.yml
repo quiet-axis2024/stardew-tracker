@@ -1,22 +1,29 @@
 name: Flatten Stardew Tracker Source
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/flatten-source.yml'
-      - '.flatten-trigger'
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 permissions:
   contents: write
+  actions: read
+  pages: write
+  id-token: write
 
 jobs:
   flatten:
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout main source
         uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Apply all existing build patches into app.jsx
         shell: bash
@@ -44,12 +51,12 @@ jobs:
           done
           mv app.flattened.jsx app.jsx
 
-      - name: Validate flattened source compiles
+      - name: Validate and build flattened source
         shell: bash
         run: |
           set -euo pipefail
           npm install --no-save react@18 react-dom@18 esbuild@0.25.8
-          mkdir -p build
+          mkdir -p build dist
           cat > build/entry.jsx <<'EOF'
           import React from 'react';
           import { createRoot } from 'react-dom/client';
@@ -57,7 +64,8 @@ jobs:
           window.ReactDOM = { createRoot };
           EOF
           cat app.jsx >> build/entry.jsx
-          ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=/tmp/app.js
+          ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=dist/app.js
+          cp index.html manifest.webmanifest icon.svg sw.js cloud.js dist/
 
       - name: Simplify Pages workflow and remove patch stack
         shell: bash
@@ -140,16 +148,26 @@ jobs:
             .flatten-trigger
           rm -f .github/workflows/flatten-source.yml
 
-      - name: Commit flattened source
+      - name: Commit flattened source to main
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
-          git config user.email '4189828+github-actions[bot]@users.noreply.github.com'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          if git diff --cached --quiet; then
-            echo 'No flatten changes to commit.'
-            exit 0
-          fi
           git commit -m 'Flatten generated tracker into app.jsx'
-          git push
+          git push origin HEAD:main
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload flattened Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy flattened tracker
+        id: deployment
+        uses: actions/deploy-pages@v4
