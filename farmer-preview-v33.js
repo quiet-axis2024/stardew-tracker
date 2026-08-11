@@ -1,7 +1,7 @@
 /*
  * Stardew wardrobe preview compositor.
- * Uses the vanilla farmer sprite sheets published by Stardew Dressup
- * (pinned upstream revision) and follows the game's layer/frame layout.
+ * Uses vanilla farmer sprite sheets published by Stardew Dressup at a pinned revision
+ * and follows Stardew Valley's farmer layer/frame layout.
  * Game artwork remains property of ConcernedApe / Stardew Valley.
  */
 (function(){
@@ -99,7 +99,8 @@
     const token=String(Date.now())+Math.random();
     canvas.dataset.sdvDrawToken=token;
     const gender=opts?.gender==='male'?'male':'female';
-    const direction=DIR[opts?.direction]||DIR.front;
+    const directionName=opts?.direction||'front';
+    const direction=DIR[directionName]||DIR.front;
     const [body,hair,hats,shirts,pants]=await Promise.all([
       loadImage(SRC[gender]),loadImage(SRC.hair),loadImage(SRC.hats),loadImage(SRC.shirts),loadImage(SRC.pants)
     ]);
@@ -120,45 +121,44 @@
     const hairIdx=Math.max(0,Math.min(55,Number(opts?.hairIndex)||0));
     const female=gender==='female';
 
-    // 1. Head / torso / boots base.
+    // In Stardew Valley the back-facing arm layer sits behind the body/clothing.
+    if(directionName==='back') drawCrop(ctx,body,96,direction.bodyY,16,32,ox,oy,direction.flip,null);
+
+    // 1. Vanilla farmer body (head/torso/boots).
     drawCrop(ctx,body,0,direction.bodyY,16,32,ox,oy,direction.flip,null);
 
-    // 2. Pants layer. Left-facing vanilla frame mirrors the right-facing pants frame.
+    // 2. Vanilla pants layer. Left-facing uses the right frame mirrored.
     if(Number.isFinite(pantsIdx)){
       const px=(pantsIdx%10)*192+(female?96:0);
       const py=Math.floor(pantsIdx/10)*688+direction.bodyY;
       drawCrop(ctx,pants,px,py,16,32,ox,oy,direction.flip,opts?.pantsDyeable?hexColor(opts?.pantsColor,'#3f5f99'):null);
     }
 
-    // 3. Shirt: 8x8 uncoloured half + dye-mask half, with four direction frames.
+    // 3. Vanilla shirt: 8x8 fixed half + 8x8 dye-mask half, four direction frames.
     if(Number.isFinite(shirtIdx)){
       const sx=(shirtIdx%16)*8;
       const sy=Math.floor(shirtIdx/16)*32+direction.shirtY;
-      drawCrop(ctx,shirts,sx,sy,8,8,ox+4,oy+(female?(opts?.direction==='back'?15:16):(opts?.direction==='back'?14:15)),false,null);
-      drawCrop(ctx,shirts,sx+128,sy,8,8,ox+4,oy+(female?(opts?.direction==='back'?15:16):(opts?.direction==='back'?14:15)),false,opts?.shirtDyeable?hexColor(opts?.shirtColor,'#5f8fb8'):null);
+      const shirtDY=oy+(female?(directionName==='back'?15:16):(directionName==='back'?14:15));
+      drawCrop(ctx,shirts,sx,sy,8,8,ox+4,shirtDY,false,null);
+      drawCrop(ctx,shirts,sx+128,sy,8,8,ox+4,shirtDY,false,opts?.shirtDyeable?hexColor(opts?.shirtColor,'#5f8fb8'):null);
     }
 
-    // 4. Hair. Vanilla base sheet contains 8 hairstyles per row, 96 px per style row.
+    // 4. Vanilla hairstyle. 8 styles per row; each style owns a 16x96 direction strip.
     const hx=(hairIdx%8)*16;
     const hy=Math.floor(hairIdx/8)*96+direction.hairY;
     drawCrop(ctx,hair,hx,hy,16,32,ox,oy+(female?2:1),direction.flip,hexColor(opts?.hairColor,'#6a402c'));
 
-    // 5. Hat. Each hat is 20x80: front / right / left / back in 20x20 frames.
+    // 5. Vanilla hat sheet. Each hat is 20x80: front / right / left / back, 20x20 each.
     if(Number.isFinite(hatIdx)){
       const hx2=(hatIdx%12)*20;
       const hy2=Math.floor(hatIdx/12)*80+direction.hatY;
       let hatOffset=female?-1:-2;
-      if(opts?.direction==='back') hatOffset-=1;
+      if(directionName==='back') hatOffset-=1;
       drawCrop(ctx,hats,hx2,hy2,20,20,ox-2,oy+hatOffset,false,null);
     }
 
-    // 6. Arms are the top vanilla layer (behind the body only when facing away).
-    if(opts?.direction==='back'){
-      // Back-facing arms belong visually behind clothing; redraw order cannot move them behind already drawn layers,
-      // so use the base frame only for the idle back view.
-    }else{
-      drawCrop(ctx,body,96,direction.bodyY,16,32,ox,oy,direction.flip,null);
-    }
+    // 6. Front/side vanilla arm layer sits on top.
+    if(directionName!=='back') drawCrop(ctx,body,96,direction.bodyY,16,32,ox,oy,direction.flip,null);
   }
 
   window.SDVFarmerSpriteV33={draw,SRC,HATS,PANTS};
