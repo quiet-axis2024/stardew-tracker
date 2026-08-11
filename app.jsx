@@ -1113,12 +1113,15 @@ function StardewTracker() {
           <div style={{fontSize:13,fontWeight:900,marginTop:7}}>第 {data.base.year} 年・{data.base.season} {data.base.day} 日{data.base.gameTime ? `・${data.base.gameTime}` : ""}</div>
           <div style={{fontSize:12,color:C.brown,marginTop:4}}>持有 {Number(data.base.money||0).toLocaleString()}g</div>
           <div style={{fontSize:12,color:C.brown}}>累計 {Number(data.base.totalIncome||0).toLocaleString()}g</div>
+          <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:7}}>{SEASONS.map(s=><Pill key={s} small active={data.base.season===s} onClick={()=>updateBase({season:s})}>{SEASON_ICON[s]} {s}</Pill>)}</div>
           <button onClick={()=>profileInputRef.current?.click()} style={{marginTop:8,border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"5px 8px",fontWeight:900,color:C.brown,fontSize:11}}>更換角色畫面</button>
           {data.profilePortrait && <button onClick={()=>update({profilePortrait:""})} style={{marginLeft:5,border:0,background:"transparent",color:C.red,fontSize:11,fontWeight:900}}>移除</button>}
-          <details style={{marginTop:7}}><summary style={{fontSize:10.5,color:C.muted,fontWeight:900,cursor:"pointer"}}>名稱辨識錯了？手動修正</summary>
+          <details style={{marginTop:7}}><summary style={{fontSize:10.5,color:C.muted,fontWeight:900,cursor:"pointer"}}>手動修正農場資料</summary>
             <div style={{display:"grid",gap:5,marginTop:5}}>
               <input value={data.base.name||""} onChange={e=>updateBase({name:e.target.value})} placeholder="農夫名字（保留特殊符號）" style={{border:`1.5px solid ${C.line}`,background:"#FFFCF0",borderRadius:7,padding:"6px 7px",fontSize:11,fontWeight:800,color:C.ink}}/>
               <input value={data.base.farm||""} onChange={e=>updateBase({farm:e.target.value})} placeholder="農場名稱（保留特殊符號）" style={{border:`1.5px solid ${C.line}`,background:"#FFFCF0",borderRadius:7,padding:"6px 7px",fontSize:11,fontWeight:800,color:C.ink}}/>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}><label style={{fontSize:10,color:C.muted,fontWeight:900}}>年份<div style={{marginTop:3}}><NumInput value={data.base.year} min={1} max={99} onChange={v=>updateBase({year:v})}/></div></label><label style={{fontSize:10,color:C.muted,fontWeight:900}}>目前金錢<div style={{marginTop:3}}><NumInput value={data.base.money} max={999999999} onChange={v=>updateBase({money:v})} suffix="g"/></div></label></div>
+              <label style={{fontSize:10,color:C.muted,fontWeight:900}}>累計收入<div style={{marginTop:3}}><NumInput value={data.base.totalIncome} max={999999999} onChange={v=>updateBase({totalIncome:v})} suffix="g"/></div></label>
             </div>
           </details>
         </div>
@@ -1145,6 +1148,9 @@ function StardewTracker() {
         <div style={{position:"relative",width:"100%",borderRadius:8,overflow:"hidden",background:"#E7C58A"}}>
           <img src={GAME_FILE(seasonFile)} alt={`${data.base.season}季遊戲日曆`} onError={e=>{e.currentTarget.style.display="none"}}
             style={{display:"block",width:"100%",height:"auto",imageRendering:"pixelated"}}/>
+          <div style={{position:"absolute",left:"3.333%",right:"3.333%",top:"19.048%",bottom:"4.762%",display:"grid",gridTemplateColumns:"repeat(7,1fr)",gridTemplateRows:"repeat(4,1fr)"}}>
+            {Array.from({length:28},(_,i)=>i+1).map(day=><button key={day} aria-label={`切換到 ${day} 日`} onClick={()=>updateBase({day})} style={{position:"relative",border:data.base.day===day?`3px solid ${C.gold}`:"2px solid transparent",background:data.base.day===day?"rgba(255,234,164,.18)":"transparent",borderRadius:6,padding:0,cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>{data.base.day===day&&<span style={{position:"absolute",right:2,bottom:2,fontSize:8,fontWeight:950,color:"#FFF2C1",background:"rgba(61,34,15,.82)",borderRadius:5,padding:"1px 3px"}}>{day}</span>}</button>)}
+          </div>
           <div style={{position:"absolute",right:7,top:7,background:"rgba(61,34,15,.88)",color:"#FFE9B5",border:`2px solid ${C.gold}`,borderRadius:9,padding:"4px 7px",fontSize:10.5,fontWeight:950,boxShadow:"0 2px 4px rgba(0,0,0,.2)"}}>今天 {data.base.day} 日</div>
         </div>
         {todayItems.length>0 && <div style={{marginTop:7,padding:"7px 9px",borderRadius:8,background:"#FFF1CF",fontSize:12,fontWeight:900,color:C.brown}}>今天：{todayItems.map(x=>x.text).join("、")}</div>}
@@ -1153,7 +1159,7 @@ function StardewTracker() {
           <div style={{fontSize:10.5,color:C.muted,fontWeight:950,marginBottom:3}}>接下來</div>
           <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{upcoming.map(x=><button key={x.day} onClick={()=>updateBase({day:x.day})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:9,padding:"4px 7px",fontSize:10,fontWeight:900,color:C.brown,cursor:"pointer"}}>{x.day}日 · {x.items.map(i=>i.text).join("／")}</button>)}</div>
         </div>}
-        <div style={{fontSize:9.5,color:C.muted,marginTop:6,lineHeight:1.4}}>上方直接使用《星露谷物語》中文遊戲日曆圖；下方補充季節採集等固定事件。書商每季日期依存檔隨機，無法只靠年份／季節推算。</div>
+        <div style={{fontSize:9.5,color:C.muted,marginTop:6,lineHeight:1.4}}>直接點上方遊戲日曆的日期格即可切換手帳日期；頁首、當日事件與魚類「今日可釣」會一起更新。書商每季日期依存檔隨機，無法只靠年份／季節推算。</div>
       </Card>
     </>;
   };
@@ -1177,19 +1183,6 @@ function StardewTracker() {
   const renderOverview = () => <div>
     {renderProfileCard()}
     {renderCalendar()}
-    <SectionTitle icon="📅">日期與資金</SectionTitle>
-    <Card>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 10 }}>
-        <label style={{ fontSize: 12, fontWeight: 800, color: C.muted }}>年份<br/><NumInput value={data.base.year} min={1} max={99} onChange={v => updateBase({ year: v })} /></label>
-        <label style={{ fontSize: 12, fontWeight: 800, color: C.muted }}>日期<br/><NumInput value={data.base.day} min={1} max={28} onChange={v => updateBase({ day: v })} suffix="日" /></label>
-      </div>
-      <div style={{ marginTop: 10, display: "flex", gap: 7, flexWrap: "wrap" }}>{SEASONS.map(s => <Pill key={s} active={data.base.season === s} onClick={() => updateBase({ season: s })}>{SEASON_ICON[s]} {s}</Pill>)}</div>
-      <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 10 }}>
-        <label style={{ fontSize: 12, fontWeight: 800, color: C.muted }}>目前金錢<br/><NumInput value={data.base.money} max={999999999} onChange={v => updateBase({ money: v })} suffix="g" /></label>
-        <label style={{ fontSize: 12, fontWeight: 800, color: C.muted }}>累計收入<br/><NumInput value={data.base.totalIncome} max={999999999} onChange={v => updateBase({ totalIncome: v })} suffix="g" /></label>
-      </div>
-    </Card>
-
     <SectionTitle icon="📊">進度速覽</SectionTitle>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 10 }}>
       <Card style={{ padding: 11 }}><div style={{ fontSize: 11, color: C.muted, fontWeight: 800 }}>技能總等級</div><div style={{ fontSize: 24, fontWeight: 950, color: C.green }}>{skillTotal}<span style={{ fontSize: 12, color: C.muted }}>/50</span></div><ProgressBar value={skillTotal} max={50}/></Card>
