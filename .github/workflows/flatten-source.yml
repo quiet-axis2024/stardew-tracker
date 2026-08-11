@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/flatten-source.yml'
+      - '.flatten-trigger'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -134,7 +136,8 @@ jobs:
             build_ui_share_patch.py \
             build_tool_icon_postfix.py \
             build_fish_guide_patch.py \
-            build_fish_guide_fix.py
+            build_fish_guide_fix.py \
+            .flatten-trigger
           rm -f .github/workflows/flatten-source.yml
 
       - name: Commit flattened source
@@ -142,7 +145,7 @@ jobs:
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.email '4189828+github-actions[bot]@users.noreply.github.com'
           git add -A
           if git diff --cached --quiet; then
             echo 'No flatten changes to commit.'
