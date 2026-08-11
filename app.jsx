@@ -1822,7 +1822,7 @@ function StardewTracker() {
     <main style={{maxWidth:680,margin:"0 auto",padding:"8px 12px 24px"}}>{content()}</main>
     <button aria-label="smoke-farm-compat" onClick={()=>{setTab("data");setDataSection("farm")}} style={{display:"none"}}>農場</button>
     <button aria-label="smoke-powers-compat" onClick={()=>{setTab("data");setDataSection("skills");setSkillSection("special")}} style={{display:"none"}}>能力</button>
-    <div style={{position:"fixed",left:0,right:0,bottom:0,zIndex:50,background:"rgba(61,34,15,.98)",borderTop:`3px solid ${C.gold}`,display:"grid",gridTemplateColumns:"repeat(6,minmax(0,1fr))",padding:"4px 5px calc(4px + env(safe-area-inset-bottom))",boxShadow:"0 -3px 10px rgba(0,0,0,.18)"}}>
+    <div style={{position:"fixed",left:0,right:0,bottom:0,zIndex:50,background:"rgba(61,34,15,.98)",borderTop:`3px solid ${C.gold}`,display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",padding:"4px 5px calc(4px + env(safe-area-inset-bottom))",boxShadow:"0 -3px 10px rgba(0,0,0,.18)"}}>
       {TABS.map(t=>{const active=tab===t.id;return <button key={t.id} onClick={()=>{setTab(t.id);window.scrollTo(0,0)}} style={{background:"transparent",border:"none",padding:"1px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:1,cursor:"pointer",minWidth:0}}><span style={{width:37,height:37,border:`2px solid ${active?C.gold:"transparent"}`,background:active?"#F5D886":"transparent",borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:active?"0 2px 0 rgba(0,0,0,.2)":"none"}}><GameIcon file={t.file} size={29}/></span><span style={{fontSize:9,fontWeight:950,color:active?"#FFE8A8":"#D8BC88",lineHeight:1.1,whiteSpace:"nowrap"}}>{t.name}</span></button>})}
     </div>
   </div>;
