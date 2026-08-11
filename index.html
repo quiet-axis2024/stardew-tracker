@@ -25,7 +25,7 @@
     (async()=>{
       const root=document.getElementById('root');
       let failureShown=false;
-      const esc=(value)=>String(value||'未知錯誤').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[ch]));
+      const esc=(value)=>String(value||'未知錯誤').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
       const fail=(message)=>{
         if(failureShown)return;
         failureShown=true;
