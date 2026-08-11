@@ -161,11 +161,18 @@
 
     if (state.mode === 'share') {
       emitStatus('loading');
-      const remote = await request('read', state.token);
-      shareRaw = JSON.stringify(remote.data || {});
-      state.updatedAt = remote.updated_at || null;
+      // 先隔離觀察者本機資料；即使雲端暫時讀不到，也不能誤顯示觀察者自己的進度。
+      shareRaw = '{}';
       installShareStorage();
-      emitStatus('readonly');
+      try {
+        const remote = await request('read', state.token);
+        shareRaw = JSON.stringify(remote.data || {});
+        state.updatedAt = remote.updated_at || null;
+        emitStatus('readonly');
+      } catch (error) {
+        console.warn('Stardew shared cloud read failed:', error);
+        emitStatus('readonly-error');
+      }
 
       // 觀察頁定期檢查；玩家進度更新時自動刷新成最新資料。
       window.setInterval(async () => {
