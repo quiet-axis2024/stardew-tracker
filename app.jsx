@@ -641,7 +641,7 @@ const COLLECTIONS = {
     items: [
       "河豚", "鳳尾魚", "金槍魚", "沙丁魚", "鯛魚", "大嘴鱸魚", "小嘴鱸魚", "虹鱒魚", "鮭魚", "大眼魚",
       "鱸魚", "鯉魚", "鯰魚", "梭子魚", "太陽魚", "紅鯔魚", "鯡魚", "鰻魚", "章魚", "紅鯛魚",
-      "魷魚", "海草", "綠藻", "海參", "大海參", "幽靈魚", "白藻", "石魚", "緋紅魚", "安康魚",
+      "魷魚", "海草", "綠藻", "海參", "大海參", "鬼魚", "白藻", "石魚", "緋紅魚", "安康魚",
       "冰柱魚", "熔岩鰻魚", "傳說之魚", "沙魚", "蠍鯉魚", "比目魚", "午夜鯉魚", "蛤", "突變鯉魚", "鱘魚",
       "虎紋鱒魚", "大頭魚", "羅非魚", "鰱魚", "麻哈脂鯉", "長鰭金槍魚", "西鯡", "蛇齒單線魚", "大比目魚", "龍蝦",
       "小龍蝦", "螃蟹", "鳥蛤", "蚌", "蝦", "蝸牛", "玉黍螺", "牡蠣", "木躍魚", "冰川魚",
@@ -687,7 +687,7 @@ const PREFILL = {
   animals: { 雞: 3, 鴨: 4, 恐龍: 1, 兔子: 2, 牛: 2, 山羊: 3, 綿羊: 2, 豬: 2 },
   ponds: [
     { fish: "大海參", count: 6, cap: 7, need: "尚未觸發下一次擴容需求" },
-    { fish: "幽靈魚", count: 3, cap: 3, need: "尚待下一次擴容需求" },
+    { fish: "鬼魚", count: 3, cap: 3, need: "尚待下一次擴容需求" },
     { fish: "鱘魚", count: 5, cap: 5, need: "萬象晶球 ×3" },
     { fish: "水滴魚", count: 3, cap: 3, need: "" },
   ],
@@ -699,7 +699,7 @@ const PREFILL = {
   friendship: {},
   collections: { fish: [], artifact: [], mineral: [] },
   mastery: [],
-  notes: "第2年夏14。明日（夏15）預告綠雨。\n豪華雞舍：雞3、鴨4、恐龍1、兔2。\n豪華牛棚：牛2、山羊3、綿羊2、豬2。\n自動收集器已裝。\n夜間結算收入通常約10,000g。\n工具除垃圾桶外皆金；垃圾桶銅。\n銥礦不足，尚未升銥工具。\n魚塘：大海參6/7、幽靈魚3/3、鱘魚5/5（需萬象晶球×3）、水滴魚3/3。\n溫室已開；曾種滿草莓；上古種子×2、稀有種子×3。\n豪華牛棚已有豬×2。",
+  notes: "第2年夏14。明日（夏15）預告綠雨。\n豪華雞舍：雞3、鴨4、恐龍1、兔2。\n豪華牛棚：牛2、山羊3、綿羊2、豬2。\n自動收集器已裝。\n夜間結算收入通常約10,000g。\n工具除垃圾桶外皆金；垃圾桶銅。\n銥礦不足，尚未升銥工具。\n魚塘：大海參6/7、鬼魚3/3、鱘魚5/5（需萬象晶球×3）、水滴魚3/3。\n溫室已開；曾種滿草莓；上古種子×2、稀有種子×3。\n豪華牛棚已有豬×2。",
   extras: {
     starfruit: 2,
     buildingNote: "筒倉×2；溫室春12解鎖；連線小屋×1（朋友）",
@@ -833,7 +833,11 @@ function StardewTracker() {
       const local = await storageGet(STORAGE_KEY, false);
       let raw = pub?.value || local?.value;
       if (raw) {
-        try { setData({ ...PREFILL, ...JSON.parse(raw) }); }
+        try {
+          const parsed=JSON.parse(raw);
+          if(Array.isArray(parsed.ponds)) parsed.ponds=parsed.ponds.map(p=>p?.fish==="幽靈魚"&&String(p?.need||"").includes("尚待下一次擴容需求")?{...p,fish:"鬼魚"}:p);
+          setData({ ...PREFILL, ...parsed });
+        }
         catch (e) { console.warn("progress parse failed", e); }
       }
       setLoaded(true);
@@ -1264,7 +1268,8 @@ function StardewTracker() {
     };
     const pondProductMap={
       "大海參":[[1,"Purple Roe","魚籽"],[9,"Iridium Ore","銥礦"],[9,"Amethyst","紫水晶"]],
-      "幽靈魚":[[1,"White Roe","魚籽"],[3,"Quartz","石英"],[9,"White Algae","白藻"],[9,"Refined Quartz","精煉石英"],[9,"Pale Broth","清湯"]],
+      "鬼魚":[[1,"White Roe","魚籽"],[3,"Quartz","石英"],[9,"White Algae","白藻"],[9,"Refined Quartz","精煉石英"],[9,"Pale Broth","清湯"]],
+      "幽靈魚":[[1,"Blue Roe","魚籽"],[9,"Treasure Chest","財寶箱"]],
       "鱘魚":[[1,"Sturgeon Roe","鱘魚籽"]],
       "水滴魚":[[1,"Beige Roe","魚籽"],[9,"Pearl","珍珠"],[9,"Warp Totem Farm","農場圖騰"]]
     };
