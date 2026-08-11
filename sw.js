@@ -1,4 +1,4 @@
-const CACHE='stardew-tracker-v11';
+const CACHE='stardew-tracker-v12';
 const CORE=['./index.html','./app.js','./cloud.js','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{
@@ -14,26 +14,15 @@ self.addEventListener('activate',event=>{
 async function networkFirst(request){
   try{
     const response=await fetch(request,{cache:'no-store'});
-    if(response&&response.ok){
-      const cache=await caches.open(CACHE);
-      cache.put(request,response.clone());
-    }
+    if(response&&response.ok){const cache=await caches.open(CACHE);cache.put(request,response.clone());}
     return response;
-  }catch(error){
-    const cached=await caches.match(request);
-    if(cached)return cached;
-    throw error;
-  }
+  }catch(error){const cached=await caches.match(request);if(cached)return cached;throw error;}
 }
 
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
   const url=new URL(event.request.url);
-  if(url.origin!==self.location.origin){
-    event.respondWith(fetch(event.request));
-    return;
-  }
-
+  if(url.origin!==self.location.origin){event.respondWith(fetch(event.request));return;}
   const isCore=/\/(index\.html|app\.js|cloud\.js)$/.test(url.pathname);
   if(event.request.mode==='navigate'||isCore){
     event.respondWith(networkFirst(event.request).catch(async()=>{
@@ -42,15 +31,10 @@ self.addEventListener('fetch',event=>{
     }));
     return;
   }
-
   event.respondWith((async()=>{
-    const cached=await caches.match(event.request);
-    if(cached)return cached;
+    const cached=await caches.match(event.request);if(cached)return cached;
     const response=await fetch(event.request);
-    if(response&&response.ok){
-      const cache=await caches.open(CACHE);
-      cache.put(event.request,response.clone());
-    }
+    if(response&&response.ok){const cache=await caches.open(CACHE);cache.put(event.request,response.clone());}
     return response;
   })());
 });
