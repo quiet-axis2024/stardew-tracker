@@ -20,19 +20,37 @@
 </head>
 <body>
   <div id="root"><div id="boot-status">🌱 載入星露谷手帳…</div></div>
-  <script src="./cloud.js?v=14"></script>
+  <script src="./cloud.js?v=15"></script>
   <script>
     (async()=>{
       const root=document.getElementById('root');
+      let failureShown=false;
+      const esc=(value)=>String(value||'未知錯誤').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
       const fail=(message)=>{
-        root.innerHTML='<div id="boot-status">⚠️ 手帳載入失敗<small style="margin-top:8px;display:block;font-weight:600">'+String(message||'未知錯誤')+'</small><button onclick="location.reload()" style="margin-top:16px;padding:9px 14px;border:2px solid #e7bd67;border-radius:9px;background:#fff1c9;color:#4a2f20;font-weight:800">重新載入</button></div>';
+        if(failureShown)return;
+        failureShown=true;
+        root.innerHTML='<div id="boot-status">⚠️ 手帳執行失敗<small style="margin-top:8px;display:block;font-weight:600;max-width:560px;word-break:break-word">'+esc(message)+'</small><button onclick="location.reload()" style="margin-top:16px;padding:9px 14px;border:2px solid #e7bd67;border-radius:9px;background:#fff1c9;color:#4a2f20;font-weight:800">重新載入</button></div>';
       };
-      window.addEventListener('error',(event)=>{ if(!window.__SDV_APP_READY__ && event.message) fail(event.message); });
+      const failIfBlank=(message)=>setTimeout(()=>{
+        if(!root || !String(root.textContent||'').trim())fail(message);
+      },0);
+      window.addEventListener('error',event=>{
+        if(event.message)failIfBlank(event.message);
+      });
+      window.addEventListener('unhandledrejection',event=>{
+        const reason=event.reason;
+        failIfBlank(reason?.message||reason||'未處理的執行錯誤');
+      });
       try{ if(window.SDVCloud) await window.SDVCloud.init(); }
       catch(error){ console.warn('Cloud init failed, falling back to local mode:',error); }
       const script=document.createElement('script');
-      script.src='./app.js?v=14';
-      script.onload=()=>{window.__SDV_APP_READY__=true;};
+      script.src='./app.js?v=15';
+      script.onload=()=>{
+        window.__SDV_APP_LOADED__=true;
+        setTimeout(()=>{
+          if(!String(root.textContent||'').trim())fail('app.js 已載入，但 React 主畫面沒有成功建立');
+        },1200);
+      };
       script.onerror=()=>fail('app.js 無法載入');
       document.body.appendChild(script);
     })();
