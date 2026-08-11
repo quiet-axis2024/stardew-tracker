@@ -45,6 +45,7 @@ jobs:
           python3 build_menu_fridge_patch.py build/entry.jsx
           python3 build_fix_patch.py build/entry.jsx
           python3 build_cooking_collection_patch.py build/entry.jsx
+          python3 build_cooking_postfix.py build/entry.jsx
           ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=dist/app.js
           cp index.html manifest.webmanifest icon.svg sw.js cloud.js dist/
 
