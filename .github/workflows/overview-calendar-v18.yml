@@ -1,0 +1,116 @@
+name: Overview Calendar V18
+
+on:
+  pull_request:
+    types: [reopened]
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Simplify overview date controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app.jsx')
+          s=p.read_text(encoding='utf-8')
+
+          # Farm card: add daily-use season buttons directly beside the save summary.
+          old='''          <div style={{fontSize:12,color:C.brown}}>累計 {Number(data.base.totalIncome||0).toLocaleString()}g</div>\n          <button onClick={()=>profileInputRef.current?.click()}'''
+          new='''          <div style={{fontSize:12,color:C.brown}}>累計 {Number(data.base.totalIncome||0).toLocaleString()}g</div>\n          <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:7}}>{SEASONS.map(s=><Pill key={s} small active={data.base.season===s} onClick={()=>updateBase({season:s})}>{SEASON_ICON[s]} {s}</Pill>)}</div>\n          <button onClick={()=>profileInputRef.current?.click()}'''
+          if old not in s: raise SystemExit('profile season marker missing')
+          s=s.replace(old,new,1)
+
+          # Low-frequency edits live in the farm card details instead of a large overview section.
+          s=s.replace('''<summary style={{fontSize:10.5,color:C.muted,fontWeight:900,cursor:"pointer"}}>名稱辨識錯了？手動修正</summary>''','''<summary style={{fontSize:10.5,color:C.muted,fontWeight:900,cursor:"pointer"}}>手動修正農場資料</summary>''',1)
+          old='''              <input value={data.base.farm||""} onChange={e=>updateBase({farm:e.target.value})} placeholder="農場名稱（保留特殊符號）" style={{border:`1.5px solid ${C.line}`,background:"#FFFCF0",borderRadius:7,padding:"6px 7px",fontSize:11,fontWeight:800,color:C.ink}}/>\n            </div>'''
+          new='''              <input value={data.base.farm||""} onChange={e=>updateBase({farm:e.target.value})} placeholder="農場名稱（保留特殊符號）" style={{border:`1.5px solid ${C.line}`,background:"#FFFCF0",borderRadius:7,padding:"6px 7px",fontSize:11,fontWeight:800,color:C.ink}}/>\n              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}><label style={{fontSize:10,color:C.muted,fontWeight:900}}>年份<div style={{marginTop:3}}><NumInput value={data.base.year} min={1} max={99} onChange={v=>updateBase({year:v})}/></div></label><label style={{fontSize:10,color:C.muted,fontWeight:900}}>目前金錢<div style={{marginTop:3}}><NumInput value={data.base.money} max={999999999} onChange={v=>updateBase({money:v})} suffix="g"/></div></label></div>\n              <label style={{fontSize:10,color:C.muted,fontWeight:900}}>累計收入<div style={{marginTop:3}}><NumInput value={data.base.totalIncome} max={999999999} onChange={v=>updateBase({totalIncome:v})} suffix="g"/></div></label>\n            </div>'''
+          if old not in s: raise SystemExit('profile manual edit marker missing')
+          s=s.replace(old,new,1)
+
+          # The in-game 480x336 calendar has a 7x4 day-cell area. Overlay 28 transparent hit targets on the actual image.
+          old='''        <div style={{position:"relative",width:"100%",borderRadius:8,overflow:"hidden",background:"#E7C58A"}}>\n          <img src={GAME_FILE(seasonFile)} alt={`${data.base.season}季遊戲日曆`} onError={e=>{e.currentTarget.style.display="none"}}\n            style={{display:"block",width:"100%",height:"auto",imageRendering:"pixelated"}}/>\n          <div style={{position:"absolute",right:7,top:7,background:"rgba(61,34,15,.88)",color:"#FFE9B5",border:`2px solid ${C.gold}`,borderRadius:9,padding:"4px 7px",fontSize:10.5,fontWeight:950,boxShadow:"0 2px 4px rgba(0,0,0,.2)"}}>今天 {data.base.day} 日</div>\n        </div>'''
+          new='''        <div style={{position:"relative",width:"100%",borderRadius:8,overflow:"hidden",background:"#E7C58A"}}>\n          <img src={GAME_FILE(seasonFile)} alt={`${data.base.season}季遊戲日曆`} onError={e=>{e.currentTarget.style.display="none"}}\n            style={{display:"block",width:"100%",height:"auto",imageRendering:"pixelated"}}/>\n          <div style={{position:"absolute",left:"3.333%",right:"3.333%",top:"19.048%",bottom:"4.762%",display:"grid",gridTemplateColumns:"repeat(7,1fr)",gridTemplateRows:"repeat(4,1fr)"}}>\n            {Array.from({length:28},(_,i)=>i+1).map(day=><button key={day} aria-label={`切換到 ${day} 日`} onClick={()=>updateBase({day})} style={{position:"relative",border:data.base.day===day?`3px solid ${C.gold}`:"2px solid transparent",background:data.base.day===day?"rgba(255,234,164,.18)":"transparent",borderRadius:6,padding:0,cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>{data.base.day===day&&<span style={{position:"absolute",right:2,bottom:2,fontSize:8,fontWeight:950,color:"#FFF2C1",background:"rgba(61,34,15,.82)",borderRadius:5,padding:"1px 3px"}}>{day}</span>}</button>)}\n          </div>\n          <div style={{position:"absolute",right:7,top:7,background:"rgba(61,34,15,.88)",color:"#FFE9B5",border:`2px solid ${C.gold}`,borderRadius:9,padding:"4px 7px",fontSize:10.5,fontWeight:950,boxShadow:"0 2px 4px rgba(0,0,0,.2)"}}>今天 {data.base.day} 日</div>\n        </div>'''
+          if old not in s: raise SystemExit('calendar image marker missing')
+          s=s.replace(old,new,1)
+
+          old_note='''<div style={{fontSize:9.5,color:C.muted,marginTop:6,lineHeight:1.4}}>上方直接使用《星露谷物語》中文遊戲日曆圖；下方補充季節採集等固定事件。書商每季日期依存檔隨機，無法只靠年份／季節推算。</div>'''
+          new_note='''<div style={{fontSize:9.5,color:C.muted,marginTop:6,lineHeight:1.4}}>直接點上方遊戲日曆的日期格即可切換手帳日期；頁首、當日事件與魚類「今日可釣」會一起更新。書商每季日期依存檔隨機，無法只靠年份／季節推算。</div>'''
+          if old_note not in s: raise SystemExit('calendar note marker missing')
+          s=s.replace(old_note,new_note,1)
+
+          # Remove the redundant large Date & Funds panel from Overview.
+          start=s.index('    <SectionTitle icon="📅">日期與資金</SectionTitle>')
+          end=s.index('    <SectionTitle icon="📊">進度速覽</SectionTitle>',start)
+          s=s[:start]+s[end:]
+
+          p.write_text(s,encoding='utf-8')
+
+          # Bump Safari/PWA resource versions.
+          i=Path('index.html'); t=i.read_text(encoding='utf-8').replace('cloud.js?v=17','cloud.js?v=18').replace('app.js?v=17','app.js?v=18'); i.write_text(t,encoding='utf-8')
+          sw=Path('sw.js'); t=sw.read_text(encoding='utf-8').replace("stardew-tracker-v17","stardew-tracker-v18"); sw.write_text(t,encoding='utf-8')
+          PY
+
+      - name: Build and smoke overview interactions
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8 jsdom@26
+          mkdir -p .smoke
+          cat > .smoke/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> .smoke/entry.jsx
+          ./node_modules/.bin/esbuild .smoke/entry.jsx --bundle --format=iife --target=safari15 --outfile=.smoke/app.js
+          cat > .smoke/test.mjs <<'EOF'
+          import fs from 'node:fs';
+          import {JSDOM,VirtualConsole} from 'jsdom';
+          const errs=[];const vc=new VirtualConsole();vc.on('jsdomError',e=>errs.push(String(e)));vc.on('error',e=>errs.push(String(e)));
+          const dom=new JSDOM('<div id="root">boot</div>',{runScripts:'dangerously',url:'https://quiet-axis2024.github.io/stardew-tracker/',pretendToBeVisual:true,virtualConsole:vc});
+          dom.window.alert=()=>{};dom.window.confirm=()=>false;dom.window.prompt=()=>null;dom.window.scrollTo=()=>{};
+          dom.window.eval(fs.readFileSync('.smoke/app.js','utf8'));
+          await new Promise(r=>setTimeout(r,500));
+          const root=dom.window.document.getElementById('root');
+          if(!root.textContent.includes('遊戲日曆'))throw new Error('overview missing');
+          if(root.textContent.includes('日期與資金'))throw new Error('redundant date panel still present');
+          const day=root.querySelector('button[aria-label="切換到 20 日"]');if(!day)throw new Error('calendar day hit target missing');
+          day.dispatchEvent(new dom.window.MouseEvent('click',{bubbles:true}));await new Promise(r=>setTimeout(r,80));
+          if(!root.textContent.includes('今天 20 日'))throw new Error('calendar day did not update save date');
+          const season=[...root.querySelectorAll('button')].find(b=>b.textContent.trim().endsWith('秋'));if(!season)throw new Error('season quick button missing');
+          season.dispatchEvent(new dom.window.MouseEvent('click',{bubbles:true}));await new Promise(r=>setTimeout(r,80));
+          if(!root.textContent.includes('秋 20 日'))throw new Error('season quick button did not update save season');
+          if(errs.length)throw new Error(errs.join('\n'));
+          console.log('OVERVIEW_SMOKE_OK');
+          EOF
+          node .smoke/test.mjs
+
+      - name: Commit canonical source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx index.html sw.js
+          git commit -m 'Make game calendar control save date'
+          git push origin HEAD:main
+
+      - name: Deploy Pages
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --ref main
