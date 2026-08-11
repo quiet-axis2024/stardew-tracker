@@ -1939,3 +1939,5 @@ function StardewTracker() {
 ReactDOM.createRoot(document.getElementById("root")).render(<StardewTracker />);
 
 /* deploy-v20 */
+
+/* deploy-v28 */
