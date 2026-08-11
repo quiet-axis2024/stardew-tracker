@@ -38,6 +38,7 @@ jobs:
           window.ReactDOM = { createRoot };
           EOF
           cat app.jsx >> build/entry.jsx
+          sed -i 's#https://wiki.stardewvalley.net#https://stardewvalleywiki.com#g' build/entry.jsx
           ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=dist/app.js
           cp index.html manifest.webmanifest icon.svg sw.js cloud.js theme.js dist/
 
