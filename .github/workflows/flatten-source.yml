@@ -60,69 +60,10 @@ jobs:
           cat app.jsx >> build/entry.jsx
           ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=/tmp/app.js
 
-      - name: Simplify Pages workflow and remove patch stack
+      - name: Remove obsolete patch stack and temporary build files
         shell: bash
         run: |
           set -euo pipefail
-          cat > .github/workflows/pages.yml <<'EOF'
-          name: Deploy Stardew Tracker to Pages
-
-          on:
-            workflow_dispatch:
-            push:
-              branches: [main]
-
-          permissions:
-            contents: read
-            actions: read
-            pages: write
-            id-token: write
-
-          concurrency:
-            group: pages
-            cancel-in-progress: true
-
-          jobs:
-            deploy:
-              environment:
-                name: github-pages
-                url: ${{ steps.deployment.outputs.page_url }}
-              runs-on: ubuntu-latest
-              steps:
-                - name: Checkout
-                  uses: actions/checkout@v4
-
-                - name: Build browser bundle
-                  shell: bash
-                  run: |
-                    set -euo pipefail
-                    npm install --no-save react@18 react-dom@18 esbuild@0.25.8
-                    mkdir -p build dist
-                    cat > build/entry.jsx <<'INNER_EOF'
-                    import React from 'react';
-                    import { createRoot } from 'react-dom/client';
-                    window.React = React;
-                    window.ReactDOM = { createRoot };
-                    INNER_EOF
-                    cat app.jsx >> build/entry.jsx
-                    ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=dist/app.js
-                    cp index.html manifest.webmanifest icon.svg sw.js cloud.js dist/
-
-                - name: Configure GitHub Pages
-                  uses: actions/configure-pages@v5
-                  with:
-                    enablement: true
-
-                - name: Upload Pages artifact
-                  uses: actions/upload-pages-artifact@v3
-                  with:
-                    path: dist
-
-                - name: Deploy to GitHub Pages
-                  id: deployment
-                  uses: actions/deploy-pages@v4
-          EOF
-
           rm -f \
             build_patch.py \
             build_calendar_patch.py \
@@ -139,16 +80,17 @@ jobs:
             build_fish_guide_patch.py \
             build_fish_guide_fix.py \
             .flatten-trigger
-          rm -f .github/workflows/flatten-source.yml
+          rm -rf node_modules build
 
-      - name: Commit flattened source to main
+      - name: Commit canonical app.jsx to main
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git commit -m 'Flatten generated tracker into app.jsx'
+          git add app.jsx
+          git add -u -- '*.py' .flatten-trigger || true
+          git commit -m 'Flatten generated tracker into canonical app.jsx'
           git push origin HEAD:main
 
       - name: Dispatch Pages deployment
