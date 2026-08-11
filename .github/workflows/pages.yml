@@ -39,7 +39,7 @@ jobs:
           EOF
           cat app.jsx >> build/entry.jsx
           ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=dist/app.js
-          cp index.html manifest.webmanifest icon.svg sw.js cloud.js dist/
+          cp index.html manifest.webmanifest icon.svg sw.js cloud.js farmer-preview-v33.js animal-preview-v33.js dist/
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
