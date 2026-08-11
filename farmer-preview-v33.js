@@ -115,9 +115,13 @@
     const ox=4, oy=6;
 
     const selected=opts?.selected||{};
-    const shirtIdx=parseShirtIndex(selected.shirt);
-    const pantsIdx=PANTS[selected.pants];
-    const hatIdx=HATS[selected.hat];
+    const db=window.SDVWardrobeV34?.byKey||{};
+    const shirtMeta=db.shirt?.[selected.shirt];
+    const pantsMeta=db.pants?.[selected.pants];
+    const hatMeta=db.hat?.[selected.hat];
+    const shirtIdx=shirtMeta?(gender==='female'?shirtMeta.femaleSprite:shirtMeta.maleSprite):parseShirtIndex(selected.shirt);
+    const pantsIdx=Number.isFinite(pantsMeta?.sheetIndex)?pantsMeta.sheetIndex:PANTS[selected.pants];
+    const hatIdx=Number.isFinite(hatMeta?.index)?hatMeta.index:HATS[selected.hat];
     const hairIdx=Math.max(0,Math.min(55,Number(opts?.hairIndex)||0));
     const female=gender==='female';
 
