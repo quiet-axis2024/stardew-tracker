@@ -20,7 +20,7 @@
 </head>
 <body>
   <div id="root"><div id="boot-status">🌱 載入星露谷手帳…</div></div>
-  <script src="./cloud.js?v=25"></script>
+  <script src="./cloud.js?v=26"></script>
   <script>
     (async()=>{
       const root=document.getElementById('root');
@@ -44,7 +44,7 @@
       try{ if(window.SDVCloud) await window.SDVCloud.init(); }
       catch(error){ console.warn('Cloud init failed, falling back to local mode:',error); }
       const script=document.createElement('script');
-      script.src='./app.js?v=25';
+      script.src='./app.js?v=26';
       script.onload=()=>{
         window.__SDV_APP_LOADED__=true;
         setTimeout(()=>{
