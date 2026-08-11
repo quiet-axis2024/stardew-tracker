@@ -8,7 +8,7 @@ https://stardewvalleywiki.com/Special:Redirect/file/hats.png | 404 | 22111 | Jav
 https://stardewvalleywiki.com/Special:Redirect/file/pants.png | 404 | 22128 | JavaScript source, ASCII text, with very long lines (3676)
 https://stardewvalleywiki.com/Special:Redirect/file/shirts.png | 404 | 22145 | JavaScript source, ASCII text, with very long lines (3679)
 https://stardewvalleywiki.com/Special:Redirect/file/shoeColors.png | 404 | 22213 | JavaScript source, ASCII text, with very long lines (3691)
-https://stardewvalleywiki.com/Special:Redirect/file/skinColors.png | 404 | 22214 | JavaScript source, ASCII text, with very long lines (3691)
+https://stardewvalleywiki.com/Special:Redirect/file/skinColors.png | 404 | 22213 | JavaScript source, ASCII text, with very long lines (3691)
 https://wiki.stardewvalley.net/Special:Redirect/file/farmer_base.png | 404 | 22230 | JavaScript source, ASCII text, with very long lines (3694)
 https://wiki.stardewvalley.net/Special:Redirect/file/farmer_girl_base.png | 404 | 22315 | JavaScript source, ASCII text, with very long lines (3709)
 https://wiki.stardewvalley.net/Special:Redirect/file/farmer_base_bald.png | 404 | 22315 | JavaScript source, ASCII text, with very long lines (3709)
