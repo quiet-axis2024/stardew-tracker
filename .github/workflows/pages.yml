@@ -41,6 +41,7 @@ jobs:
           python3 build_patch.py build/entry.jsx
           python3 build_calendar_patch.py build/entry.jsx
           python3 build_ocr_patch.py build/entry.jsx
+          python3 build_ocr_name_patch.py build/entry.jsx
           ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=dist/app.js
           cp index.html manifest.webmanifest icon.svg sw.js cloud.js dist/
 
