@@ -20,16 +20,16 @@ jobs:
         run: |
           set -euo pipefail
           npm install --no-save react@18 react-dom@18 esbuild@0.25.8 jsdom@26
-          mkdir -p /tmp/sdv-smoke
-          cat > /tmp/sdv-smoke/entry.jsx <<'EOF'
+          mkdir -p .smoke
+          cat > .smoke/entry.jsx <<'EOF'
           import React from 'react';
           import { createRoot } from 'react-dom/client';
           window.React = React;
           window.ReactDOM = { createRoot };
           EOF
-          cat app.jsx >> /tmp/sdv-smoke/entry.jsx
-          ./node_modules/.bin/esbuild /tmp/sdv-smoke/entry.jsx --bundle --format=iife --target=safari15 --outfile=/tmp/sdv-smoke/app.js
-          cat > /tmp/sdv-smoke/smoke.mjs <<'EOF'
+          cat app.jsx >> .smoke/entry.jsx
+          ./node_modules/.bin/esbuild .smoke/entry.jsx --bundle --format=iife --target=safari15 --outfile=.smoke/app.js
+          cat > smoke.mjs <<'EOF'
           import fs from 'node:fs';
           import { JSDOM, VirtualConsole } from 'jsdom';
           const errors=[];
@@ -45,7 +45,7 @@ jobs:
           dom.window.URL.createObjectURL=()=>''; dom.window.URL.revokeObjectURL=()=>{};
           dom.window.addEventListener('error',e=>errors.push(`window.error: ${e.message}\n${e.error?.stack||''}`));
           dom.window.addEventListener('unhandledrejection',e=>errors.push(`unhandled: ${e.reason?.stack||e.reason}`));
-          const bundle=fs.readFileSync('/tmp/sdv-smoke/app.js','utf8');
+          const bundle=fs.readFileSync('.smoke/app.js','utf8');
           dom.window.eval(bundle);
           await new Promise(r=>setTimeout(r,1200));
           const root=dom.window.document.getElementById('root');
@@ -57,4 +57,4 @@ jobs:
           }
           console.log('SMOKE_OK');
           EOF
-          node /tmp/sdv-smoke/smoke.mjs
+          node smoke.mjs
