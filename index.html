@@ -15,14 +15,41 @@
     *{box-sizing:border-box}
     body{-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
     button,input,textarea,select{font:inherit}
+    #boot-status{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;color:#f4ddb0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-weight:800;text-align:center}
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script defer src="./app.js"></script>
+  <div id="root"><div id="boot-status">🌱 載入星露谷手帳…</div></div>
+  <script src="./cloud.js?v=8"></script>
+  <script src="./theme.js?v=8" defer></script>
   <script>
+    (async()=>{
+      const root=document.getElementById('root');
+      const fail=(message)=>{
+        root.innerHTML='<div id="boot-status">⚠️ 手帳載入失敗<small style="margin-top:8px;display:block;font-weight:600">'+String(message||'未知錯誤')+'</small><button onclick="location.reload()" style="margin-top:16px;padding:9px 14px;border:2px solid #e7bd67;border-radius:9px;background:#fff1c9;color:#4a2f20;font-weight:800">重新載入</button></div>';
+      };
+      window.addEventListener('error',(event)=>{
+        if(!window.__SDV_APP_READY__ && event.message) fail(event.message);
+      });
+      try{
+        if(window.SDVCloud) await window.SDVCloud.init();
+      }catch(error){
+        console.warn('Cloud init failed, falling back to local mode:',error);
+      }
+      const script=document.createElement('script');
+      script.src='./app.js?v=8';
+      script.onload=()=>{window.__SDV_APP_READY__=true;};
+      script.onerror=()=>fail('app.js 無法載入');
+      document.body.appendChild(script);
+    })();
+
     if('serviceWorker' in navigator){
-      window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));
+      window.addEventListener('load',async()=>{
+        try{
+          const registration=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});
+          await registration.update();
+        }catch(error){console.warn('Service worker update failed:',error);}
+      });
     }
   </script>
 </body>
