@@ -687,7 +687,7 @@ const PREFILL = {
   animals: { 雞: 3, 鴨: 4, 恐龍: 1, 兔子: 2, 牛: 2, 山羊: 3, 綿羊: 2, 豬: 2 },
   ponds: [
     { fish: "大海參", count: 6, cap: 7, need: "尚未觸發下一次擴容需求" },
-    { fish: "鬼魚", count: 3, cap: 3, need: "尚待下一次擴容需求" },
+    { fish: "幽靈魚", count: 3, cap: 3, need: "尚待下一次擴容需求" },
     { fish: "鱘魚", count: 5, cap: 5, need: "萬象晶球 ×3" },
     { fish: "水滴魚", count: 3, cap: 3, need: "" },
   ],
@@ -699,7 +699,7 @@ const PREFILL = {
   friendship: {},
   collections: { fish: [], artifact: [], mineral: [] },
   mastery: [],
-  notes: "第2年夏14。明日（夏15）預告綠雨。\n豪華雞舍：雞3、鴨4、恐龍1、兔2。\n豪華牛棚：牛2、山羊3、綿羊2、豬2。\n自動收集器已裝。\n夜間結算收入通常約10,000g。\n工具除垃圾桶外皆金；垃圾桶銅。\n銥礦不足，尚未升銥工具。\n魚塘：大海參6/7、鬼魚3/3、鱘魚5/5（需萬象晶球×3）、水滴魚3/3。\n溫室已開；曾種滿草莓；上古種子×2、稀有種子×3。\n豪華牛棚已有豬×2。",
+  notes: "第2年夏14。明日（夏15）預告綠雨。\n豪華雞舍：雞3、鴨4、恐龍1、兔2。\n豪華牛棚：牛2、山羊3、綿羊2、豬2。\n自動收集器已裝。\n夜間結算收入通常約10,000g。\n工具除垃圾桶外皆金；垃圾桶銅。\n銥礦不足，尚未升銥工具。\n魚塘：大海參6/7、幽靈魚3/3、鱘魚5/5（需萬象晶球×3）、水滴魚3/3。\n溫室已開；曾種滿草莓；上古種子×2、稀有種子×3。\n豪華牛棚已有豬×2。",
   extras: {
     starfruit: 2,
     buildingNote: "筒倉×2；溫室春12解鎖；連線小屋×1（朋友）",
@@ -833,11 +833,7 @@ function StardewTracker() {
       const local = await storageGet(STORAGE_KEY, false);
       let raw = pub?.value || local?.value;
       if (raw) {
-        try {
-          const parsed=JSON.parse(raw);
-          if(Array.isArray(parsed.ponds)) parsed.ponds=parsed.ponds.map(p=>p?.fish==="幽靈魚"&&String(p?.need||"").includes("尚待下一次擴容需求")?{...p,fish:"鬼魚"}:p);
-          setData({ ...PREFILL, ...parsed });
-        }
+        try { setData({ ...PREFILL, ...JSON.parse(raw) }); }
         catch (e) { console.warn("progress parse failed", e); }
       }
       setLoaded(true);
@@ -1350,7 +1346,7 @@ function StardewTracker() {
         </Card>
         {pondPicker!=null&&data.ponds?.[pondPicker]&&<Card style={{padding:8,marginTop:7,background:"#FFF8E2"}}>
           <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:5}}><b style={{fontSize:10.5,color:C.brown,flex:1}}>第 {pondPicker+1} 座魚塘｜選魚</b><button onClick={()=>setPondPicker(null)} style={{border:0,background:"transparent",color:C.brown,fontSize:12,fontWeight:950}}>完成</button></div>
-          <div style={{display:"flex",gap:5,overflowX:"auto",paddingBottom:5,WebkitOverflowScrolling:"touch"}}>{COLLECTIONS.fish.items.map((name,fi)=>{const p=data.ponds[pondPicker],on=name===p.fish;return <button key={`${pondPicker}-${name}`} onClick={()=>{const ponds=[...data.ponds];ponds[pondPicker]={...p,fish:name};update({ponds})}} style={{flex:"0 0 58px",border:`1.5px solid ${on?C.green:C.line}`,background:on?C.lightGreen:C.paper,borderRadius:8,padding:"4px 2px",minHeight:58,cursor:"pointer"}}><img src={ICON_URLS.fish[fi]} alt="" loading="lazy" style={{width:28,height:28,imageRendering:"pixelated",objectFit:"contain"}}/><div style={{fontSize:7.5,fontWeight:900,color:C.ink,lineHeight:1.05}}>{name}</div></button>})}</div>
+          <div style={{display:"flex",gap:5,overflowX:"auto",paddingBottom:5,WebkitOverflowScrolling:"touch"}}>{COLLECTIONS.fish.items.map((name,fi)=>{const p=data.ponds[pondPicker],on=name===p.fish;return <button key={`${pondPicker}-${name}`} onClick={()=>{const ponds=[...data.ponds];ponds[pondPicker]={...p,fish:name};update({ponds});setPondPicker(null)}} style={{flex:"0 0 58px",border:`1.5px solid ${on?C.green:C.line}`,background:on?C.lightGreen:C.paper,borderRadius:8,padding:"4px 2px",minHeight:58,cursor:"pointer"}}><img src={ICON_URLS.fish[fi]} alt="" loading="lazy" style={{width:28,height:28,imageRendering:"pixelated",objectFit:"contain"}}/><div style={{fontSize:7.5,fontWeight:900,color:C.ink,lineHeight:1.05}}>{name}</div></button>})}</div>
           <button onClick={()=>{const ponds=data.ponds.filter((_,j)=>j!==pondPicker);setPondPicker(null);update({ponds,buildings:{...data.buildings,fishPonds:ponds.length}})}} style={{marginTop:5,border:0,background:"transparent",color:C.red,fontSize:9.5,fontWeight:900,padding:0}}>刪除這座魚塘</button>
         </Card>}
         <button onClick={()=>{const i=(data.ponds||[]).length;const ponds=[...(data.ponds||[]),{fish:"",count:0}];update({ponds,buildings:{...data.buildings,fishPonds:ponds.length}});setPondPicker(i)}} style={{marginTop:6,width:"100%",border:`1.5px dashed ${C.line}`,background:C.cream,borderRadius:9,padding:7,fontWeight:900,color:C.brown,fontSize:10.5}}>＋ 新增魚塘</button>
