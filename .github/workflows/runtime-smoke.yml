@@ -1,0 +1,60 @@
+name: Runtime Smoke Test
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Build and execute tracker in DOM
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8 jsdom@26
+          mkdir -p /tmp/sdv-smoke
+          cat > /tmp/sdv-smoke/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> /tmp/sdv-smoke/entry.jsx
+          ./node_modules/.bin/esbuild /tmp/sdv-smoke/entry.jsx --bundle --format=iife --target=safari15 --outfile=/tmp/sdv-smoke/app.js
+          cat > /tmp/sdv-smoke/smoke.mjs <<'EOF'
+          import fs from 'node:fs';
+          import { JSDOM, VirtualConsole } from 'jsdom';
+          const errors=[];
+          const vc=new VirtualConsole();
+          vc.on('jsdomError',e=>errors.push(String(e?.stack||e)));
+          vc.on('error',e=>errors.push(String(e)));
+          const dom=new JSDOM('<!doctype html><html><body><div id="root"><div>boot</div></div></body></html>',{
+            runScripts:'dangerously', url:'https://quiet-axis2024.github.io/stardew-tracker/', virtualConsole:vc,
+            pretendToBeVisual:true
+          });
+          dom.window.alert=()=>{}; dom.window.confirm=()=>false; dom.window.prompt=()=>null;
+          dom.window.scrollTo=()=>{};
+          dom.window.URL.createObjectURL=()=>''; dom.window.URL.revokeObjectURL=()=>{};
+          dom.window.addEventListener('error',e=>errors.push(`window.error: ${e.message}\n${e.error?.stack||''}`));
+          dom.window.addEventListener('unhandledrejection',e=>errors.push(`unhandled: ${e.reason?.stack||e.reason}`));
+          const bundle=fs.readFileSync('/tmp/sdv-smoke/app.js','utf8');
+          dom.window.eval(bundle);
+          await new Promise(r=>setTimeout(r,1200));
+          const root=dom.window.document.getElementById('root');
+          console.log('ROOT_TEXT=',root?.textContent?.slice(0,500));
+          if(errors.length) console.error('RUNTIME_ERRORS\n'+errors.join('\n---\n'));
+          if(!root || !root.textContent.includes('星露谷進度手帳')) {
+            console.error('SMOKE_FAIL: main tracker did not render');
+            process.exit(1);
+          }
+          console.log('SMOKE_OK');
+          EOF
+          node /tmp/sdv-smoke/smoke.mjs
