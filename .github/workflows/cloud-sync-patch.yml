@@ -1,0 +1,181 @@
+name: Apply Supabase cloud sync
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/cloud-sync-patch.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch tracker cloud sync
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('app.jsx')
+          s = p.read_text()
+
+          marker = '''const storeDelete = async (key, shared = false) => {
+            try { window.localStorage.removeItem(key); } catch (e) {}
+          };
+          '''
+          cloud = '''
+          const CLOUD_ENDPOINT = "https://cobkkabxxoyxyecgmjql.supabase.co/functions/v1/stardew-cloud";
+          const CLOUD_OWNER_KEY = "sdv2-cloud-owner-token";
+
+          async function cloudRequest(action, token, data) {
+            const res = await fetch(CLOUD_ENDPOINT, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action, token, ...(data ? { data } : {}) }),
+            });
+            let body = {};
+            try { body = await res.json(); } catch (e) {}
+            if (!res.ok) throw new Error(body?.error || `cloud_${res.status}`);
+            return body;
+          }
+          '''
+          if 'const CLOUD_ENDPOINT =' not in s:
+            if marker not in s:
+              raise SystemExit('storeDelete marker not found')
+            s = s.replace(marker, marker + cloud, 1)
+
+          state_marker = '''  const importRef = useRef(null);
+            const saveTimer = useRef(null);
+          '''
+          state_cloud = '''  const importRef = useRef(null);
+            const saveTimer = useRef(null);
+            const initialParams = useRef(new URLSearchParams(window.location.search));
+            const [cloudMode] = useState(() => initialParams.current.get("share") ? "share" : (initialParams.current.get("manage") || window.localStorage.getItem(CLOUD_OWNER_KEY)) ? "owner" : "local");
+            const [cloudToken] = useState(() => initialParams.current.get("share") || initialParams.current.get("manage") || window.localStorage.getItem(CLOUD_OWNER_KEY) || "");
+            const readOnly = cloudMode === "share";
+          '''
+          if 'const initialParams = useRef' not in s:
+            if state_marker not in s:
+              raise SystemExit('state marker not found')
+            s = s.replace(state_marker, state_cloud, 1)
+
+          begin = s.index('  /* 載入：')
+          end = s.index('  /* ---------- 收集包工具 ---------- */', begin)
+          sync_block = '''  /* 載入：本機作為離線備援；管理／分享連結則同步雲端 */
+            useEffect(() => {
+              (async () => {
+                const params = initialParams.current;
+                const manageParam = params.get("manage");
+                if (manageParam) {
+                  try { window.localStorage.setItem(CLOUD_OWNER_KEY, manageParam); } catch (e) {}
+                  params.delete("manage");
+                  const clean = `${window.location.pathname}${params.toString() ? `?${params}` : ""}${window.location.hash}`;
+                  window.history.replaceState({}, "", clean);
+                }
+
+                const parse = (r) => {
+                  if (!r || !r.value) return null;
+                  const saved = JSON.parse(r.value);
+                  return saved.v === 2 ? mergeSaved(saved) : null;
+                };
+
+                let localData = null;
+                if (!readOnly) {
+                  try { localData = parse(await storeGet(PUB_KEY, true)); } catch (e) {}
+                  if (!localData) { try { localData = parse(await storeGet(KEY)); } catch (e) {} }
+                  if (localData) setData(localData);
+                }
+
+                if (cloudToken) {
+                  try {
+                    const remote = await cloudRequest("read", cloudToken);
+                    if (remote?.data?.v === 2) {
+                      const merged = mergeSaved(remote.data);
+                      setData(merged);
+                      if (!readOnly) {
+                        const json = JSON.stringify(merged);
+                        await storeSet(PUB_KEY, json, true);
+                        try { await storeSet(KEY, json); } catch (e) {}
+                      }
+                      setSaveState(readOnly ? "☁ 唯讀雲端" : "✓ 雲端已同步");
+                    } else if (cloudMode === "owner") {
+                      const seed = localData || DEFAULT_DATA;
+                      await cloudRequest("write", cloudToken, seed);
+                      setData(seed);
+                      setSaveState("✓ 已建立雲端存檔");
+                    }
+                  } catch (e) {
+                    setSaveState(readOnly ? "⚠ 無法讀取雲端" : "⚠ 雲端離線・使用本機");
+                  }
+                }
+                setLoaded(true);
+              })();
+            }, []);
+
+            /* 自動儲存：本機先保存，管理模式再同步雲端；分享模式唯讀 */
+            useEffect(() => {
+              if (!loaded || readOnly) return;
+              setSaveState(cloudMode === "owner" ? "同步中…" : "儲存中…");
+              if (saveTimer.current) clearTimeout(saveTimer.current);
+              saveTimer.current = setTimeout(async () => {
+                const json = JSON.stringify(data);
+                let localOk = true;
+                try {
+                  await storeSet(PUB_KEY, json, true);
+                  try { await storeSet(KEY, json); } catch (e) {}
+                } catch (e) { localOk = false; }
+
+                if (cloudMode === "owner" && cloudToken) {
+                  try {
+                    await cloudRequest("write", cloudToken, data);
+                    setSaveState("✓ 雲端已同步");
+                  } catch (e) {
+                    setSaveState(localOk ? "⚠ 本機已存・雲端失敗" : "⚠ 儲存失敗");
+                  }
+                } else {
+                  setSaveState(localOk ? "✓ 已儲存" : "⚠ 儲存失敗");
+                }
+              }, 700);
+              return () => clearTimeout(saveTimer.current);
+            }, [data, loaded, cloudMode, cloudToken, readOnly]);
+
+            const upd = (fn) => setData((d) => {
+              if (readOnly) return d;
+              const n = JSON.parse(JSON.stringify(d));
+              fn(n);
+              return n;
+            });
+
+          '''
+          s = s[:begin] + sync_block + s[end:]
+
+          s = s.replace('''  const importBackup = async (file) => {
+              if (!file) return;''', '''  const importBackup = async (file) => {
+              if (readOnly || !file) return;''', 1)
+          s = s.replace('''  const doReset = async () => {
+              if (!confirmReset)''', '''  const doReset = async () => {
+              if (readOnly) return;
+              if (!confirmReset)''', 1)
+          s = s.replace('記錄為所有人共用，重設會影響每個看得到這個網頁的人。建議先匯出 JSON 備份。', '一般模式只會重設目前裝置；雲端管理模式會同步重設結果。唯讀分享模式無法修改資料。')
+          s = s.replace('''      {/* 內容 */}
+            <div style={{ maxWidth: 520, margin: "0 auto", padding: "16px 12px" }}>''', '''      {/* 內容 */}
+            <div style={{ maxWidth: 520, margin: "0 auto", padding: "16px 12px" }}>
+              {readOnly && <div style={{ background: "#DDEBFF", border: `3px solid ${C.blue}`, color: C.text, borderRadius: 10, padding: "9px 12px", marginBottom: 12, fontWeight: 900, fontSize: 13 }}>👀 唯讀分享模式・資料來自雲端</div>}''', 1)
+
+          p.write_text(s)
+          PY
+          rm -f .github/workflows/cloud-sync-patch.yml
+
+      - name: Commit cloud integration
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Add secure Supabase cloud sync and read-only sharing"
+          git push
