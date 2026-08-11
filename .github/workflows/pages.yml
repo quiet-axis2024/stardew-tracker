@@ -1,9 +1,9 @@
 name: Deploy Stardew Tracker to Pages
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -28,7 +28,7 @@ jobs:
       - name: Build browser bundle
         shell: bash
         run: |
-          set -e
+          set -euo pipefail
           npm install --no-save react@18 react-dom@18 esbuild@0.25.8
           mkdir -p build dist
           cat > build/entry.jsx <<'EOF'
@@ -38,20 +38,6 @@ jobs:
           window.ReactDOM = { createRoot };
           EOF
           cat app.jsx >> build/entry.jsx
-          python3 build_patch.py build/entry.jsx
-          python3 build_calendar_patch.py build/entry.jsx
-          python3 build_ocr_patch.py build/entry.jsx
-          python3 build_ocr_name_patch.py build/entry.jsx
-          python3 build_menu_fridge_patch.py build/entry.jsx
-          python3 build_fix_patch.py build/entry.jsx
-          python3 build_cooking_collection_patch.py build/entry.jsx
-          python3 build_cooking_postfix.py build/entry.jsx
-          python3 build_collection_cooking_patch.py build/entry.jsx
-          python3 build_collection_link_patch.py build/entry.jsx
-          python3 build_ui_share_patch.py build/entry.jsx
-          python3 build_tool_icon_postfix.py build/entry.jsx
-          python3 build_fish_guide_patch.py build/entry.jsx
-          python3 build_fish_guide_fix.py build/entry.jsx
           ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=dist/app.js
           cp index.html manifest.webmanifest icon.svg sw.js cloud.js dist/
 
