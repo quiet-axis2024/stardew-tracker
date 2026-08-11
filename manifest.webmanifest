@@ -1,0 +1,12 @@
+{
+  "name": "星露谷進度手帳",
+  "short_name": "星露谷手帳",
+  "description": "Stardew Valley 自用進度與圖鑑紀錄器",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#5a3825",
+  "theme_color": "#4a2f20",
+  "lang": "zh-Hant",
+  "icons": [{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
