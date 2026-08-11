@@ -19,32 +19,29 @@ jobs:
       - name: Download and inspect
         run: |
           set -euo pipefail
+          python3 -m pip install --quiet pillow
           python3 - <<'PY'
           import json, urllib.request
           from pathlib import Path
+          from PIL import Image
           base='https://raw.githubusercontent.com/lybell-art/stardew-dressup/main/'
           files=['assets/farmer_base.png','assets/farmer_girl_base.png','assets/farmer_base_bald.png','assets/farmer_girl_base_bald.png','assets/hairstyle.png','assets/hairstyles2.png','assets/hats.png','assets/shirts.png','assets/pants.png']
           Path('.probe').mkdir(exist_ok=True)
           for f in files:
               urllib.request.urlretrieve(base+f, '.probe/'+Path(f).name)
-          try:
-              from PIL import Image
-          except Exception:
-              raise
           dims={Path(f).name:Image.open('.probe/'+Path(f).name).size for f in files}
           def load(path):
-              return json.load(urllib.request.urlopen(base+path))
+              with urllib.request.urlopen(base+path) as r: return json.load(r)
           pants=load('src/data/pantsData.json')
           locale=load('src/i18n/default.json')
           hats={v:k for k,v in locale.items() if k.startswith('hats.name.')}
           pants_names={v:k for k,v in locale.items() if k.startswith('pants.name.')}
-          target_hats=['Cowboy Hat','Bowler Hat','Top Hat','Sombrero','Straw Hat','Official Cap','Blue Bonnet','Plum Chapeau','Hard Hat','Sou\'wester','Daisy','Watermelon Band','Mouse Ears','Cat Ears','Cowgal Hat','Cowpoke Hat','Archer\'s Cap','Blue Cowboy Hat','Red Cowboy Hat','Cone Hat','Elegant Turban','White Turban','Garbage Hat','Golden Mask','Propeller Hat','Bridal Veil','Witch Hat','Copper Pan','Green Turban','Magic Cowboy Hat','Magic Turban','Golden Helmet','Deluxe Pirate Hat','Pink Bow','Frog Hat','Small Cap','Bluebird Mask','Deluxe Cowboy Hat','Mr. Qi\'s Hat','Dark Cowboy Hat']
+          target_hats=['Cowboy Hat','Bowler Hat','Top Hat','Sombrero','Straw Hat','Official Cap','Blue Bonnet','Plum Chapeau','Hard Hat',"Sou'wester",'Daisy','Watermelon Band','Mouse Ears','Cat Ears','Cowgal Hat','Cowpoke Hat',"Archer's Cap",'Blue Cowboy Hat','Red Cowboy Hat','Cone Hat','Elegant Turban','White Turban','Garbage Hat','Golden Mask','Propeller Hat','Bridal Veil','Witch Hat','Copper Pan','Green Turban','Magic Cowboy Hat','Magic Turban','Golden Helmet','Deluxe Pirate Hat','Pink Bow','Frog Hat','Small Cap','Bluebird Mask','Deluxe Cowboy Hat',"Mr. Qi's Hat",'Dark Cowboy Hat']
           target_pants=['Farmer Pants','Shorts','Long Dress','Skirt','Pleated Skirt','Dinosaur Pants','Grass Skirt','Genie Pants','Baggy Pants','Simple Dress','Relaxed Fit Pants','Relaxed Fit Shorts','Prismatic Pants','Prismatic Genie Pants']
           result={'dimensions':dims,'hatIndices':{},'pantsEntries':{}}
           for name in target_hats:
               key=hats.get(name)
               result['hatIndices'][name]=int(key.rsplit('.',1)[1]) if key else None
-          # Find pants key then data array position/key number.
           for name in target_pants:
               key=pants_names.get(name)
               if not key:
