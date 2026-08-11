@@ -1268,10 +1268,9 @@ function StardewTracker() {
       "鱘魚":[[1,"Sturgeon Roe","鱘魚籽"]],
       "水滴魚":[[1,"Beige Roe","魚籽"],[9,"Pearl","珍珠"],[9,"Warp Totem Farm","農場圖騰"]]
     };
-    const pondProducts=(fish,count)=>{
+    const pondProducts=(fish)=>{
       if(!fish)return [];
-      const defs=pondProductMap[fish]||[[1,"Roe","魚籽"]];
-      return defs.filter(([min])=>Number(count||0)>=min);
+      return pondProductMap[fish]||[[1,"Roe","魚籽"]];
     };
     const machineDefs=[
       ["keg","小桶","Keg"],["jar","罐頭瓶","Preserves Jar"],["cheese","起司壓製機","Cheese Press"],["mayo","美乃滋機","Mayonnaise Machine"],
@@ -1332,8 +1331,8 @@ function StardewTracker() {
                 <div style={{fontSize:9,fontWeight:950,color:C.ink,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",marginTop:1}}>{p.fish||"未選魚種"}</div>
               </button>
               <div style={{marginTop:3,minHeight:28}}>
-                <div style={{display:"flex",justifyContent:"center",gap:2,flexWrap:"wrap"}}>{products.slice(0,4).map(([min,file,label])=><span key={`${file}-${min}`} title={label}><GameIcon file={file} size={18} alt={label}/></span>)}</div>
-                <div style={{fontSize:6.8,color:C.muted,fontWeight:800,lineHeight:1.05,marginTop:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{products.length?products.map(x=>x[2]).join("／"):"尚無產出"}</div>
+                <div style={{display:"flex",justifyContent:"center",gap:3,flexWrap:"wrap"}}>{products.slice(0,4).map(([min,file,label])=>{const unlocked=Number(p.count||0)>=min;return <span key={`${file}-${min}`} title={unlocked?label:`${label}・需 ${min} 隻`} style={{display:"inline-flex",flexDirection:"column",alignItems:"center",filter:unlocked?"none":"grayscale(1)",opacity:unlocked?1:.28}}><GameIcon file={file} size={18} alt={label}/>{!unlocked&&<span style={{fontSize:5.8,fontWeight:950,color:C.muted,lineHeight:1}}>需{min}</span>}</span>})}</div>
+                <div style={{fontSize:6.8,color:C.muted,fontWeight:800,lineHeight:1.05,marginTop:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{products.length?products.map(([min,,label])=>Number(p.count||0)>=min?label:`${label}(需${min})`).join("／"):"尚無產出"}</div>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"22px 1fr 22px",alignItems:"center",gap:2,marginTop:4}}>
                 <button onClick={()=>{const ponds=[...data.ponds];ponds[i]={...p,count:Math.max(0,Number(p.count||0)-1)};update({ponds})}} style={{border:0,background:C.cream,borderRadius:6,height:21,padding:0,fontWeight:950,color:C.brown}}>−</button>
