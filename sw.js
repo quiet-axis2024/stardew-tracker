@@ -1,5 +1,5 @@
-const CACHE='stardew-tracker-v4';
-const CORE=['./','./index.html','./app.js','./manifest.webmanifest','./icon.svg'];
+const CACHE='stardew-tracker-v8';
+const CORE=['./index.html','./app.js','./cloud.js','./theme.js','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>Promise.allSettled(CORE.map(url=>cache.add(url)))));
@@ -11,21 +11,42 @@ self.addEventListener('activate',event=>{
   self.clients.claim();
 });
 
+async function networkFirst(request){
+  try{
+    const response=await fetch(request,{cache:'no-store'});
+    if(response&&(response.ok||response.type==='opaque')){
+      const cache=await caches.open(CACHE);
+      cache.put(request,response.clone());
+    }
+    return response;
+  }catch(error){
+    const cached=await caches.match(request);
+    if(cached)return cached;
+    throw error;
+  }
+}
+
 self.addEventListener('fetch',event=>{
-  if(event.request.method!=='GET') return;
+  if(event.request.method!=='GET')return;
+  const url=new URL(event.request.url);
+  const isCore=url.origin===self.location.origin && /\/(index\.html|app\.js|cloud\.js|theme\.js)$/.test(url.pathname);
+
+  if(event.request.mode==='navigate'||isCore){
+    event.respondWith(networkFirst(event.request).catch(async()=>{
+      if(event.request.mode==='navigate')return caches.match('./index.html');
+      throw new Error('offline core asset unavailable');
+    }));
+    return;
+  }
+
   event.respondWith((async()=>{
     const cached=await caches.match(event.request);
-    if(cached) return cached;
-    try{
-      const response=await fetch(event.request);
-      if(response && (response.ok || response.type==='opaque')){
-        const cache=await caches.open(CACHE);
-        cache.put(event.request,response.clone());
-      }
-      return response;
-    }catch(error){
-      if(event.request.mode==='navigate') return caches.match('./index.html');
-      throw error;
+    if(cached)return cached;
+    const response=await fetch(event.request);
+    if(response&&(response.ok||response.type==='opaque')){
+      const cache=await caches.open(CACHE);
+      cache.put(event.request,response.clone());
     }
+    return response;
   })());
 });
