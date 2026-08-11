@@ -1,0 +1,69 @@
+name: Apply v33 real sprite wardrobe
+
+on:
+  push:
+    branches: [v33-real-game-sprites]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout v33 branch
+        uses: actions/checkout@v4
+        with:
+          ref: v33-real-game-sprites
+          fetch-depth: 0
+
+      - name: Apply v33 patch
+        run: |
+          set -euo pipefail
+          python3 v33_patch.py
+
+      - name: Validate helpers and JSX
+        run: |
+          set -euo pipefail
+          node --check farmer-preview-v33.js
+          node --check animal-preview-v33.js
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8
+          mkdir -p .verify
+          cat > .verify/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> .verify/entry.jsx
+          ./node_modules/.bin/esbuild .verify/entry.jsx --bundle --format=iife --target=safari15 --outfile=.verify/app.js
+          grep -q 'FarmerSpritePreviewV33' app.jsx
+          grep -q 'AnimalSpritePreviewV33' app.jsx
+          grep -q '遊戲實際角色' app.jsx
+          if grep -q 'synthetic=!side' app.jsx; then echo 'fake animal geometry remains'; exit 1; fi
+          if grep -q 'headW=(side?27:34)' app.jsx; then echo 'fake player geometry remains'; exit 1; fi
+          grep -q 'farmer-preview-v33.js?v=33' index.html
+          grep -q 'animal-preview-v33.js?v=33' index.html
+          grep -q 'app.js?v=33' index.html
+          grep -q 'stardew-tracker-v33' sw.js
+          grep -q 'farmer-preview-v33.js' .github/workflows/pages.yml
+          grep -q 'animal-preview-v33.js' .github/workflows/pages.yml
+
+      - name: Verify pinned sprite sources
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 -o /tmp/farmer.png 'https://raw.githubusercontent.com/lybell-art/stardew-dressup/15f7be39b9a1de549595df8102bc7e77b406b605/assets/farmer_girl_base.png'
+          curl -fsSL --retry 3 -o /tmp/horse.png 'https://raw.githubusercontent.com/shayderrr/stardew_decomp/6fcc1d4d20d14c5be6232d0f9eac1d423222fd84/stardew/unpacked/Animals/horse.png'
+          file /tmp/farmer.png /tmp/horse.png | grep -q 'PNG image data'
+
+      - name: Commit clean v33 branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx index.html sw.js .github/workflows/pages.yml farmer-preview-v33.js animal-preview-v33.js
+          git rm -f v33_patch.py .github/workflows/v33-apply.yml
+          for f in sprite-probe.txt v33-asset-inspect.json animal-contact-v33.b64; do [ ! -e "$f" ] || git rm -f "$f"; done
+          git commit -m 'v33: use real Stardew character and animal sprites'
+          git push origin HEAD:v33-real-game-sprites
