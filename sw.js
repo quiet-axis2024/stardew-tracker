@@ -1,5 +1,5 @@
-const CACHE='stardew-tracker-v9';
-const CORE=['./index.html','./app.js','./cloud.js','./theme.js','./manifest.webmanifest','./icon.svg'];
+const CACHE='stardew-tracker-v10';
+const CORE=['./index.html','./app.js','./cloud.js','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>Promise.allSettled(CORE.map(url=>cache.add(url)))));
@@ -29,14 +29,12 @@ async function networkFirst(request){
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
   const url=new URL(event.request.url);
-
-  // Wiki 圖片與其他跨網域資源直接走網路，不把 opaque 失敗回應永久快取。
   if(url.origin!==self.location.origin){
     event.respondWith(fetch(event.request));
     return;
   }
 
-  const isCore=/\/(index\.html|app\.js|cloud\.js|theme\.js)$/.test(url.pathname);
+  const isCore=/\/(index\.html|app\.js|cloud\.js)$/.test(url.pathname);
   if(event.request.mode==='navigate'||isCore){
     event.respondWith(networkFirst(event.request).catch(async()=>{
       if(event.request.mode==='navigate')return caches.match('./index.html');
