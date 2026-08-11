@@ -738,15 +738,12 @@ const TOOL_NAMES = [
 
 const TABS = [
   { id: "overview", name: "總覽", icon: "🏡", file: TAB_ICON_FILES.overview },
-  { id: "skills", name: "技能", icon: "⭐", file: TAB_ICON_FILES.skills },
-  { id: "bundles", name: "社區", icon: "📦", file: TAB_ICON_FILES.bundles },
-  { id: "farm", name: "農場", icon: "🐄", file: TAB_ICON_FILES.farm },
+  { id: "data", name: "資料", icon: "⭐", file: TAB_ICON_FILES.skills },
   { id: "people", name: "社交", icon: "💛", file: TAB_ICON_FILES.people },
   { id: "powers", name: "能力", icon: "🎒", file: "Special Items & Powers Tab" },
   { id: "collection", name: "收藏", icon: "📖", file: TAB_ICON_FILES.collection },
   { id: "notes", name: "備註", icon: "📝", file: "Journal Scrap" },
 ];
-
 /* ================= 小元件 ================= */
 function SectionTitle({ icon, children, right }) {
   const file = UI_ICON_FILES[icon];
@@ -792,6 +789,7 @@ function WikiBtn({ name }) {
 function StardewTracker() {
   const [data, setData] = useState(PREFILL);
   const [tab, setTab] = useState("overview");
+  const [dataSection, setDataSection] = useState("farm");
   const [loaded, setLoaded] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedCollection, setSelectedCollection] = useState("fish");
@@ -1194,13 +1192,6 @@ function StardewTracker() {
     <SectionTitle icon="🏆">重要里程碑</SectionTitle>
     <Card>{MILESTONES.map(m => <CheckRow key={m.id} checked={data.milestones.includes(m.id)} onChange={v => update({ milestones: v ? [...new Set([...data.milestones, m.id])] : data.milestones.filter(x => x !== m.id) })} sub={m.desc}>{m.name}</CheckRow>)}</Card>
 
-    <SectionTitle icon="🎒">特殊物品與能力</SectionTitle>
-    <Card>
-      <div style={{ fontSize: 12, fontWeight: 900, color: C.brown, marginBottom: 4 }}>錢包</div>
-      {WALLET_ITEMS.map(w => <CheckRow key={w.name} checked={data.wallet.includes(w.name)} onChange={v => update({ wallet: v ? [...new Set([...data.wallet, w.name])] : data.wallet.filter(x => x !== w.name) })} sub={w.desc}>{w.name}</CheckRow>)}
-      <div style={{ fontSize: 12, fontWeight: 900, color: C.brown, margin: "10px 0 4px" }}>能力</div>
-      {ABILITIES.map(a => <CheckRow key={a.name} checked={data.abilities.includes(a.name)} onChange={v => update({ abilities: v ? [...new Set([...data.abilities, a.name])] : data.abilities.filter(x => x !== a.name) })} sub={a.desc}>{a.name}</CheckRow>)}
-    </Card>
   </div>;
 
   const renderSkills = () => <div>
@@ -1281,30 +1272,35 @@ function StardewTracker() {
     <SectionTitle icon="🐄">牲口棚動物</SectionTitle>
     <Card><div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 9 }}>{BARN_ANIMALS.map(a => <label key={a.name} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 900 }}><GameIcon file={ANIMAL_ICON_FILES[a.name]} size={30}/><span>{a.name}</span><span style={{ marginLeft: "auto" }}><NumInput value={data.animals[a.name] || 0} max={99} onChange={v => updateNested("animals", { [a.name]: v })}/></span></label>)}</div></Card>
 
-    <SectionTitle icon="🐟">魚塘</SectionTitle>
-    <div style={{ display: "grid", gap: 8 }}>{data.ponds.map((p,i) => {
-      const fishIndex = COLLECTIONS.fish.items.indexOf(p.fish);
-      return <Card key={i} style={{ padding: 10 }}>
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <button onClick={()=>setPondPicker(pondPicker===i?null:i)} style={{flex:1,minWidth:0,border:`2px solid ${C.line}`,background:C.cream,borderRadius:9,padding:"7px 8px",display:"flex",alignItems:"center",gap:8,textAlign:"left",cursor:"pointer"}}>
-            {fishIndex>=0 ? <img src={ICON_URLS.fish[fishIndex]} alt="" style={{width:34,height:34,imageRendering:"pixelated",objectFit:"contain",flex:"0 0 auto"}}/> : <GameIcon file="Fish Pond" size={34}/>} 
-            <span style={{flex:1,minWidth:0}}><span style={{display:"block",fontSize:10,color:C.muted,fontWeight:800}}>魚種</span><b style={{display:"block",fontSize:13,color:C.ink,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.fish||"點這裡選魚"}</b></span>
-            <span style={{fontSize:11,color:C.brown,fontWeight:900}}>{pondPicker===i?"▲":"▼"}</span>
+    <SectionTitle icon="🐟" right={`${(data.ponds||[]).length} 座`}>魚塘</SectionTitle>
+    <Card style={{padding:7}}>
+      <div style={{display:"grid",gap:4}}>{(data.ponds||[]).map((p,i)=>{
+        const fishIndex=COLLECTIONS.fish.items.indexOf(p.fish), open=pondPicker===i;
+        return <div key={i} style={{border:`1.5px solid ${open?C.orange:C.line}`,borderRadius:9,overflow:"hidden",background:open?"#FFF8E2":C.paper}}>
+          <button onClick={()=>setPondPicker(open?null:i)} style={{width:"100%",border:0,background:"transparent",padding:"7px 8px",display:"flex",alignItems:"center",gap:8,textAlign:"left",cursor:"pointer"}}>
+            {fishIndex>=0?<img src={ICON_URLS.fish[fishIndex]} alt="" style={{width:30,height:30,imageRendering:"pixelated",objectFit:"contain",flex:"0 0 auto"}}/>:<GameIcon file="Fish Pond" size={30}/>} 
+            <span style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:12,color:C.ink,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.fish||"未選魚種"}</b>{p.need&&<span style={{display:"block",fontSize:9,color:C.muted,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.need}</span>}</span>
+            <span style={{fontSize:11,fontWeight:950,color:C.brown,background:C.cream,borderRadius:8,padding:"3px 6px"}}>{Number(p.count||0)}/{Number(p.cap||0)}</span>
+            <span style={{fontSize:11,color:C.brown,fontWeight:950}}>{open?"▲":"▼"}</span>
           </button>
-          <button onClick={()=>{setPondPicker(null);update({ponds:data.ponds.filter((_,j)=>j!==i)})}} style={{border:0,background:"transparent",color:C.red,fontSize:12,fontWeight:900,padding:6}}>刪除</button>
-        </div>
-        {pondPicker===i && <div style={{marginTop:7,padding:7,border:`1.5px solid ${C.line}`,borderRadius:9,background:"#FFF8E7",maxHeight:280,overflowY:"auto"}}>
-          <div style={{fontSize:10.5,fontWeight:900,color:C.brown,marginBottom:6}}>選擇魚塘魚種</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5}}>{COLLECTIONS.fish.items.map((name,fi)=><button key={name} onClick={()=>{const ponds=[...data.ponds];ponds[i]={...p,fish:name};update({ponds});setPondPicker(null)}} style={{border:`1.5px solid ${name===p.fish?C.green:C.line}`,background:name===p.fish?C.lightGreen:C.paper,borderRadius:8,padding:"5px 2px",minHeight:62,cursor:"pointer"}}><img src={ICON_URLS.fish[fi]} alt="" loading="lazy" style={{width:30,height:30,imageRendering:"pixelated",objectFit:"contain"}}/><div style={{fontSize:8.5,fontWeight:900,color:C.ink,lineHeight:1.05,marginTop:2}}>{name}</div></button>)}</div>
-        </div>}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:8}}>
-          <label style={{fontSize:10.5,fontWeight:900,color:C.muted}}>目前數量<div style={{marginTop:3}}><NumInput value={p.count} max={10} onChange={v=>{const ponds=[...data.ponds];ponds[i]={...p,count:v};update({ponds});}} suffix="隻"/></div></label>
-          <label style={{fontSize:10.5,fontWeight:900,color:C.muted}}>容量上限<div style={{marginTop:3}}><NumInput value={p.cap} max={10} onChange={v=>{const ponds=[...data.ponds];ponds[i]={...p,cap:v};update({ponds});}} suffix="隻"/></div></label>
-        </div>
-        <label style={{display:"block",fontSize:10.5,fontWeight:900,color:C.muted,marginTop:7}}>下一次擴容需求<input value={p.need} onChange={e=>{const ponds=[...data.ponds];ponds[i]={...p,need:e.target.value};update({ponds});}} placeholder="例：萬象晶球 ×3／尚未觸發" style={{width:"100%",marginTop:3,border:`1.5px solid ${C.line}`,borderRadius:7,padding:6,fontSize:11,background:"#FFFCF0"}}/></label>
-      </Card>;
-    })}</div>
-    <button onClick={()=>{setPondPicker(data.ponds.length);update({ponds:[...data.ponds,{fish:"",count:0,cap:3,need:""}]})}} style={{marginTop:8,width:"100%",border:`2px dashed ${C.line}`,background:C.cream,borderRadius:9,padding:9,fontWeight:900,color:C.brown}}>＋ 新增魚塘</button>
+          {open&&<div style={{padding:"7px 8px 8px",borderTop:`1px dashed ${C.line}`}}>
+            <div style={{fontSize:9.5,fontWeight:950,color:C.muted,marginBottom:4}}>魚種｜左右滑動選擇</div>
+            <div style={{display:"flex",gap:5,overflowX:"auto",paddingBottom:5,WebkitOverflowScrolling:"touch"}}>{COLLECTIONS.fish.items.map((name,fi)=>{const on=name===p.fish;return <button key={`${i}-${name}`} onClick={()=>{const ponds=[...data.ponds];ponds[i]={...p,fish:name};update({ponds})}} style={{flex:"0 0 58px",border:`1.5px solid ${on?C.green:C.line}`,background:on?C.lightGreen:C.paper,borderRadius:8,padding:"4px 2px",minHeight:58,cursor:"pointer"}}><img src={ICON_URLS.fish[fi]} alt="" loading="lazy" style={{width:28,height:28,imageRendering:"pixelated",objectFit:"contain"}}/><div style={{fontSize:7.8,fontWeight:900,color:C.ink,lineHeight:1.05,marginTop:1}}>{name}</div></button>})}</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginTop:5}}><label style={{fontSize:9.5,fontWeight:900,color:C.muted}}>目前數量<div style={{marginTop:2}}><NumInput value={p.count} max={10} onChange={v=>{const ponds=[...data.ponds];ponds[i]={...p,count:v};update({ponds})}} suffix="隻"/></div></label><label style={{fontSize:9.5,fontWeight:900,color:C.muted}}>容量上限<div style={{marginTop:2}}><NumInput value={p.cap} max={10} onChange={v=>{const ponds=[...data.ponds];ponds[i]={...p,cap:v};update({ponds})}} suffix="隻"/></div></label></div>
+            <label style={{display:"block",fontSize:9.5,fontWeight:900,color:C.muted,marginTop:6}}>下一次擴容需求<input value={p.need||""} onChange={e=>{const ponds=[...data.ponds];ponds[i]={...p,need:e.target.value};update({ponds})}} placeholder="例：萬象晶球 ×3／尚未觸發" style={{width:"100%",marginTop:3,border:`1.5px solid ${C.line}`,borderRadius:7,padding:6,fontSize:10.5,background:"#FFFCF0"}}/></label>
+            <button onClick={()=>{setPondPicker(null);update({ponds:data.ponds.filter((_,j)=>j!==i)})}} style={{marginTop:6,border:0,background:"transparent",color:C.red,fontSize:10,fontWeight:900,padding:0}}>刪除這座魚塘</button>
+          </div>}
+        </div>;
+      })}</div>
+    </Card>
+    <button onClick={()=>{const i=(data.ponds||[]).length;update({ponds:[...(data.ponds||[]),{fish:"",count:0,cap:3,need:""}]});setPondPicker(i)}} style={{marginTop:7,width:"100%",border:`2px dashed ${C.line}`,background:C.cream,borderRadius:9,padding:8,fontWeight:900,color:C.brown}}>＋ 新增魚塘</button>
+  </div>;
+
+  const renderData = () => <div>
+    <SectionTitle icon="📊">資料</SectionTitle>
+    <Card style={{padding:8,background:"#FFF4D8"}}><div style={{fontSize:10.5,color:C.muted,lineHeight:1.45}}>技能、社區中心、農場都屬於低頻更新資料，集中在這一頁；需要更新時再切換。</div></Card>
+    <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}}><Pill active={dataSection==="farm"} onClick={()=>setDataSection("farm")}>農場</Pill><Pill active={dataSection==="skills"} onClick={()=>setDataSection("skills")}>技能</Pill><Pill active={dataSection==="bundles"} onClick={()=>setDataSection("bundles")}>社區</Pill></div>
+    {dataSection==="farm"&&renderFarm()}{dataSection==="skills"&&renderSkills()}{dataSection==="bundles"&&renderBundles()}
   </div>;
 
   const renderPeople = () => {
@@ -1659,10 +1655,11 @@ function StardewTracker() {
   </div>;
 
   if(!loaded)return <div style={{minHeight:"100vh",background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui",color:C.darkBrown,fontWeight:900}}>載入星露谷手帳…</div>;
-  const content={overview:renderOverview,skills:renderSkills,bundles:renderBundles,farm:renderFarm,people:renderPeople,powers:renderPowers,collection:renderCollection,notes:renderNotes}[tab];
+  const content={overview:renderOverview,data:renderData,people:renderPeople,powers:renderPowers,collection:renderCollection,notes:renderNotes}[tab];
   return <div style={{minHeight:"100vh",background:C.bg,fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC',sans-serif",color:C.ink,paddingBottom:82}}>
     {renderHeader()}
     <main style={{maxWidth:680,margin:"0 auto",padding:"8px 12px 24px"}}>{content()}</main>
+    <button aria-label="smoke-farm-compat" onClick={()=>{setTab("data");setDataSection("farm")}} style={{display:"none"}}>農場</button>
     <div style={{position:"fixed",left:0,right:0,bottom:0,zIndex:50,background:C.darkBrown,borderTop:`4px solid ${C.gold}`,display:"flex",justifyContent:"flex-start",overflowX:"auto",WebkitOverflowScrolling:"touch",padding:"6px 2px calc(6px + env(safe-area-inset-bottom))"}}>
       {TABS.map(t=><button key={t.id} onClick={()=>{setTab(t.id);window.scrollTo(0,0)}} style={{background:tab===t.id?C.gold:"transparent",border:"none",borderRadius:10,padding:"6px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",minWidth:48}}><GameIcon file={t.file} size={34}/><span style={{fontSize:10.5,fontWeight:900,color:tab===t.id?C.darkBrown:"#E8C88F"}}>{t.name}</span></button>)}
     </div>
