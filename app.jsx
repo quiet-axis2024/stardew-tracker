@@ -1566,7 +1566,7 @@ function StardewTracker() {
     <SectionTitle icon="🔗">分享我的手帳</SectionTitle>
     <Card style={{background:"#EAF4D8"}}>
       <div style={{fontSize:12,color:C.ink,lineHeight:1.55,marginBottom:9}}><b>分享的是完整手帳，不是純文字。</b>朋友打開唯讀連結後，會直接看到你目前雲端保存的日期、農場、社區中心、動物、魚塘、社交、收藏、烹飪等記錄；你之後更新，他重新整理也會看到新版。</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><button onClick={shareTrackerView} style={{border:`2px solid ${C.green}`,background:C.lightGreen,color:C.green,borderRadius:9,padding:10,fontWeight:950}}>分享手帳…</button><button onClick={copyTrackerView} style={{border:`2px solid ${C.line}`,background:C.cream,color:C.brown,borderRadius:9,padding:10,fontWeight:950}}>複製連結</button></div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><button onClick={copyTrackerView} style={{border:`2px solid ${C.green}`,background:C.lightGreen,color:C.green,borderRadius:9,padding:10,fontWeight:950}}>複製連結</button><button onClick={shareTrackerView} style={{border:`2px solid ${C.orange}`,background:"#FFE4C5",color:C.brown,borderRadius:9,padding:10,fontWeight:950}}>分享手帳…</button></div>
       <div style={{fontSize:10,color:C.muted,marginTop:7}}>此連結為唯讀，朋友無法改動你的雲端存檔。</div>
     </Card>
     <SectionTitle icon="📤">純文字進度</SectionTitle>
