@@ -10,7 +10,6 @@ s=s.replace('style={{ width: 64, border: `2px solid ${C.line}`','style={{ width,
 s=s.replace('<NumInput value={data.base.money} max={999999999} onChange={v=>updateBase({money:v})} suffix="g"/>','<NumInput value={data.base.money} max={999999999} onChange={v=>updateBase({money:v})} suffix="g" width={118}/>',1)
 s=s.replace('<NumInput value={data.base.totalIncome} max={999999999} onChange={v=>updateBase({totalIncome:v})} suffix="g"/>','<NumInput value={data.base.totalIncome} max={999999999} onChange={v=>updateBase({totalIncome:v})} suffix="g" width={118}/>',1)
 
-# ---------- 2. Shipping / wardrobe constants ----------
 marker='const SECRET_NOTE_SUMMARY_V3 = {'
 if 'const SHIPPING_ITEMS_V30' not in s:
     constants=r'''const SHIPPING_ITEMS_V30 = [
@@ -36,12 +35,10 @@ const BOOTS_V30 = [
     if marker not in s: raise SystemExit('constant insertion marker missing')
     s=s.replace(marker,constants+marker,1)
 
-# ---------- 3. State ----------
 state_marker='  const [fishFindGroupV4, setFishFindGroupV4] = useState("main");'
 if 'wardrobeCategoryV30' not in s:
     s=s.replace(state_marker,state_marker+'\n  const [wardrobeCategoryV30, setWardrobeCategoryV30] = useState("hat");\n  const [wardrobeTargetV30, setWardrobeTargetV30] = useState("player");',1)
 
-# ---------- 4. Bottom nav: archive into Data, Fishing + Wardrobe out ----------
 pat=r'const TABS = \[.*?\n\];'
 new_tabs='''const TABS = [
   { id: "overview", name: "總覽", icon: "🏡", file: TAB_ICON_FILES.overview },
@@ -54,14 +51,12 @@ new_tabs='''const TABS = [
 s,n=re.subn(pat,new_tabs,s,count=1,flags=re.S)
 if n!=1: raise SystemExit('TABS replacement failed')
 
-# ---------- 5. Collection: fish becomes pure dex; shipping becomes full icon collection ----------
 s=s.replace('{collectionSection==="fish"&&renderFishHubV4()}','{collectionSection==="fish"&&renderFishDexV4()}',1)
 old_shipping='''{collectionSection==="shipping"&&<Card style={{marginTop:8}}><div style={{display:"flex",gap:8,alignItems:"center"}}><GameIcon file="ShippingBox" size={34}/><div><div style={{fontSize:12,fontWeight:900,color:C.brown}}>出貨收集</div><div style={{fontSize:10.5,color:C.muted}}>目前先記已點亮數量；之後可再補完整 1.6 出貨圖鑑。</div></div></div><div style={{marginTop:7}}><NumInput value={Number(extrasState.shippedCount||0)} max={999} onChange={v=>updateExtras({shippedCount:v})} suffix="項"/></div></Card>}'''
 new_shipping='''{collectionSection==="shipping"&&renderShippingV30()}'''
 if old_shipping not in s: raise SystemExit('shipping placeholder marker missing')
 s=s.replace(old_shipping,new_shipping,1)
 
-# Insert shipping renderer before renderCollection.
 insert='  const renderCollection = () => {'
 if 'const renderShippingV30' not in s:
     shipping_renderer=r'''  const renderShippingV30 = () => {
@@ -77,18 +72,16 @@ if 'const renderShippingV30' not in s:
     if insert not in s: raise SystemExit('renderCollection insertion missing')
     s=s.replace(insert,shipping_renderer+insert,1)
 
-# ---------- 6. Data gets archive as fourth first-level category ----------
 old_data='''return <div><SectionTitle icon="📊">資料</SectionTitle><div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:7,marginTop:7}}><DataTab id="farm" label="農場" file="Animals Tab"/><DataTab id="skills" label="技能" file="Skills Tab Icon"/><DataTab id="bundles" label="社區" file="Golden Scroll"/></div>{dataSection==="farm"&&renderFarm()}{dataSection==="skills"&&renderSkills()}{dataSection==="bundles"&&renderBundles()}</div>;'''
 new_data='''return <div><SectionTitle icon="📊">資料</SectionTitle><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:6,marginTop:7}}><DataTab id="farm" label="農場" file="Animals Tab"/><DataTab id="skills" label="技能" file="Skills Tab Icon"/><DataTab id="bundles" label="社區" file="Golden Scroll"/><DataTab id="collection" label="收藏" file="Collections Tab"/></div>{dataSection==="farm"&&renderFarm()}{dataSection==="skills"&&renderSkills()}{dataSection==="bundles"&&renderBundles()}{dataSection==="collection"&&renderCollection()}</div>;'''
 if old_data not in s: raise SystemExit('renderData marker missing')
 s=s.replace(old_data,new_data,1)
 
-# ---------- 7. Dedicated fishing high-frequency page ----------
 insert='  const renderNotes = () => <div>'
 if 'const renderFishingV30' not in s:
     pages=r'''  const renderFishingV30 = () => {
     const fast=fishViewV4==="find"?"find":"today";
-    return <div><SectionTitle icon="🐟">釣魚速查</SectionTitle><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginTop:6}}><button onClick={()=>setFishViewV4("today")} style={{border:`2px solid ${fast==="today"?C.orange:C.line}`,background:fast==="today"?"#FFE2A8":C.paper,borderRadius:10,padding:7,display:"flex",alignItems:"center",justifyContent:"center",gap:6,fontSize:10,fontWeight:950,color:C.brown}}><GameIcon file="Fishing Rod" size={30}/>今日可釣</button><button onClick={()=>setFishViewV4("find")} style={{border:`2px solid ${fast==="find"?C.orange:C.line}`,background:fast==="find"?"#FFE2A8":C.paper,borderRadius:10,padding:7,display:"flex",alignItems:"center",justifyContent:"center",gap:6,fontSize:10,fontWeight:950,color:C.brown}}><GameIcon file="Treasure Hunter" size={30}/>找魚</button></div>{fast==="today"?renderFishTodayV4():renderFishFindV4()}</div>;
+    return <div><SectionTitle icon="🐟">釣魚速查</SectionTitle><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginTop:6}}><button onClick={()=>setFishViewV4("today")} style={{border:`2px solid ${fast==="today"?C.orange:C.line}`,background:fast==="today"?"#FFE2A8":C.paper,borderRadius:10,padding:7,display:"flex",alignItems:"center",justifyContent:"center",gap:6,fontSize:10,fontWeight:950,color:C.brown}}><GameIcon file="Iridium Rod" size={30}/>今日可釣</button><button onClick={()=>setFishViewV4("find")} style={{border:`2px solid ${fast==="find"?C.orange:C.line}`,background:fast==="find"?"#FFE2A8":C.paper,borderRadius:10,padding:7,display:"flex",alignItems:"center",justifyContent:"center",gap:6,fontSize:10,fontWeight:950,color:C.brown}}><GameIcon file="Treasure Hunter" size={30}/>找魚</button></div>{fast==="today"?renderFishTodayV4():renderFishFindV4()}</div>;
   };
 
   const renderWardrobeV30 = () => {
@@ -100,14 +93,14 @@ if 'const renderFishingV30' not in s:
     const list=wardrobeTargetV30==="player"?cats[wardrobeCategoryV30]:HATS_V30;
     const slot=wardrobeTargetV30==="player"?wardrobeCategoryV30:"hat";
     const chosen=target[slot]||"";
-    const targets=[["player","玩家","Farmer"],["horse","馬","Horse"],["cat","貓","Cat 1"],["dog","狗","Dog 1"]];
+    const targets=[["player","玩家","Inventory Tab"],["horse","馬","Horse"],["cat","貓","Cat 1"],["dog","狗","Dog 1"]];
     const baseFile=wardrobeTargetV30==="horse"?"Horse":wardrobeTargetV30==="cat"?"Cat 1":wardrobeTargetV30==="dog"?"Dog 1":null;
     const selectedHat=(wardrobe[wardrobeTargetV30]||{}).hat||"";
     const player=wardrobe.player||defaults.player;
     return <div><SectionTitle icon="🎩">衣櫥搭配</SectionTitle>
       <Card style={{padding:9,background:"#FFF4D8"}}><div style={{fontSize:10.5,color:C.muted,lineHeight:1.4}}>用遊戲服飾圖做搭配板；帽子可套到玩家、馬、貓、狗。玩家上衣／下裝可記染色。這裡是搭配預覽，不假裝成逐像素遊戲角色合成。</div></Card>
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:5,marginTop:7}}>{targets.map(([id,name,file])=>{const on=wardrobeTargetV30===id;return <button key={id} onClick={()=>{setWardrobeTargetV30(id);if(id!=="player")setWardrobeCategoryV30("hat")}} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFE2A8":C.paper,borderRadius:9,padding:5,fontSize:8.5,fontWeight:950,color:C.brown}}>{id==="player"?(data.profilePortrait?<img src={data.profilePortrait} alt="" style={{width:30,height:38,objectFit:"cover",borderRadius:4}}/>:<GameIcon file="Inventory Tab" size={30}/>):<GameIcon file={file} size={30}/>}<div>{name}</div></button>})}</div>
-      <Card style={{marginTop:7,padding:8,textAlign:"center"}}><div style={{position:"relative",width:150,height:160,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"center"}}>{wardrobeTargetV30==="player"?(data.profilePortrait?<img src={data.profilePortrait} alt="玩家" style={{width:105,height:140,objectFit:"cover",borderRadius:8,imageRendering:"pixelated"}}>:<GameIcon file="Inventory Tab" size={90}/>):<GameIcon file={baseFile} size={105}/>} {selectedHat&&<img src={GAME_FILE(selectedHat)} alt="帽子" style={{position:"absolute",top:2,left:"50%",transform:"translateX(-50%)",width:46,height:46,objectFit:"contain",imageRendering:"pixelated",filter:"drop-shadow(0 1px 1px rgba(0,0,0,.25))"}}/>}</div>{wardrobeTargetV30==="player"&&<><div style={{display:"flex",justifyContent:"center",gap:10,marginTop:2}}>{[[player.hat,"帽"],[player.shirt,"衣"],[player.pants,"褲"],[player.boots,"鞋"]].map(([f,l])=><div key={l} style={{width:46,textAlign:"center"}}><div style={{height:34,display:"flex",alignItems:"center",justifyContent:"center"}}>{f?<GameIcon file={f} size={31}/>:<span style={{color:C.muted}}>—</span>}</div><div style={{fontSize:7.5,color:C.muted,fontWeight:900}}>{l}</div></div>)}</div><div style={{display:"flex",justifyContent:"center",gap:12,marginTop:6}}><label style={{fontSize:8.5,color:C.muted,fontWeight:900}}>上衣色 <input type="color" value={player.shirtColor||"#5f8fb8"} onChange={e=>update({wardrobeV30:{...wardrobe,player:{...player,shirtColor:e.target.value}}})} style={{width:31,height:24,border:0,verticalAlign:"middle"}}/></label><label style={{fontSize:8.5,color:C.muted,fontWeight:900}}>下裝色 <input type="color" value={player.pantsColor||"#3f5f99"} onChange={e=>update({wardrobeV30:{...wardrobe,player:{...player,pantsColor:e.target.value}}})} style={{width:31,height:24,border:0,verticalAlign:"middle"}}/></label></div></>}</Card>
+      <Card style={{marginTop:7,padding:8,textAlign:"center"}}><div style={{position:"relative",width:150,height:160,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"center"}}>{wardrobeTargetV30==="player"?(data.profilePortrait?<img src={data.profilePortrait} alt="玩家" style={{width:105,height:140,objectFit:"cover",borderRadius:8,imageRendering:"pixelated"}}/>:<GameIcon file="Inventory Tab" size={90}/>):<GameIcon file={baseFile} size={105}/>} {selectedHat&&<img src={GAME_FILE(selectedHat)} alt="帽子" style={{position:"absolute",top:2,left:"50%",transform:"translateX(-50%)",width:46,height:46,objectFit:"contain",imageRendering:"pixelated",filter:"drop-shadow(0 1px 1px rgba(0,0,0,.25))"}}/>}</div>{wardrobeTargetV30==="player"&&<><div style={{display:"flex",justifyContent:"center",gap:10,marginTop:2}}>{[[player.hat,"帽"],[player.shirt,"衣"],[player.pants,"褲"],[player.boots,"鞋"]].map(([f,l])=><div key={l} style={{width:46,textAlign:"center"}}><div style={{height:34,display:"flex",alignItems:"center",justifyContent:"center"}}>{f?<GameIcon file={f} size={31}/>:<span style={{color:C.muted}}>—</span>}</div><div style={{fontSize:7.5,color:C.muted,fontWeight:900}}>{l}</div></div>)}</div><div style={{display:"flex",justifyContent:"center",gap:12,marginTop:6}}><label style={{fontSize:8.5,color:C.muted,fontWeight:900}}>上衣色 <input type="color" value={player.shirtColor||"#5f8fb8"} onChange={e=>update({wardrobeV30:{...wardrobe,player:{...player,shirtColor:e.target.value}}})} style={{width:31,height:24,border:0,verticalAlign:"middle"}}/></label><label style={{fontSize:8.5,color:C.muted,fontWeight:900}}>下裝色 <input type="color" value={player.pantsColor||"#3f5f99"} onChange={e=>update({wardrobeV30:{...wardrobe,player:{...player,pantsColor:e.target.value}}})} style={{width:31,height:24,border:0,verticalAlign:"middle"}}/></label></div></>}</Card>
       {wardrobeTargetV30==="player"&&<div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:5,marginTop:7}}>{[["hat","帽子","Cowboy Hat"],["shirt","上衣","Shirt003"],["pants","下裝","Farmer Pants"],["boots","鞋","Space Boots"]].map(([id,name,file])=>{const on=wardrobeCategoryV30===id;return <button key={id} onClick={()=>setWardrobeCategoryV30(id)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFE2A8":C.paper,borderRadius:8,padding:5,fontSize:8.5,fontWeight:950,color:C.brown}}><GameIcon file={file} size={26}/><div>{name}</div></button>})}</div>}
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:5,marginTop:7}}>{list.map(it=>{const [file,name,source,dye]=it;const on=chosen===file;return <button key={file} onClick={()=>setTarget({[slot]:on?"":file})} style={{border:`1.5px solid ${on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:9,padding:"5px 3px",minHeight:102,textAlign:"center",cursor:"pointer"}}><GameIcon file={file} size={38}/><div style={{fontSize:8.2,fontWeight:950,color:on?C.green:C.ink,lineHeight:1.05,marginTop:2}}>{name}</div><div style={{fontSize:6.8,color:C.muted,lineHeight:1.2,marginTop:3}}>{source}</div>{dye&&<div style={{fontSize:6.5,color:C.blue,fontWeight:900,marginTop:2}}>可染色</div>}</button>})}</div>
     </div>;
@@ -117,7 +110,6 @@ if 'const renderFishingV30' not in s:
     if insert not in s: raise SystemExit('page insertion marker missing')
     s=s.replace(insert,pages+insert,1)
 
-# ---------- 8. Main content map + bottom columns ----------
 s=s.replace('const content={overview:renderOverview,data:renderData,people:renderPeople,powers:renderPowers,collection:renderCollection,notes:renderNotes}[tab];','const content={overview:renderOverview,data:renderData,people:renderPeople,powers:renderPowers,collection:renderCollection,fishing:renderFishingV30,wardrobe:renderWardrobeV30,notes:renderNotes}[tab];',1)
 s=s.replace('gridTemplateColumns:"repeat(5,minmax(0,1fr))"','gridTemplateColumns:"repeat(6,minmax(0,1fr))"',1)
 
