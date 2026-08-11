@@ -51,13 +51,11 @@ const COLLECTION_TABS_V3 = [
 ];
 
 const SECRET_NOTE_SUMMARY_V3 = {
- 1:"阿比蓋爾的最愛清單。",2:"山姆家的送禮備忘。",3:"莉亞心目中的完美晚餐。",4:"瑪魯的發明材料備忘。",5:"潘妮記下家人與熟人的喜好。",6:"酒吧常客的特別點單。",7:"幾位單身男性的喜好備忘。",8:"海莉與艾蜜麗的送禮線索。",9:"亞歷克斯的訓練飲食。",10:"骷髏洞窟 100 層有人在等你。",11:"瑪妮與賈斯的舊照片。",12:"垃圾桶尋寶線索。",13:"每月最後一天中午，去遊樂場上方灌木找驚喜。",14:"社區中心後方藏有東西。",15:"夜市美人魚表演的音符順序線索。",16:"鐵路區域的藏寶圖。",17:"Joja 北方的藏寶圖。",18:"沙漠的藏寶圖。",19:"從柳巷 1 號出發的方向謎題。",20:"從鎮中心出發的方向謎題；終點需要兔子的腳。",21:"凌晨 12:40 的灌木秘密。",22:"齊先生隧道任務的開始提示。",23:"把楓糖漿帶進秘密森林。",24:"祝尼魔與寶石顏色／葡萄乾相關提示。",25:"溫泉附近遺失的項鍊線索。",26:"給祝尼魔小屋放葡萄乾可提高收穫。",27:"爺爺留下的精通洞穴線索。"
+ 1:"阿比蓋爾的最愛清單。",2:"山姆家的送禮備忘。",3:"莉亞心目中的完美晚餐。",4:"瑪魯的發明材料備忘。",5:"潘妮記下家人與熟人的喜好。",6:"酒吧常客的特別點單。",7:"幾位單身男性的喜好備忘。",8:"海莉與艾蜜麗的送禮清單。",9:"亞歷克斯的力量訓練餐。",10:"來自骷髏洞穴的挑戰訊息。",11:"瑪妮與賈斯的照片。",12:"垃圾桶物品的實用提示。",13:"春季最後一天的隱藏物品提示。",14:"社區中心後方的隱藏物品提示。",15:"美人魚表演的音符提示。",16:"鐵路區藏寶圖。",17:"河流北側的藏寶圖。",18:"沙漠區的藏寶圖。",19:"鎮上石橋附近的藏寶圖。",20:"通往特殊護符的路線圖。",21:"灌木中的秘密地點圖。",22:"與秘密紙條任務相關的提示。",23:"楓糖漿與熊的秘密任務。",24:"祝尼魔小屋顏色與寶石的提示。",25:"水邊遺失物的提示。",26:"古代植物相關提示。",27:"小鎮隱藏秘密的線索。"
 };
-const SECRET_NOTE_IMAGE_V3 = {11:"SecretNote11",16:"SecretNote16",17:"SecretNote17",18:"SecretNote18",19:"SecretNote19",20:"SecretNote20",21:"SecretNote21"};
-const JOURNAL_SUMMARY_V3 = {
- 1:"海難倖存者抵達薑島並開始求生。",2:"島上魚很多，也提到金色核桃與鸚鵡。",3:"觀察火山與島上環境的紀錄。",4:"一張金色核桃藏寶圖。",5:"關於島上探索與核桃的線索。",6:"一張與美人魚／島嶼謎題有關的圖像線索。",7:"薑島自然與探索提示。",8:"更多島嶼探索與金色核桃線索。",9:"火山與島上秘密的提示。",10:"火山入口附近的藏寶圖；可挖到鴕鳥蛋與金色核桃。",11:"把兩枚戒指投入火山鍛造台可以合併。"
-};
-const JOURNAL_IMAGE_V3 = {4:"JournalScrap4",6:"JournalScrap6",10:"JournalScrap10"};
+const JOURNAL_SUMMARY_V3 = {1:"薑島的第一條探索提示。",2:"島嶼地點線索。",3:"火山相關探索提示。",4:"一張薑島藏寶圖。",5:"島上生物與物品提示。",6:"另一張島嶼藏寶圖。",7:"薑島探索紀錄。",8:"薑島探索紀錄。",9:"薑島探索紀錄。",10:"金色核桃位置圖。",11:"薑島最後的日誌提示。"};
+const SECRET_NOTE_IMAGE_V3={11:"SecretNote11",16:"SecretNote16",17:"SecretNote17",18:"SecretNote18",19:"SecretNote19",20:"SecretNote20",21:"SecretNote21"};
+const JOURNAL_IMAGE_V3={4:"JournalScrap4",6:"JournalScrap6",10:"JournalScrap10"};
 '''
 repl(anchor,defs+'\n'+anchor,'data')
 
@@ -69,12 +67,11 @@ state2='''  const [collectionSection, setCollectionSection] = useState("fish");
 repl(state,state2,'states')
 
 # Remove the inner Fish/Artifact/Mineral selector: these are now real collection subtabs.
-old='''      <SectionTitle icon="📖">圖鑑</SectionTitle>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{Object.entries(COLLECTIONS).map(([k,v])=><Pill key={k} active={selectedCollection===k} onClick={()=>{setSelectedCollection(k);setSelectedItem(null)}}>{v.icon} {v.name}</Pill>)}</div>'''
-new='''      <SectionTitle icon="📖">{c.name}</SectionTitle>'''
-repl(old,new,'dex selector')
+old='''      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{Object.entries(COLLECTIONS).map(([k,v])=><Pill key={k} active={selectedCollection===k} onClick={()=>{setSelectedCollection(k);setSelectedItem(null)}}>{v.icon} {v.name}</Pill>)}</div>'''
+s=s.replace(old,'',1)
 
-insert=s.index('  const renderPowers = () => {')
+# Helpers/pages before the collection wrapper.
+insert=s.index('  const renderCollection = () => {')
 helpers=r'''
   const prepSetV3 = data.cookingPrepV3 || [];
   const cookedSetV3 = data.cookingCollectionV3 || [];
@@ -107,8 +104,10 @@ helpers=r'''
 '''
 s=s[:insert]+helpers+s[insert:]
 
-# Replace collection wrapper created by the previous patch.
-start=s.index('  const renderCollection = () => <div>')
+# Replace collection wrapper created by the previous patch. That patch now uses a
+# block-bodied arrow function, so match the current generated source rather than
+# the obsolete `=> <div>` form.
+start=s.index('  const renderCollection = () => {')
 end=s.index('\n  const buildSummary = () => {',start)
 wrapper=r'''  const renderCollection = () => {
     const tabClick = k => { setCollectionSection(k); if(["fish","artifact","mineral"].includes(k)){setSelectedCollection(k);setSelectedItem(null);} };
