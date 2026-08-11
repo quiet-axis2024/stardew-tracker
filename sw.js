@@ -1,4 +1,4 @@
-const CACHE='stardew-tracker-v22';
+const CACHE='stardew-tracker-v23';
 const CORE=['./index.html','./app.js','./cloud.js','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{
