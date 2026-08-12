@@ -24,20 +24,20 @@ jobs:
           p=Path('app.jsx')
           s=p.read_text(encoding='utf-8')
           reps=[
-            ('  { id: "overview", name: "總覽", icon: "🏡", file: "Stardrop" },','  { id: "overview", name: "總覽", icon: "🏡", file: "Warp Totem: Farm" },'),
-            ('  { id: "data", name: "資料", icon: "⭐", file: "Book Of Stars" },','  { id: "data", name: "資料", icon: "⭐", file: "Stardew Valley Almanac" },'),
-            ('<SectionTitle icon="game:Book Of Stars">資料</SectionTitle>','<SectionTitle icon="game:Stardew Valley Almanac">資料</SectionTitle>'),
-            ('<SkillTab id="milestones" label="里程碑" file="Stardrop Tea"/>','<SkillTab id="milestones" label="里程碑" file="Golden Tag"/>'),
-            ('<SkillTab id="special" label="特殊能力" file="Treasure Chest"/>','<SkillTab id="special" label="特殊能力" file="Galaxy Soul"/>'),
-            ('<SectionTitle icon="🏆">重要里程碑</SectionTitle>','<SectionTitle icon="game:Golden Tag">重要里程碑</SectionTitle>'),
-            ('<SectionTitle icon="🎒">特殊物品與能力</SectionTitle>','<SectionTitle icon="game:Galaxy Soul">特殊物品與能力</SectionTitle>'),
-            ('<GameIcon file="Special Items & Powers Tab" size={28}/>特殊物品','<GameIcon file="Galaxy Soul" size={28}/>特殊物品'),
+            ('  { id: "overview", name: "總覽", icon: "🏡", file: "Stardrop" },','  { id: "overview", name: "總覽", icon: "🏡", file: "Warp Totem: Farm" },',1),
+            ('  { id: "data", name: "資料", icon: "⭐", file: "Book Of Stars" },','  { id: "data", name: "資料", icon: "⭐", file: "Stardew Valley Almanac" },',1),
+            ('<SectionTitle icon="game:Book Of Stars">資料</SectionTitle>','<SectionTitle icon="game:Stardew Valley Almanac">資料</SectionTitle>',1),
+            ('<SkillTab id="milestones" label="里程碑" file="Stardrop Tea"/>','<SkillTab id="milestones" label="里程碑" file="Golden Tag"/>',1),
+            ('<SkillTab id="special" label="特殊能力" file="Treasure Chest"/>','<SkillTab id="special" label="特殊能力" file="Galaxy Soul"/>',1),
+            ('<SectionTitle icon="🏆">重要里程碑</SectionTitle>','<SectionTitle icon="game:Golden Tag">重要里程碑</SectionTitle>',1),
+            ('<SectionTitle icon="🎒">特殊物品與能力</SectionTitle>','<SectionTitle icon="game:Galaxy Soul">特殊物品與能力</SectionTitle>',2),
+            ('<GameIcon file="Special Items & Powers Tab" size={28}/>特殊物品','<GameIcon file="Galaxy Soul" size={28}/>特殊物品',1),
           ]
-          for old,new in reps:
+          for old,new,expected in reps:
               count=s.count(old)
-              if count!=1:
-                  raise SystemExit(f'expected exactly one match, got {count}: {old[:90]}')
-              s=s.replace(old,new,1)
+              if count!=expected:
+                  raise SystemExit(f'expected {expected} match(es), got {count}: {old[:90]}')
+              s=s.replace(old,new)
           p.write_text(s,encoding='utf-8')
 
           p=Path('index.html')
@@ -56,7 +56,7 @@ jobs:
       - name: Validate v63
         run: |
           set -euo pipefail
-          npm install --no-save react@18 react-dom@18 esbuild@0.25.8 eslint@9
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8
           mkdir -p .verify
           cat > .verify/entry.jsx <<'EOF'
           import React from 'react';
