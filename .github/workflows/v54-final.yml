@@ -1,0 +1,35 @@
+name: Finalize v54 calendar gifts
+on:
+  push:
+    branches: [v54-ui-regression-fixes]
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v54-ui-regression-fixes
+          fetch-depth: 0
+      - name: Show every birthday favorite
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app.jsx')
+          s=p.read_text(encoding='utf-8')
+          old='gift.love.slice(0,8).map(x=>renderMiniItemV26(x,"#FFF8E3"))'
+          new='gift.love.map(x=>renderMiniItemV26(x,"#FFF8E3"))'
+          if old not in s: raise RuntimeError('birthday gift slice anchor missing')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
+          grep -q 'gift.love.map(x=>renderMiniItemV26' app.jsx
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx
+          git commit -m 'v54: show all birthday favorite items'
+          git push origin HEAD:v54-ui-regression-fixes
