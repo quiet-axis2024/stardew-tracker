@@ -1,0 +1,46 @@
+name: Polish v49 tracker
+
+on:
+  push:
+    branches: [v49-pwa-search-share-data]
+    paths:
+      - 'v49_polish.py'
+      - '.github/workflows/v49-polish.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  polish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v49-pwa-search-share-data
+          fetch-depth: 0
+      - name: Apply metadata polish
+        run: python3 v49_polish.py
+      - name: Build browser bundle
+        run: npx --yes esbuild@0.25.0 app.jsx --bundle --format=iife --outfile=/tmp/app-v49-polish.js --loader:.jsx=jsx
+      - name: Validate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          app=Path('app.jsx').read_text()
+          extra=Path('lookup-extra-v49.js').read_text()
+          assert 'itemFarmKindV49' in app
+          assert '耕種季節' in app and '出現季節' in app
+          assert '"Max Energy":"最大體力"' in app
+          assert '薑島全年' in app
+          assert '"Grape":{"kind":"crop"' in extra
+          assert '"seasons":["夏","秋"]' in extra
+          print('v49 polish validation passed')
+          PY
+      - name: Commit product changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx lookup-extra-v49.js
+          git rm -f v49_polish.py .github/workflows/v49-polish.yml
+          git commit -m 'v49: refine season and buff metadata display'
+          git push origin v49-pwa-search-share-data
