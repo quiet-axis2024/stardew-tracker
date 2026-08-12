@@ -23,7 +23,6 @@ must_replace(
 'if(!index.has(key))index.set(key,{key,name,file:resolved,aliases:new Set(),kinds:new Set(),sources:new Set(),bundles:[],remix:[],cookNeed:0,cookGroups:new Set(),shippable:false});',
 'index source set'
 )
-
 must_replace(
 'COLLECTIONS.fish.items.forEach((name,i)=>{const it=ensure(name,FISH_ICON_FILES[i],"fish");if(it)it.fishIndex=i});',
 'COLLECTIONS.fish.items.forEach((name,i)=>{const it=ensure(name,FISH_ICON_FILES[i],"fish");if(it){it.fishIndex=i;if(FISH_INFO[i])it.sources.add(FISH_INFO[i])}});',
@@ -50,7 +49,7 @@ must_replace(
 'mine source'
 )
 
-# Remove v44 price database logic; recommendation is now only 留/賣.
+# Drop sell-price calculation and make recommendation exactly one word: 留 / 賣.
 must_sub(
 r'    const priceDbV44=window\.SDVItemPricesV44\|\|\{\};.*?    const fixedUses=',
 '    const fixedUses=',
@@ -78,26 +77,22 @@ must_sub(
 'recommendation and source'
 )
 
-# Replace bottom metadata row: left source, right single-character recommendation.
-must_sub(
- r'        <div style=\{\{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:9,paddingTop:7,borderTop:`1px dashed \$\{C\.line\}`\}\}>\s*<div.*?sellPriceTextV44.*?</div>\s*</div>',
-'''        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 58px",gap:8,alignItems:"stretch",marginTop:9,paddingTop:7,borderTop:`1px dashed ${C.line}`}}>
+old_bottom='''        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:9,paddingTop:7,borderTop:`1px dashed ${C.line}`}}>
+          <div style={{minWidth:0}}><span style={{fontSize:7.4,color:C.muted,fontWeight:900}}>建議</span><div style={{fontSize:11,fontWeight:950,color:recommendActionV44==="留"?C.green:C.orange,marginTop:1}}>{recommendActionV44}</div><div style={{fontSize:7.5,color:C.muted,lineHeight:1.3,marginTop:1}}>{recommendReasonV44}</div></div>
+          <div style={{minWidth:0}}><span style={{fontSize:7.4,color:C.muted,fontWeight:900}}>賣價</span><div style={{fontSize:11,fontWeight:950,color:C.brown,marginTop:1}}>{sellPriceTextV44}</div><div style={{fontSize:7.5,color:C.muted,lineHeight:1.3,marginTop:1}}>基礎賣價；品質與職業加成另計。</div></div>
+        </div>'''
+new_bottom='''        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 58px",gap:8,alignItems:"stretch",marginTop:9,paddingTop:7,borderTop:`1px dashed ${C.line}`}}>
           <div style={{minWidth:0}}><span style={{fontSize:7.4,color:C.muted,fontWeight:900}}>來源</span><div style={{fontSize:8.5,color:C.ink,lineHeight:1.35,marginTop:2}}>{sourceTextV45}</div></div>
           <div style={{minWidth:0,textAlign:"center",borderLeft:`1px solid ${C.line}`,paddingLeft:7}}><span style={{fontSize:7.4,color:C.muted,fontWeight:900}}>建議</span><div style={{fontSize:18,fontWeight:950,color:recommendActionV45==="留"?C.green:C.orange,lineHeight:1.15,marginTop:3}}>{recommendActionV45}</div></div>
-        </div>''',
-'bottom source/action row'
-)
+        </div>'''
+must_replace(old_bottom,new_bottom,'bottom source/action row')
 
-# Keep shipment as a use, but phrase it consistently with selling.
+# Shipment is itself a sale. Never recommend "留" merely to light the shipping collection.
 s=s.replace('`出貨圖鑑：可出貨${shipped?"，目前已點亮":"，目前尚未點亮"}。`','`出貨圖鑑：${shipped?"已點亮":"賣出 1 個即可點亮"}。`')
-
-# No price database should remain in the UI code.
-s=s.replace('recommendActionV44','recommendActionV45')
-s=s.replace('recommendReasonV44','recommendActionV45')
 
 p.write_text(s,encoding='utf-8')
 
-# Remove now-unused price script and bump browser cache version.
+# Remove now-unused price asset and bump browser cache version.
 idx=Path('index.html')
 i=idx.read_text(encoding='utf-8')
 i=re.sub(r'\n\s*<script src="\.\/item-prices-v44\.js\?v=44"></script>','',i)
