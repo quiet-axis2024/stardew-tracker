@@ -191,7 +191,7 @@ const MILESTONES = [
   { id: "skull100", name: "骷髏洞窟 100 層", desc: "抵達骷髏洞窟第 100 層" },
   { id: "cc", name: "社區中心完成", desc: "完成社區中心修復" },
   { id: "movie", name: "電影院解鎖", desc: "完成後期城鎮設施解鎖" },
-  { id: "island", name: "薑島解鎖", desc: "修復威利的船並抵達薑島" },
+  { id: "island", name: "姜岛解鎖", desc: "修復威利的船並抵達姜岛" },
   { id: "volcano", name: "火山地牢頂層", desc: "抵達火山第 10 層並解鎖鍛造台" },
   { id: "walnutRoom", name: "齊先生的核桃房", desc: "收集 100 顆金色核桃後解鎖" },
   { id: "masteryCave", name: "精通洞穴解鎖", desc: "五項技能皆達 10 級" },
@@ -350,7 +350,7 @@ const SHIPPING_ITEMS_V30 = [
 ];
 
 const HATS_V30 = [
-  ["Cowboy Hat","牛仔帽","完成博物館全收藏後，帽子老鼠 10,000g"],["Bowler Hat","圓頂禮帽","累計賺取 1,000,000g 後，帽子老鼠 10,000g"],["Top Hat","大禮帽","齊先生賭場 8,000 齊幣"],["Sombrero","墨西哥帽","累計賺取 10,000,000g 後，帽子老鼠"],["Straw Hat","草帽","彩蛋節找蛋比賽首次獲勝"],["Official Cap","大檐帽","釣到 24 種不同魚後，帽子老鼠"],["Blue Bonnet","藍色軟帽","博物館捐贈 40 件後，帽子老鼠"],["Plum Chapeau","紫紅小帽","烹飪 25 種料理後，帽子老鼠"],["Hard Hat","安全帽","探險家公會：擊殺 30 隻掘地蟲；亦可能沙漠節造型"],["Sou'wester","防雨帽","釣到 10 種不同魚後，帽子老鼠"],["Daisy","雛菊髮卡","製作 15 種物品後，帽子老鼠"],["Watermelon Band","西瓜髮卡","釣到 100 條魚後，帽子老鼠"],["Mouse Ears","老鼠耳朵","任一村民 10 心後，帽子老鼠"],["Cat Ears","貓耳","8 位村民 10 心後，帽子老鼠"],["Cowgal Hat","牛仔女郎帽","單一栽培成就後，帽子老鼠"],["Cowpoke Hat","專業牛仔帽","混合栽培成就後，帽子老鼠"],["Archer's Cap","射手帽","烹飪全部配方後，帽子老鼠"],["Blue Cowboy Hat","藍色牛仔帽","骷髏洞穴寶箱層"],["Red Cowboy Hat","紅色牛仔帽","骷髏洞穴寶箱層"],["Cone Hat","錐帽","夜市魔法商船"],["Elegant Turban","優雅頭巾","解鎖全部成就後，帽子老鼠"],["White Turban","白色頭巾","裁縫或骷髏洞穴寶箱層"],["Garbage Hat","垃圾帽","翻過 20 個垃圾桶後，每次有低機率取得"],["Golden Mask","金色面具","裁縫製作"],["Propeller Hat","螺旋槳帽","裁縫／隨機外觀掉落"],["Bridal Veil","新娘面紗","裁縫／隨機外觀掉落"],["Witch Hat","女巫帽","裁縫／隨機外觀掉落"],["Copper Pan","淘盤","把淘盤放進帽子欄"],["Green Turban","綠色頭巾","沙漠商人"],["Magic Cowboy Hat","魔法牛仔帽","沙漠商人奇數日"],["Magic Turban","魔法頭巾","沙漠商人偶數日"],["Golden Helmet","金色頭盔","打開金色椰子時機率取得"],["Deluxe Pirate Hat","豪華海盜帽","火山地牢寶箱"],["Pink Bow","粉色蝴蝶結","火山地牢矮人商店"],["Frog Hat","青蛙帽","薑島青蛙洞穴水域釣到"],["Small Cap","小帽子","薑島商人：週一交換"],["Bluebird Mask","藍鳥面具","薑島商人：週三交換"],["Deluxe Cowboy Hat","豪華牛仔帽","薑島商人：週五交換"],["Mr. Qi's Hat","齊先生的帽子","齊先生核桃房 5 齊鑽"],["Dark Cowboy Hat","黑色牛仔帽","骷髏洞穴寶箱層"]
+  ["Cowboy Hat","牛仔帽","完成博物館全收藏後，帽子老鼠 10,000g"],["Bowler Hat","圓頂禮帽","累計賺取 1,000,000g 後，帽子老鼠 10,000g"],["Top Hat","大禮帽","齊先生賭場 8,000 齊幣"],["Sombrero","墨西哥帽","累計賺取 10,000,000g 後，帽子老鼠"],["Straw Hat","草帽","彩蛋節找蛋比賽首次獲勝"],["Official Cap","大檐帽","釣到 24 種不同魚後，帽子老鼠"],["Blue Bonnet","藍色軟帽","博物館捐贈 40 件後，帽子老鼠"],["Plum Chapeau","紫紅小帽","烹飪 25 種料理後，帽子老鼠"],["Hard Hat","安全帽","探險家公會：擊殺 30 隻掘地蟲；亦可能沙漠節造型"],["Sou'wester","防雨帽","釣到 10 種不同魚後，帽子老鼠"],["Daisy","雛菊髮卡","製作 15 種物品後，帽子老鼠"],["Watermelon Band","西瓜髮卡","釣到 100 條魚後，帽子老鼠"],["Mouse Ears","老鼠耳朵","任一村民 10 心後，帽子老鼠"],["Cat Ears","貓耳","8 位村民 10 心後，帽子老鼠"],["Cowgal Hat","牛仔女郎帽","單一栽培成就後，帽子老鼠"],["Cowpoke Hat","專業牛仔帽","混合栽培成就後，帽子老鼠"],["Archer's Cap","射手帽","烹飪全部配方後，帽子老鼠"],["Blue Cowboy Hat","藍色牛仔帽","骷髏洞穴寶箱層"],["Red Cowboy Hat","紅色牛仔帽","骷髏洞穴寶箱層"],["Cone Hat","錐帽","夜市魔法商船"],["Elegant Turban","優雅頭巾","解鎖全部成就後，帽子老鼠"],["White Turban","白色頭巾","裁縫或骷髏洞穴寶箱層"],["Garbage Hat","垃圾帽","翻過 20 個垃圾桶後，每次有低機率取得"],["Golden Mask","金色面具","裁縫製作"],["Propeller Hat","螺旋槳帽","裁縫／隨機外觀掉落"],["Bridal Veil","新娘面紗","裁縫／隨機外觀掉落"],["Witch Hat","女巫帽","裁縫／隨機外觀掉落"],["Copper Pan","淘盤","把淘盤放進帽子欄"],["Green Turban","綠色頭巾","沙漠商人"],["Magic Cowboy Hat","魔法牛仔帽","沙漠商人奇數日"],["Magic Turban","魔法頭巾","沙漠商人偶數日"],["Golden Helmet","金色頭盔","打開金色椰子時機率取得"],["Deluxe Pirate Hat","豪華海盜帽","火山地牢寶箱"],["Pink Bow","粉色蝴蝶結","火山地牢矮人商店"],["Frog Hat","青蛙帽","姜岛青蛙洞穴水域釣到"],["Small Cap","小帽子","姜岛商人：週一交換"],["Bluebird Mask","藍鳥面具","姜岛商人：週三交換"],["Deluxe Cowboy Hat","豪華牛仔帽","姜岛商人：週五交換"],["Mr. Qi's Hat","齊先生的帽子","齊先生核桃房 5 齊鑽"],["Dark Cowboy Hat","黑色牛仔帽","骷髏洞穴寶箱層"]
 ];
 const SHIRTS_V30 = [
   ["Shirt000","經典背帶褲","布料＋完美早餐",false],["Shirt002","薄荷襯衫","布料＋蒲公英",false],["Shirt003","深色襯衫","布料＋蝙蝠翅膀",false],["Shirt004","骷髏襯衫","布料＋史前頭骨；幽靈骷髏也可能掉落",false],["Shirt005","淺藍襯衫","布料＋蛋黃醬",false],["Shirt006","棕色條紋襯衫","布料＋樹液",false],["Shirt007","綠色背帶褲","布料＋蕨菜",false],["Shirt008","好悲傷襯衫","布料＋野山葵",false],["Shirt009","海藍寶石襯衫","布料＋鴨蛋黃醬",false],["Shirt010","西裝上衣","布料＋花束",false],["Shirt011","綠色腰帶襯衫","布料＋山洞蘿蔔",false],["Shirt012","萊姆綠條紋衫","布料＋鴨毛",false],["Shirt013","紅色條紋衫","布料＋蔓越莓糖果",false],["Shirt014","骨架襯衫","布料＋骨頭類物品；幽靈骷髏也可能掉落",false],["Shirt015","橙色襯衫","布料＋雞油菌",false],["Shirt016","夜空襯衫","布料＋藍莓千層酥",false],["Shirt017","鎮長吊帶褲","布料＋蔬菜雜燴",false],["Shirt018","棕色夾克","布料＋泥岩",false],["Shirt019","水手服","角色建立可選；染色版可用布料＋多種蟹籠海產",true]
@@ -365,7 +365,7 @@ const BOOTS_V30 = [
 const SECRET_NOTE_SUMMARY_V3 = {
  1:"阿比蓋爾的最愛清單。",2:"山姆家的送禮備忘。",3:"莉亞心目中的完美晚餐。",4:"瑪魯的發明材料備忘。",5:"潘妮記下家人與熟人的喜好。",6:"酒吧常客的特別點單。",7:"幾位單身男性的喜好備忘。",8:"海莉與艾蜜麗的送禮清單。",9:"亞歷克斯的力量訓練餐。",10:"來自骷髏洞穴的挑戰訊息。",11:"瑪妮與賈斯的照片。",12:"垃圾桶物品的實用提示。",13:"春季最後一天的隱藏物品提示。",14:"社區中心後方的隱藏物品提示。",15:"美人魚表演的音符提示。",16:"鐵路區藏寶圖。",17:"河流北側的藏寶圖。",18:"沙漠區的藏寶圖。",19:"鎮上石橋附近的藏寶圖。",20:"通往特殊護符的路線圖。",21:"灌木中的秘密地點圖。",22:"與秘密紙條任務相關的提示。",23:"楓糖漿與熊的秘密任務。",24:"祝尼魔小屋顏色與寶石的提示。",25:"水邊遺失物的提示。",26:"古代植物相關提示。",27:"小鎮隱藏秘密的線索。"
 };
-const JOURNAL_SUMMARY_V3 = {1:"薑島的第一條探索提示。",2:"島嶼地點線索。",3:"火山相關探索提示。",4:"一張薑島藏寶圖。",5:"島上生物與物品提示。",6:"另一張島嶼藏寶圖。",7:"薑島探索紀錄。",8:"薑島探索紀錄。",9:"薑島探索紀錄。",10:"金色核桃位置圖。",11:"薑島最後的日誌提示。"};
+const JOURNAL_SUMMARY_V3 = {1:"姜岛的第一條探索提示。",2:"島嶼地點線索。",3:"火山相關探索提示。",4:"一張姜岛藏寶圖。",5:"島上生物與物品提示。",6:"另一張島嶼藏寶圖。",7:"姜岛探索紀錄。",8:"姜岛探索紀錄。",9:"姜岛探索紀錄。",10:"金色核桃位置圖。",11:"姜岛最後的日誌提示。"};
 
 const SECRET_NOTE_CONTENT_V4 = {
   1:"阿比蓋爾的最愛：南瓜、紫水晶、巧克力蛋糕、香辣鰻魚、黑莓脆皮餅。",
@@ -394,7 +394,7 @@ const SECRET_NOTE_CONTENT_V4 = {
   24:"M. Jasper 的紀錄：把寶石或礦物放進祝尼魔小屋會影響祝尼魔顏色；葡萄乾也是祝尼魔特別喜歡的食物。",
   25:"提示：有人把卡洛琳的華麗項鍊弄丟在溫泉附近。",
   26:"古代農耕秘訣：餵祝尼魔葡萄乾，會讓牠們成為更有效率的收割幫手。",
-  27:"爺爺留下提示：當你準備好時，煤礦森林南部有一處與五種技能精通有關的秘密。"
+  27:"爺爺留下提示：當你準備好時，煤矿森林南部有一處與五種技能精通有關的秘密。"
 };
 const SECRET_NOTE_SOLUTION_V4 = {
   10:"讀取後會加入「神秘紙條」任務；抵達骷髏洞穴 100 層觸發齊先生事件，獲得永久 +25 生命上限。",
@@ -412,7 +412,7 @@ const SECRET_NOTE_SOLUTION_V4 = {
   24:"在祝尼魔小屋內放寶石／可採集礦物／晶球礦物可改變祝尼魔顏色；五彩碎片會呈現彩虹色。",
   25:"春、夏、秋在溫泉外水池釣魚可釣到華麗項鍊；交卡洛琳加 50 友情，交阿比蓋爾加 100 友情。",
   26:"把葡萄乾放進祝尼魔小屋後，收割時有機率得到雙倍作物；每週消耗 1 袋，可預先堆多袋。",
-  27:"五種技能都到 10 級後，煤礦森林南部、下水道管附近的精通洞穴會開放。"
+  27:"五種技能都到 10 級後，煤矿森林南部、下水道管附近的精通洞穴會開放。"
 };
 
 const SECRET_NOTE_IMAGE_V3={11:"SecretNote11",16:"SecretNote16",17:"SecretNote17",18:"SecretNote18",19:"SecretNote19",20:"SecretNote20",21:"SecretNote21"};
@@ -439,11 +439,11 @@ const FISH_RULES_V4 = {
 };
 
 const FISH_AREAS_V4 = [
-  {id:"town",name:"鵜鶘鎮",sub:"河流",icon:"Sunfish",fish:[14,12,22,6,46,4,7,13,8,40,9,47,10,29,68],tip:"釣鮟鱇魚需站在河流最北端。"},
-  {id:"forest_river",name:"煤礦森林",sub:"河流",icon:"Chub",fish:[14,12,43,22,46,4,44,7,13,8,40,9,47,10,68]},
-  {id:"forest_pond",name:"煤礦森林",sub:"池塘",icon:"Smallmouth Bass",fish:[22,6,13,9,36,10,68]},
-  {id:"forest_falls",name:"煤礦森林",sub:"南部瀑布",icon:"Goby",fish:[71,8],tip:"蝦虎魚需把浮標拋進南部瀑布下方水池；有效釣魚等級至少 4。"},
-  {id:"glacier",name:"煤礦森林",sub:"南部小島",icon:"Glacierfish",fish:[59],tip:"冰川魚是冬季傳說魚，需在箭頭形小島南端指定水域。"},
+  {id:"town",name:"鹈鹕镇",sub:"河流",icon:"Sunfish",fish:[14,12,22,6,46,4,7,13,8,40,9,47,10,29,68],tip:"釣鮟鱇魚需站在河流最北端。"},
+  {id:"forest_river",name:"煤矿森林",sub:"河流",icon:"Chub",fish:[14,12,43,22,46,4,44,7,13,8,40,9,47,10,68]},
+  {id:"forest_pond",name:"煤矿森林",sub:"池塘",icon:"Smallmouth Bass",fish:[22,6,13,9,36,10,68]},
+  {id:"forest_falls",name:"煤矿森林",sub:"南部瀑布",icon:"Goby",fish:[71,8],tip:"蝦虎魚需把浮標拋進南部瀑布下方水池；有效釣魚等級至少 4。"},
+  {id:"glacier",name:"煤矿森林",sub:"南部小島",icon:"Glacierfish",fish:[59],tip:"冰川魚是冬季傳說魚，需在箭頭形小島南端指定水域。"},
   {id:"mountain",name:"山湖",sub:"礦井外湖泊",icon:"Largemouth Bass",fish:[5,41,11,43,22,7,39,9,36,47,10,32,68],tip:"傳說之魚需春季雨天、釣魚等級 10，浮標需落在離岸足夠遠的位置。"},
   {id:"beach",name:"海灘",sub:"海洋",icon:"Sardine",fish:[3,35,1,16,21,48,17,18,42,15,19,2,0,24,23,45,20,28,70],tip:"緋紅魚需夏季、釣魚等級 5，並在修橋後的東側區域拋遠。"},
   {id:"secret",name:"秘密森林",sub:"池塘",icon:"Woodskip",fish:[11,58,12,68],seasonOverride:{12:["春","夏","秋"]}},
@@ -455,10 +455,10 @@ const FISH_AREAS_V4 = [
   {id:"mine100",name:"礦井",sub:"100 層",icon:"Lava Eel",fish:[31,22,26,69]},
   {id:"witch",name:"女巫沼澤",sub:"沼澤",icon:"Void Salmon",fish:[60,12,22,26],seasonOverride:{12:["春","夏","秋"]}},
   {id:"night",name:"冬季夜市",sub:"潛水艇",icon:"Midnight Squid",fish:[62,63,64,18,23,24,21,70],forceSeasons:["冬"],days:[15,16,17],timeOverride:[[17,26]],tip:"夜市冬 15–17 日 17:00–02:00；潛水艇下潛還會消耗約 30 分鐘遊戲時間。"},
-  {id:"island_n",name:"薑島北部",sub:"淡水",icon:"Blue Discus",fish:[67,36,42,68],forceSeasons:["春","夏","秋","冬"],island:true},
-  {id:"island_w_fresh",name:"薑島西部",sub:"河流／池塘",icon:"Blue Discus",fish:[67,36,42,68],forceSeasons:["春","夏","秋","冬"],island:true},
-  {id:"island_w_ocean",name:"薑島西部",sub:"海洋",icon:"Lionfish",fish:[35,66,18,0,24,2,70],forceSeasons:["春","夏","秋","冬"],island:true},
-  {id:"island_s",name:"薑島南部及東南部",sub:"南部／東南部海域",icon:"Lionfish",fish:[35,66,0,24,2,70],forceSeasons:["春","夏","秋","冬"],island:true},
+  {id:"island_n",name:"姜岛北部",sub:"淡水",icon:"Blue Discus",fish:[67,36,42,68],forceSeasons:["春","夏","秋","冬"],island:true},
+  {id:"island_w_fresh",name:"姜岛西部",sub:"河流／池塘",icon:"Blue Discus",fish:[67,36,42,68],forceSeasons:["春","夏","秋","冬"],island:true},
+  {id:"island_w_ocean",name:"姜岛西部",sub:"海洋",icon:"Lionfish",fish:[35,66,18,0,24,2,70],forceSeasons:["春","夏","秋","冬"],island:true},
+  {id:"island_s",name:"姜岛南部及東南部",sub:"南部／東南部海域",icon:"Lionfish",fish:[35,66,0,24,2,70],forceSeasons:["春","夏","秋","冬"],island:true},
   {id:"pirate",name:"海盜灣",sub:"海盜灣水域",icon:"Stingray",fish:[35,0,65,24,2,70],forceSeasons:["春","夏","秋","冬"],island:true},
   {id:"caldera",name:"火山口",sub:"熔岩湖",icon:"Lava Eel",fish:[31],forceSeasons:["春","夏","秋","冬"],island:true}
 ];
@@ -467,15 +467,15 @@ const FISH_AREAS_V4 = [
 const FISH_AREA_GROUPS_V4 = {
   main:{name:"本島",ids:["town","forest_river","forest_pond","forest_falls","glacier","mountain","beach","secret"]},
   special:{name:"特殊水域",ids:["desert","sewer","bug","mine20","mine60","mine100","witch","night"]},
-  island:{name:"薑島",ids:["island_n","island_w_fresh","island_w_ocean","island_s","pirate","caldera"]}
+  island:{name:"姜岛",ids:["island_n","island_w_fresh","island_w_ocean","island_s","pirate","caldera"]}
 };
 
 const FISH_MAP_META_V42 = {
   main:{
     file:"Map",
     clusters:[
-      {id:"town",label:"鵜鶘鎮",x:54,y:50,ids:["town"]},
-      {id:"forest",label:"煤礦森林",x:30,y:69,ids:["forest_river","forest_pond","forest_falls","glacier"]},
+      {id:"town",label:"鹈鹕镇",x:54,y:50,ids:["town"]},
+      {id:"forest",label:"煤矿森林",x:30,y:69,ids:["forest_river","forest_pond","forest_falls","glacier"]},
       {id:"mountain",label:"山湖",x:66,y:29,ids:["mountain"]},
       {id:"beach",label:"海灘",x:69,y:82,ids:["beach"]},
       {id:"secret",label:"秘密森林",x:12,y:61,ids:["secret"]}
@@ -623,43 +623,43 @@ const POND_RARE_V55 = ["Lava Eel","Blobfish","Sturgeon","Super Cucumber","Rainbo
 const POND_LEGENDARY_V55 = new Set(["Legend","Crimsonfish","Angler","Glacierfish","Mutant Carp","Legend II","Son of Crimsonfish","Ms. Angler","Glacierfish Jr.","Radioactive Carp"]);
 
 const MACHINE_EXTRA_V55 = {
-  "Sewing Machine":{sourceZh:"艾米丽特殊订单「宝石恢复活力」完成后邮寄；用于裁缝与染色。"},
-  "Telephone":{sourceZh:"木匠商店购买；可远程查询商店营业与部分库存。"},
-  "Mini-Fridge":{sourceZh:"农舍升级后木匠商店购买；也可由格斯特殊订单取得。"},
-  "Mini-Jukebox":{ingredients:[{name:"Iron Bar",quantity:2},{name:"Battery Pack",quantity:1}],sourceZh:"格斯 5 心事件后取得配方。"},
-  "Statue Of Blessings":{ingredients:[{name:"Sap",quantity:999},{name:"Fiber",quantity:999},{name:"Stone",quantity:999},{name:"Moss",quantity:333}],sourceZh:"耕种精通后解锁配方。"},
-  "Statue Of The Dwarf King":{ingredients:[{name:"Iridium Bar",quantity:20}],sourceZh:"采矿精通后解锁配方。"},
-  "Deconstructor":{sourceZh:"齐先生核桃房以齐钻购买。"},
-  "Anvil":{ingredients:[{name:"Iron Bar",quantity:50}],sourceZh:"战斗精通后解锁配方。"},
-  "Mini-Forge":{ingredients:[{name:"Dragon Tooth",quantity:5},{name:"Iron Bar",quantity:10},{name:"Gold Bar",quantity:10},{name:"Iridium Bar",quantity:5}],sourceZh:"战斗精通后解锁配方；功能类似火山锻造台。"},
-  "Crab Pot":{ingredients:[{name:"Wood",quantity:40},{name:"Iron Bar",quantity:3}],sourceZh:"钓鱼 3 级基础配方；诱捕者职业会改变材料需求。"}
+  "Sewing Machine":{sourceZh:"艾米麗特殊訂單「寶石恢復活力」完成後郵寄；用於裁縫與染色。"},
+  "Telephone":{sourceZh:"木匠商店購買；可遠端查詢商店營業與部分庫存。"},
+  "Mini-Fridge":{sourceZh:"農舍升級後木匠商店購買；也可由格斯特殊訂單取得。"},
+  "Mini-Jukebox":{ingredients:[{name:"Iron Bar",quantity:2},{name:"Battery Pack",quantity:1}],sourceZh:"格斯 5 心事件後取得配方。"},
+  "Statue Of Blessings":{ingredients:[{name:"Sap",quantity:999},{name:"Fiber",quantity:999},{name:"Stone",quantity:999},{name:"Moss",quantity:333}],sourceZh:"耕種精通後解鎖配方。"},
+  "Statue Of The Dwarf King":{ingredients:[{name:"Iridium Bar",quantity:20}],sourceZh:"採礦精通後解鎖配方。"},
+  "Deconstructor":{sourceZh:"齊先生核桃房以齊鑽購買。"},
+  "Anvil":{ingredients:[{name:"Iron Bar",quantity:50}],sourceZh:"戰鬥精通後解鎖配方。"},
+  "Mini-Forge":{ingredients:[{name:"Dragon Tooth",quantity:5},{name:"Iron Bar",quantity:10},{name:"Gold Bar",quantity:10},{name:"Iridium Bar",quantity:5}],sourceZh:"戰鬥精通後解鎖配方；功能類似火山鍛造臺。"},
+  "Crab Pot":{ingredients:[{name:"Wood",quantity:40},{name:"Iron Bar",quantity:3}],sourceZh:"釣魚 3 級基礎配方；誘捕者職業會改變材料需求。"}
 };
 
 const SOCIAL_SPECIAL_ITEM_V55 = {
-  "Frog Egg":{name:"青蛙蛋",file:"Frog Egg Colors",source:"饰品；战斗精通后由怪物／箱子等来源取得"},
-  "Parrot Egg":{name:"鹦鹉蛋",file:"Parrot Egg",source:"饰品；战斗精通后取得"},
-  "Fairy Box":{name:"仙女盒",file:"Fairy Box",source:"饰品；战斗精通后取得"},
-  "Basilisk Paw":{name:"蜥怪的爪子",file:"Basilisk Paw",source:"饰品；战斗精通后取得"},
-  "Jack Be Nimble Jack Be Thick":{name:"铜墙铁壁",file:"Jack Be Nimble, Jack Be Thick",source:"能力书籍"},
-  "Large Goat Milk":{name:"大瓶羊奶",file:"Large Goat Milk",source:"高好感山羊产出"},
+  "Frog Egg":{name:"青蛙蛋",file:"Frog Egg Colors",source:"飾品；戰鬥精通後由怪物／箱子等來源取得"},
+  "Parrot Egg":{name:"鹦鹉蛋",file:"Parrot Egg",source:"飾品；戰鬥精通後取得"},
+  "Fairy Box":{name:"仙女盒",file:"Fairy Box",source:"飾品；戰鬥精通後取得"},
+  "Basilisk Paw":{name:"蜥怪的爪子",file:"Basilisk Paw",source:"飾品；戰鬥精通後取得"},
+  "Jack Be Nimble Jack Be Thick":{name:"铜墙铁壁",file:"Jack Be Nimble, Jack Be Thick",source:"能力書籍"},
+  "Large Goat Milk":{name:"大瓶羊奶",file:"Large Goat Milk",source:"高好感山羊產出"},
   "Strange Doll (green)":{name:"诡异玩偶（绿）",file:"Strange Doll (green)",source:"古物"},
   "Strange Doll (yellow)":{name:"诡异玩偶（黄）",file:"Strange Doll (yellow)",source:"古物"}
 };
 const SOCIAL_GENERIC_V55 = {
-  "All Artisan Goods (except Coffee, Green Tea & Oil)":{name:"所有工匠物品（咖啡、绿茶、油除外）",file:"Keg"},
-  "All Artisan Goods (except Honey, Jelly & Oil)":{name:"所有工匠物品（蜂蜜、果酱、油除外）",file:"Preserves Jar"},
-  "All Eggs (except Void Egg)":{name:"所有蛋类（虚空蛋除外）",file:"Egg"},
-  "All Fish":{name:"所有鱼类",file:"Tuna"},
-  "All Fish (except Clam, Cockle, Mussel & Oyster)":{name:"所有鱼类（蛤、鸟蛤、蚌、牡蛎除外）",file:"Tuna"},
-  "All Milk":{name:"所有奶类",file:"Milk"},
-  "All Universal Likes":{name:"所有通用喜欢",file:"Daffodil"},
-  "All Universal Likes (except Garlic)":{name:"所有通用喜欢（大蒜除外）",file:"Daffodil"},
-  "All Fruit (except Spice Berry)":{name:"所有水果（香味浆果除外）",file:"Apple"},
-  "All Universal Hates":{name:"所有通用讨厌",file:"Holly"},
-  "All Universal Hates (except Carp & Wild Bait)":{name:"所有通用讨厌（鲤鱼、万能鱼饵除外）",file:"Holly"},
-  "All Universal Hates (except Seafoam Pudding)":{name:"所有通用讨厌（海泡布丁除外）",file:"Holly"},
-  "All Universal Hates (except Slime)":{name:"所有通用讨厌（史莱姆泥除外）",file:"Holly"},
-  "All Universal Hates (except Monster Musk, Seafoam Pudding, Strange Bun & Void Mayonnaise)":{name:"所有通用讨厌（怪物香水、海泡布丁、奇怪的小面包、虚空蛋黄酱除外）",file:"Holly"}
+  "All Artisan Goods (except Coffee, Green Tea & Oil)":{name:"所有工匠物品（咖啡、綠茶、油除外）",file:"Keg"},
+  "All Artisan Goods (except Honey, Jelly & Oil)":{name:"所有工匠物品（蜂蜜、果醬、油除外）",file:"Preserves Jar"},
+  "All Eggs (except Void Egg)":{name:"所有蛋類（虛空蛋除外）",file:"Egg"},
+  "All Fish":{name:"所有魚類",file:"Tuna"},
+  "All Fish (except Clam, Cockle, Mussel & Oyster)":{name:"所有魚類（蛤、鳥蛤、蚌、牡蠣除外）",file:"Tuna"},
+  "All Milk":{name:"所有奶類",file:"Milk"},
+  "All Universal Likes":{name:"所有通用喜歡",file:"Daffodil"},
+  "All Universal Likes (except Garlic)":{name:"所有通用喜歡（大蒜除外）",file:"Daffodil"},
+  "All Fruit (except Spice Berry)":{name:"所有水果（香味漿果除外）",file:"Apple"},
+  "All Universal Hates":{name:"所有通用討厭",file:"Holly"},
+  "All Universal Hates (except Carp & Wild Bait)":{name:"所有通用討厭（鯉魚、萬能魚餌除外）",file:"Holly"},
+  "All Universal Hates (except Seafoam Pudding)":{name:"所有通用討厭（海泡布丁除外）",file:"Holly"},
+  "All Universal Hates (except Slime)":{name:"所有通用討厭（史萊姆泥除外）",file:"Holly"},
+  "All Universal Hates (except Monster Musk, Seafoam Pudding, Strange Bun & Void Mayonnaise)":{name:"所有通用討厭（怪物香水、海泡布丁、奇怪的小麵包、虛空蛋黃醬除外）",file:"Holly"}
 };
 const SOCIAL_EMPTY_RULES_V55 = {
   "谢恩":{likes:["All Universal Likes"]},"謝恩":{likes:["All Universal Likes"]},
@@ -671,18 +671,18 @@ const SOCIAL_EMPTY_RULES_V55 = {
   "矮人":{hates:["All Universal Hates"]}
 };
 const NPC_SERVICES_V55 = {
-  "罗宾":[["Silo","建造／管理农场建筑","建造、升级、移动或拆除多数农场建筑，并负责农舍升级与部分社区升级。"]],
-  "羅賓":[["Silo","建造／管理农场建筑","建造、升级、移动或拆除多数农场建筑，并负责农舍升级与部分社区升级。"]],
-  "玛妮":[["Cow","购买农场动物","为鸡舍或牲口棚购买动物；也销售干草、暖气机、挤奶桶等动物照护用品。"]],
-  "瑪妮":[["Cow","购买农场动物","为鸡舍或牲口棚购买动物；也销售干草、暖气机、挤奶桶等动物照护用品。"]],
-  "克林特":[["Pickaxe","工具升级","支付金钱与金属锭升级主要手持工具。"],["Geode","处理晶球","在铁匠铺敲开晶球；每个基础处理费 25g。"]],
-  "刘易斯":[["Prize Ticket","奖券兑换机","镇长家内可用奖品券在奖品机领取连续奖励。"]],
-  "劉易斯":[["Prize Ticket","奖券兑换机","镇长家内可用奖品券在奖品机领取连续奖励。"]],
-  "威利":[["Boat","姜岛船运","修复鱼店后室的旧船后可搭船前往姜岛；单程船票 1,000g。"]],
-  "皮埃尔":[["36 Backpack","背包升级","杂货店可购买两次背包扩充，每次增加 12 格。"]],
-  "皮埃爾":[["36 Backpack","背包升级","杂货店可购买两次背包扩充，每次增加 12 格。"]],
-  "法师":[["Magic Ink","幻象神龛","达到条件后可付费修改角色外观。"],["Junimo Hut","魔法建筑","归还魔法墨水后可购买祝尼魔小屋、方尖碑与黄金时钟等魔法建筑。"]],
-  "法師":[["Magic Ink","幻象神龛","达到条件后可付费修改角色外观。"],["Junimo Hut","魔法建筑","归还魔法墨水后可购买祝尼魔小屋、方尖碑与黄金时钟等魔法建筑。"]]
+  "罗宾":[["Silo","建造／管理農場建築","建造、升級、移動或拆除多數農場建築，並負責農舍升級與部分社群升級。"]],
+  "羅賓":[["Silo","建造／管理農場建築","建造、升級、移動或拆除多數農場建築，並負責農舍升級與部分社群升級。"]],
+  "玛妮":[["Cow","購買農場動物","為雞舍或牲口棚購買動物；也銷售乾草、暖氣機、擠奶桶等動物照護用品。"]],
+  "瑪妮":[["Cow","購買農場動物","為雞舍或牲口棚購買動物；也銷售乾草、暖氣機、擠奶桶等動物照護用品。"]],
+  "克林特":[["Pickaxe","工具升級","支付金錢與金屬錠升級主要手持工具。"],["Geode","處理晶球","在鐵匠鋪敲開晶球；每個基礎處理費 25g。"]],
+  "刘易斯":[["Prize Ticket","獎券兌換機","鎮長家內可用獎品券在獎品機領取連續獎勵。"]],
+  "劉易斯":[["Prize Ticket","獎券兌換機","鎮長家內可用獎品券在獎品機領取連續獎勵。"]],
+  "威利":[["Boat","姜島船運","修復魚店後室的舊船後可搭船前往姜島；單程船票 1,000g。"]],
+  "皮埃尔":[["36 Backpack","揹包升級","雜貨店可購買兩次揹包擴充，每次增加 12 格。"]],
+  "皮埃爾":[["36 Backpack","揹包升級","雜貨店可購買兩次揹包擴充，每次增加 12 格。"]],
+  "法师":[["Magic Ink","幻象神龕","達到條件後可付費修改角色外觀。"],["Junimo Hut","魔法建築","歸還魔法墨水後可購買祝尼魔小屋、方尖碑與黃金時鐘等魔法建築。"]],
+  "法師":[["Magic Ink","幻象神龕","達到條件後可付費修改角色外觀。"],["Junimo Hut","魔法建築","歸還魔法墨水後可購買祝尼魔小屋、方尖碑與黃金時鐘等魔法建築。"]]
 };
 
 const MASTERY_POWERS_V2 = [
@@ -745,7 +745,7 @@ function parseFishMeta(info = "") {
   if (info.includes("礦井") || info.includes("火山")) areas.push("礦井");
   if (info.includes("沙漠")) areas.push("沙漠");
   if (info.includes("下水道") || info.includes("蟲穴") || info.includes("沼澤") || info.includes("秘密森林")) areas.push("特殊");
-  if (info.includes("薑島") || info.includes("海盜灣")) areas.push("薑島");
+  if (info.includes("姜岛") || info.includes("海盜灣")) areas.push("姜岛");
   if (info.includes("夜市")) areas.push("夜市");
   if (!areas.length) areas.push("其他");
   let time = "全天/不限";
@@ -763,7 +763,7 @@ function FishTags({ meta, compact = false }) {
   const seasonTags = meta.seasons.length === 4 ? ["全季"] : meta.seasons;
   return <div style={{display:"flex",gap:3,flexWrap:"wrap",justifyContent:compact?"center":"flex-start",marginTop:compact?3:5}}>
     {seasonTags.map(s=>chip(s, s==="全季"?"#E8E0CF":SEASON_COLORS[s]+"30", s==="全季"?"#6B3E1E":SEASON_COLORS[s]))}
-    {meta.areas.slice(0,compact?1:3).map(a=>chip(a,a==="海洋"?"#DDECF7":a==="河流"?"#DDF2ED":a==="湖泊"?"#E5E4FA":a==="薑島"?"#F5E7BE":"#EEE6D7"))}
+    {meta.areas.slice(0,compact?1:3).map(a=>chip(a,a==="海洋"?"#DDECF7":a==="河流"?"#DDF2ED":a==="湖泊"?"#E5E4FA":a==="姜岛"?"#F5E7BE":"#EEE6D7"))}
     {chip(meta.weather, meta.weather==="雨"?"#D8E8FA":meta.weather==="晴"?"#FFF0B8":"#EEE6D7")}
     {!compact && chip(meta.time,"#F2E5CE")}
   </div>;
@@ -815,7 +815,7 @@ const FISH_INFO = [
   "蟹籠·淡水", "蟹籠·海", "蟹籠/海灘採集", "蟹籠·海", "蟹籠·海",
   "蟹籠·淡水", "蟹籠·淡水", "蟹籠/海灘採集", "秘密森林池塘", "傳說魚·冬·森林河南小島",
   "女巫沼澤", "突變蟲穴", "夜市深海潛艇(冬15-17)", "夜市深海潛艇", "夜市深海潛艇",
-  "薑島海盜灣", "薑島海洋", "薑島河流", "河釣獲(1.6)", "礦井水域釣獲(1.6)",
+  "姜岛海盜灣", "姜岛海洋", "姜岛河流", "河釣獲(1.6)", "礦井水域釣獲(1.6)",
   "海釣獲(1.6)", "瀑布水域(1.6)",
 ];
 const ARTIFACT_INFO = [
@@ -1021,9 +1021,9 @@ const STARDROP_SOURCES_V26 = [
 const FESTIVAL_GUIDE_V26 = {
   "彩蛋節":{desc:"鎮上舉行彩蛋狩獵；節日商店可以買草莓種子。",items:[["Strawberry Seeds","草莓種子"],["Straw Hat","草帽"]]},
   "沙漠節":{desc:"春 15–17 的三日沙漠活動，有每日挑戰、商店與各種臨時攤位。",items:[["Calico Egg","卡利科蛋"]]},
-  "花舞節":{desc:"在煤礦森林舉行；和可交往角色達到 4 心後可以邀請對方跳舞。",items:[]},
+  "花舞節":{desc:"在煤矿森林舉行；和可交往角色達到 4 心後可以邀請對方跳舞。",items:[]},
   "夏威夷宴會":{desc:"把一樣食材放進公共湯鍋；州長的評價會影響與村民的友情。",items:[["Cauliflower","花椰菜"],["Super Cucumber","大海參"]]},
-  "鱒魚大賽":{desc:"在煤礦森林釣虹鱒；拿到金色標籤後可在攤位換獎勵。",items:[["Rainbow Trout","虹鱒魚"],["Golden Tag","金色標籤"]]},
+  "鱒魚大賽":{desc:"在煤矿森林釣虹鱒；拿到金色標籤後可在攤位換獎勵。",items:[["Rainbow Trout","虹鱒魚"],["Golden Tag","金色標籤"]]},
   "月光水母起舞":{desc:"晚上到海灘觀看月光水母遷徙，沒有競賽或需要準備的物品。",items:[]},
   "星露谷展覽會":{desc:"展示九樣物品並玩小遊戲賺星幣；2,000 星幣可換一顆星之果實。",items:[["Token","星幣"],["Stardrop","星之果實"]]},
   "萬靈節":{desc:"夜間進鎮走迷宮；迷宮終點可拿到黃金南瓜。",items:[["Golden Pumpkin","黃金南瓜"]]},
@@ -1034,7 +1034,10 @@ const FESTIVAL_GUIDE_V26 = {
 };
 
 /* ================= 全新手帳預設：不帶任何玩家進度 ================= */
+const SAVE_SCHEMA_VERSION_V67 = 1;
+const LEGACY_SCHEMA_VERSION_V67 = 0;
 const PREFILL = {
+  schemaVersion: SAVE_SCHEMA_VERSION_V67,
   base: { year: 1, season: "春", day: 1, money: 0, totalIncome: 0, backpack: 12, farm: "", name: "", platform: "Switch 2 / 1.6", profileDataVerifiedV47: false },
   skills: { farming: 0, mining: 0, foraging: 0, fishing: 0, combat: 0 },
   prof: { farming5: "", farming10: "", mining5: "", mining10: "", foraging5: "", foraging10: "", fishing5: "", fishing10: "", combat5: "", combat10: "" },
@@ -1170,6 +1173,14 @@ function normalizeWardrobeProgressV38(input){
     return out;
   };
   return {...base,wardrobeSchemaVersion:38,wardrobeV30:{...old,player,horse:animal(old.horse),cat:animal(old.cat,true),dog:animal(old.dog,true)}};
+}
+
+function normalizeSaveV67(input){
+  const raw=input&&typeof input==="object"?input:{};
+  const hasSchema=Object.prototype.hasOwnProperty.call(raw,"schemaVersion");
+  const parsed=Number(raw.schemaVersion);
+  const schemaVersion=hasSchema&&Number.isInteger(parsed)&&parsed>=0?parsed:LEGACY_SCHEMA_VERSION_V67;
+  return normalizeWardrobeProgressV38({...PREFILL,...raw,schemaVersion});
 }
 
 function FarmerSpritePreviewV33({player,direction="front",large=false,scene="day",shirtDyeable=false,pantsDyeable=false}) {
@@ -1322,11 +1333,6 @@ function StardewTracker() {
     if(tab==="wardrobe")loadLazyDataV67("wardrobe");
     if(tab==="fishing"||tab==="people")loadLazyDataV67("lookup");
   },[tab]);
-  useEffect(()=>{
-    const run=()=>{if(!window.SDVLookupV46)loadLazyDataV67("lookup")};
-    if("requestIdleCallback" in window){const id=window.requestIdleCallback(run,{timeout:5000});return()=>window.cancelIdleCallback?.(id);}
-    const id=window.setTimeout(run,2800);return()=>window.clearTimeout(id);
-  },[]);
 
   useEffect(()=>{
     let alive=true;
@@ -1342,7 +1348,7 @@ function StardewTracker() {
       const local = await storageGet(STORAGE_KEY, false);
       let raw = pub?.value || local?.value;
       if (raw) {
-        try { setData(normalizeWardrobeProgressV38({ ...PREFILL, ...JSON.parse(raw) })); }
+        try { setData(normalizeSaveV67(JSON.parse(raw))); }
         catch (e) { console.warn("progress parse failed", e); }
       }
       setLoaded(true);
@@ -1980,8 +1986,8 @@ function StardewTracker() {
     const setCustomName=(b,name)=>update({bundleNameV28:{...customNames,[b.id]:name||b.name}});
     const RoomTab=({r})=>{const rd=roomDone(r),active=bundleRoom===r.id;return <button onClick={()=>{setBundleRoom(active?"":r.id);setBundleEditV28(null)}} style={{border:`1.5px solid ${active?C.orange:rd?C.green:C.line}`,background:active?"#FFE2A8":rd?"#EEF7DD":C.paper,borderRadius:8,padding:"5px 2px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",minWidth:0}}><GameIcon file={ROOM_ICON_FILES[r.id]} size={24}/><span style={{fontSize:8.2,fontWeight:950,color:active?C.darkBrown:rd?C.green:C.muted}}>{rd?"✓ ":""}{r.name}</span></button>};
     const RouteLevelV55=({label,file,children})=><div style={{marginTop:9}}><div style={{display:"flex",alignItems:"center",gap:6,padding:"4px 2px 2px",fontSize:9,fontWeight:950,color:C.orange}}><GameIcon file={file} size={21}/><span>{label}</span></div>{children}</div>;
-    const routeButton=(id,label,file)=>{const active=route===id,inactive=Boolean(route)&&!active;return <button onClick={()=>{if(route&&route!==id&&!window.confirm(`游戏里社区中心与 Joja 是二选一路线。确定把手帐当前路线切换成「${label}」吗？
-另一条路线已记录的数据会保留，但不会同时计入当前路线。`))return;update({communityRouteV28:id});setBundleRoom("");setBundleEditV28(null)}} style={{border:`2px solid ${active?C.green:C.line}`,background:active?"#EAF4D8":inactive?"#E5E1D8":C.paper,borderRadius:10,padding:"7px 5px",display:"flex",alignItems:"center",justifyContent:"center",gap:7,fontSize:9,fontWeight:950,color:active?C.green:inactive?C.muted:C.brown,filter:inactive?"grayscale(.9)":"none",opacity:inactive?.65:1}}><GameIcon file={file} size={27}/><span>{active?"✓ ":""}{label}{active?<small style={{display:"block",fontSize:6.2,color:C.green,marginTop:1}}>目前路線</small>:null}</span></button>};
+    const routeButton=(id,label,file)=>{const active=route===id,inactive=Boolean(route)&&!active;return <button onClick={()=>{if(route&&route!==id&&!window.confirm(`遊戲中社区中心與 Joja 是二選一路線。確定把手帳目前路線切換成「${label}」嗎？
+另一條路線已記錄的資料會保留，但不會同時計入目前路線。`))return;update({communityRouteV28:id});setBundleRoom("");setBundleEditV28(null)}} style={{border:`2px solid ${active?C.green:C.line}`,background:active?"#EAF4D8":inactive?"#E5E1D8":C.paper,borderRadius:10,padding:"7px 5px",display:"flex",alignItems:"center",justifyContent:"center",gap:7,fontSize:9,fontWeight:950,color:active?C.green:inactive?C.muted:C.brown,filter:inactive?"grayscale(.9)":"none",opacity:inactive?.65:1}}><GameIcon file={file} size={27}/><span>{active?"✓ ":""}{label}{active?<small style={{display:"block",fontSize:6.2,color:C.green,marginTop:1}}>目前路線</small>:null}</span></button>};
     return <div>
       <SectionTitle icon="📦">城鎮修復路線</SectionTitle>
       <Card style={{padding:8,background:"#FFF4D8"}}><div style={{display:"flex",alignItems:"center",gap:5,fontSize:8.8,fontWeight:950,color:C.brown,marginBottom:6}}><GameIcon file="Golden Scroll" size={20}/><span>選擇這個存檔的城鎮修復路線｜遊戲中二選一</span></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7}}>{routeButton("cc","社区中心","Golden Scroll")}{routeButton("joja","Joja","Joja Warehouse")}</div>{!route&&<div style={{fontSize:8,color:C.muted,lineHeight:1.35,marginTop:6,textAlign:"center"}}>尚未選擇路線；選好後才顯示對應內容。</div>}</Card>
@@ -2008,7 +2014,7 @@ function StardewTracker() {
 
       <SectionTitle icon="game:Raccoon Icon">森林鄰居</SectionTitle>
       <Card style={{padding:9,background:raccoonV50.stump?"#EEF7DD":"#E5E1D8",filter:raccoonV50.stump?"none":"grayscale(.9)",opacity:raccoonV50.stump?1:.72}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}><GameIcon file="Raccoon Icon" size={38}/><div style={{flex:1,minWidth:0}}><b style={{fontSize:12,color:C.darkBrown}}>大樹樁・浣熊一家</b><div style={{fontSize:8.5,color:C.muted,lineHeight:1.35,marginTop:2}}>位於煤礦森林，屬於城鎮／鄰居進度，不算農場建築。</div></div><button onClick={()=>setRaccoonV50({stump:!raccoonV50.stump,requests:!raccoonV50.stump?raccoonV50.requests:0})} style={{border:`1.5px solid ${raccoonV50.stump?C.green:C.line}`,background:raccoonV50.stump?C.lightGreen:"#EEE9DE",borderRadius:7,padding:"5px 7px",fontSize:8.5,fontWeight:950,color:raccoonV50.stump?C.green:C.muted}}>{raccoonV50.stump?"✓ 樹樁已修復":"未修復"}</button></div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}><GameIcon file="Raccoon Icon" size={38}/><div style={{flex:1,minWidth:0}}><b style={{fontSize:12,color:C.darkBrown}}>大樹樁・浣熊一家</b><div style={{fontSize:8.5,color:C.muted,lineHeight:1.35,marginTop:2}}>位於煤矿森林，屬於城鎮／鄰居進度，不算農場建築。</div></div><button onClick={()=>setRaccoonV50({stump:!raccoonV50.stump,requests:!raccoonV50.stump?raccoonV50.requests:0})} style={{border:`1.5px solid ${raccoonV50.stump?C.green:C.line}`,background:raccoonV50.stump?C.lightGreen:"#EEE9DE",borderRadius:7,padding:"5px 7px",fontSize:8.5,fontWeight:950,color:raccoonV50.stump?C.green:C.muted}}>{raccoonV50.stump?"✓ 樹樁已修復":"未修復"}</button></div>
         {raccoonV50.stump&&<><div style={{display:"grid",gridTemplateColumns:"auto 24px 42px 24px",alignItems:"center",gap:4,marginTop:8,paddingTop:7,borderTop:`1px dashed ${C.line}`}}><span style={{fontSize:9,fontWeight:950,color:C.brown}}>已完成浣熊請求</span><button onClick={()=>setRaccoonV50({requests:Math.max(0,Number(raccoonV50.requests||0)-1)})} style={{border:0,background:C.cream,borderRadius:6,height:22,fontWeight:950,color:C.brown}}>−</button><b style={{fontSize:10,color:C.green,textAlign:"center"}}>{Number(raccoonV50.requests||0)} 次</b><button onClick={()=>setRaccoonV50({requests:Math.min(99,Number(raccoonV50.requests||0)+1)})} style={{border:0,background:C.cream,borderRadius:6,height:22,fontWeight:950,color:C.brown}}>＋</button></div><div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:7}}>{[[1,"妻子商店"],[2,"浣熊日記"],[3,"浣熊帽"],[9,"好鄰居成就"]].map(([n,label])=>{const on=Number(raccoonV50.requests||0)>=n;return <span key={label} style={{fontSize:7.5,fontWeight:900,padding:"3px 6px",borderRadius:8,background:on?"#DFF0CD":"#EEE5D2",color:on?C.green:C.muted}}>{on?"✓ ":""}{label}</span>})}</div><div style={{fontSize:8,color:C.muted,lineHeight:1.35,marginTop:6}}>每完成一次請求後約 7 天才會出現下一次；第 9 次完成「好鄰居」成就，之後仍可繼續交換。</div></>}
       </Card>
     </div>;
@@ -2388,7 +2394,7 @@ function StardewTracker() {
   const importRef=useRef(null);
   const importBackup = async (file) => {
     if(!file)return;
-    try{const parsed=JSON.parse(await file.text());setData({...PREFILL,...parsed});alert("備份已匯入");}catch(e){alert("無法讀取這份備份檔")}
+    try{const parsed=JSON.parse(await file.text());setData(normalizeSaveV67(parsed));alert("備份已匯入");}catch(e){alert("無法讀取這份備份檔")}
     if(importRef.current)importRef.current.value="";
   };
 
@@ -2467,7 +2473,7 @@ function StardewTracker() {
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:5}}>{groupAreas.map(a=>{const on=a.id===area.id;return <button key={a.id} onClick={()=>setFishAreaV4(a.id)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFF0D2":C.paper,borderRadius:8,padding:"5px 2px",minWidth:0}}><GameIcon file={a.icon} size={27}/><div style={{fontSize:7.4,fontWeight:950,color:C.ink,lineHeight:1.08,marginTop:2}}>{a.name}</div><div style={{fontSize:6.7,color:C.muted,lineHeight:1.05}}>{a.sub}</div></button>})}</div>
       </Card>}
 
-      <Card style={{marginTop:7,padding:8,background:"#FFF8E2"}}><div style={{display:"flex",alignItems:"center",gap:8}}><GameIcon file={area.icon} size={34}/><div style={{flex:1,minWidth:0}}><b style={{fontSize:13,color:C.darkBrown}}>{area.name} · {area.sub}</b>{area.island&&<div style={{fontSize:8.5,color:C.green,fontWeight:900,marginTop:2}}>薑島魚類不受季節限制</div>}</div><span style={{fontSize:9.5,color:C.muted,fontWeight:900}}>{rows.length} 項</span></div>{area.tip&&<div style={{fontSize:9,color:C.brown,lineHeight:1.4,marginTop:5}}>{area.tip}</div>}</Card>
+      <Card style={{marginTop:7,padding:8,background:"#FFF8E2"}}><div style={{display:"flex",alignItems:"center",gap:8}}><GameIcon file={area.icon} size={34}/><div style={{flex:1,minWidth:0}}><b style={{fontSize:13,color:C.darkBrown}}>{area.name} · {area.sub}</b>{area.island&&<div style={{fontSize:8.5,color:C.green,fontWeight:900,marginTop:2}}>姜岛魚類不受季節限制</div>}</div><span style={{fontSize:9.5,color:C.muted,fontWeight:900}}>{rows.length} 項</span></div>{area.tip&&<div style={{fontSize:9,color:C.brown,lineHeight:1.4,marginTop:5}}>{area.tip}</div>}</Card>
 
       <Card style={{marginTop:7,padding:7}}>
         <div style={{fontSize:9.2,fontWeight:950,color:C.brown,marginBottom:5}}>條件</div>
@@ -2544,7 +2550,7 @@ function StardewTracker() {
     const all=[...index.values()].filter(it=>{const name=String(it.name||"").trim(),file=String(it.file||"").trim();return Boolean(name)&&!/^\d+$/.test(name)&&!/^\d+$/.test(file)&&!/^\?\?.+\?\?$/.test(name)}).sort((a,b)=>a.name.localeCompare(b.name,"zh-Hant"));
     const itemFarmKindV49=it=>["crop","seed","fruit","sapling"].includes(it?.farmingKind);
     const itemCurrentSeasonV49=it=>{if(!it)return false;if(itemFarmKindV49(it)&&Array.isArray(it.seasons)&&it.seasons.includes(data.base.season))return true;if(it.fishIndex!==undefined){const r=fishRuleV4(it.fishIndex);return (r?.s||[]).includes(data.base.season);}return false;};
-    const seasonLabelV49=s=>s==="ginger island"?"薑島全年":s;
+    const seasonLabelV49=s=>s==="ginger island"?"姜岛全年":s;
     const itemSeasonTextV49=it=>(it?.seasons||[]).length===4?"四季":((it?.seasons||[]).map(seasonLabelV49).join("／"));
     const itemSeasonTitleV49=it=>it?.fishIndex!==undefined?"出現季節":itemFarmKindV49(it)?"耕種季節":"出現季節";
     const itemSeasonIconV49=it=>it?.fishIndex!==undefined?"🐟":itemFarmKindV49(it)?"🌱":"🍃";

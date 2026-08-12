@@ -84,6 +84,12 @@ GitHub Pages 由 `.github/workflows/pages.yml` 自動建置；兩邊都使用 es
 - 高頻導航、NPC 頭像、日曆／地圖等核心圖優先由 repo 內 `assets/game` 提供；未本地化的遊戲圖仍可回退 Stardew Valley Wiki，並由 Service Worker runtime cache。
 - 大型查找與完整衣櫥目錄採延後載入；後續世界／NPC 行程／完整分類等資料模組也沿用此原則。
 
+## 產品規格與資料維護
+
+- 正式產品方向與功能完整化規格：`docs/ROADMAP.md`。
+- generated／snapshot 資料的來源與重建規則：`docs/DATA_SOURCES.md`。
+- GitHub Issues 用於追蹤執行狀態；若 Issue 與 ROADMAP 衝突，以 ROADMAP 為準。
+
 ## 資料來源與聲明
 
 遊戲資料以《星露谷物語》1.6 為基準，名稱以 Switch 中文版本實際顯示為優先；圖鑑、魚類、NPC、設備與遊戲圖片主要參考 Stardew Valley Wiki 及遊戲資料。
