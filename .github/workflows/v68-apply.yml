@@ -21,6 +21,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/apply-v68-progress-linking.py
+          python3 scripts/fix-v68-foundation-audit.py
 
       - name: Validate source and browser bundle
         shell: bash
@@ -59,6 +60,6 @@ jobs:
           git config user.email jinx.lin0820@gmail.com
           git add app.jsx index.html sw.js build-cloudflare.sh .github/workflows/pages.yml scripts/audit-foundation-v67.py scripts/audit-progress-link-v68.py
           git commit -m "v68: link milestones community farm mine and horse progress"
-          git rm .github/workflows/v68-apply.yml scripts/apply-v68-progress-linking.py
-          git commit -m "build: remove one-time v68 migration helper"
+          git rm .github/workflows/v68-apply.yml scripts/apply-v68-progress-linking.py scripts/fix-v68-foundation-audit.py
+          git commit -m "build: remove one-time v68 migration helpers"
           git push origin v68-progress-linking
