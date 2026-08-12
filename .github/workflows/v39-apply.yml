@@ -1,0 +1,69 @@
+name: Apply v39 compact wardrobe UI
+
+on:
+  push:
+    branches: [v39-compact-wardrobe-ui]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v39-compact-wardrobe-ui
+          fetch-depth: 0
+      - name: Apply v39 patch
+        run: |
+          set -euo pipefail
+          python3 v39_patch.py
+      - name: Validate v39
+        run: |
+          set -euo pipefail
+          node --check farmer-preview-v33.js
+          node --check animal-preview-v33.js
+          node --check wardrobe-data-v34.js
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8
+          mkdir -p .verify
+          cat > .verify/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> .verify/entry.jsx
+          ./node_modules/.bin/esbuild .verify/entry.jsx --bundle --format=iife --target=safari15 --outfile=.verify/app.js
+          grep -q 'GenderIconV39' app.jsx
+          grep -q 'Cursors.png' app.jsx
+          grep -q 'compactStepperV39' app.jsx
+          grep -q 'activeDyeKindV39' app.jsx
+          grep -q 'wardrobeFilterSafeV39' app.jsx
+          grep -q 'PetVariantPreviewV36 type={wardrobeTargetV30} variant={v} compact' app.jsx
+          grep -q '自由搭配角色、服飾與染色' app.jsx
+          grep -q 'app.js?v=39' index.html
+          grep -q 'stardew-tracker-v39' sw.js
+          python3 - <<'PY'
+          from pathlib import Path
+          a=Path('app.jsx').read_text(encoding='utf-8')
+          assert 'v38：修正舊版衣櫥紀錄' not in a
+          assert '法師地下室可改：體型' not in a
+          assert '外觀款式</b>' not in a
+          assert 'activeDyeKindV39&&<Card' in a
+          assert 'slot==="boots")&&<div' not in a
+          assert 'slot==="boots")&&<div' not in a
+          assert 'slot==="boots")&&' not in a or '!(wardrobeTargetV30==="player"&&slot==="boots")' in a
+          assert 'summaryRow("帽子",hatMeta,null,"Cowboy Hat")' in a
+          print('v39 compact wardrobe checks ok')
+          PY
+      - name: Commit v39 code
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx index.html sw.js
+          git rm -f v39_patch.py
+          git commit -m 'v39: compact wardrobe controls and summaries'
+          git push origin HEAD:v39-compact-wardrobe-ui
