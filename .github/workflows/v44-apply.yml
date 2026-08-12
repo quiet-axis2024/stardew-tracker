@@ -1,0 +1,91 @@
+name: Apply v44 item card pricing
+
+on:
+  push:
+    branches: [v44-item-card-pricing]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v44-item-card-pricing
+          fetch-depth: 0
+      - name: Generate Stardew base sell prices
+        run: |
+          set -euo pipefail
+          curl -L --fail --silent --show-error \
+            'https://raw.githubusercontent.com/juliaramosguedes/stardew-data/4e0d98119afefd766f15ee77a529db4eb71fa240/data/en-US/objects.json' \
+            -o /tmp/sdv-objects.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path('/tmp/sdv-objects.json').read_text(encoding='utf-8'))
+          prices={}
+          for obj in data.get('objects',[]):
+              name=str(obj.get('name') or '').strip()
+              if not name or name in prices:
+                  continue
+              price=obj.get('sellPrice')
+              if isinstance(price,(int,float)):
+                  prices[name]=int(price)
+          text='/* Stardew Valley 1.6.15 Data/Objects base sell prices. */\nwindow.SDVItemPricesV44='+json.dumps(prices,ensure_ascii=False,separators=(',',':'))+';\n'
+          Path('item-prices-v44.js').write_text(text,encoding='utf-8')
+          print('prices:',len(prices))
+          PY
+      - name: Apply v44 patch
+        run: |
+          set -euo pipefail
+          python3 v44_patch.py
+      - name: Validate v44
+        run: |
+          set -euo pipefail
+          node --check item-prices-v44.js
+          node --check farmer-preview-v33.js
+          node --check animal-preview-v33.js
+          node --check wardrobe-data-v34.js
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8
+          mkdir -p .verify
+          cat > .verify/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> .verify/entry.jsx
+          ./node_modules/.bin/esbuild .verify/entry.jsx --bundle --format=iife --target=safari15 --outfile=.verify/app.js
+          grep -q 'SDVItemPricesV44' app.jsx
+          grep -q '>用途</div>' app.jsx
+          grep -q '>建議</span>' app.jsx
+          grep -q '>賣價</span>' app.jsx
+          grep -q 'item-prices-v44.js?v=44' index.html
+          grep -q 'stardew-tracker-v44' sw.js
+          python3 - <<'PY'
+          import json,re
+          from pathlib import Path
+          a=Path('app.jsx').read_text(encoding='utf-8')
+          section=a[a.index('const renderItemUsageV42'):a.index('const renderFishTodayV4')]
+          assert section.index('{selected&&<Card') < section.index('{results.map')
+          assert '要不要留' not in section
+          assert '能不能賣' not in section
+          assert 'recommendActionV44' in section
+          assert 'sellPriceTextV44' in section
+          p=Path('item-prices-v44.js').read_text(encoding='utf-8')
+          assert '"Topaz":80' in p
+          assert '"Prismatic Shard":2000' in p
+          print('v44 selected-card and pricing checks ok')
+          PY
+      - name: Commit v44 code
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx index.html sw.js item-prices-v44.js
+          git rm -f v44_patch.py
+          git commit -m 'v44: prioritize item uses and sell price'
+          git push origin HEAD:v44-item-card-pricing
