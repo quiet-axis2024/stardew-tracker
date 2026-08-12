@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/v69-apply.yml'
       - 'scripts/apply-v69-today.py'
+      - 'scripts/fix-v69-progress-audit.py'
 
 permissions:
   contents: write
@@ -24,6 +25,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/apply-v69-today.py
+          python3 scripts/fix-v69-progress-audit.py
 
       - name: Validate v69
         shell: bash
@@ -61,6 +63,6 @@ jobs:
           set -euo pipefail
           git config user.name quiet-axis2024
           git config user.email jinx.lin0820@gmail.com
-          git add app.jsx index.html sw.js build-cloudflare.sh scripts/audit-foundation-v67.py scripts/audit-today-v69.py
+          git add app.jsx index.html sw.js build-cloudflare.sh scripts/audit-foundation-v67.py scripts/audit-progress-link-v68.py scripts/audit-today-v69.py
           git commit -m "v69: add today assistant to overview"
           git push origin v69-today-assistant
