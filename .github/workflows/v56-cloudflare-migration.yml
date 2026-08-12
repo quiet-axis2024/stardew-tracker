@@ -1,0 +1,44 @@
+name: Apply v56 Cloudflare migration
+on:
+  push:
+    branches: [v56-cloudflare-migration]
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v56-cloudflare-migration
+          fetch-depth: 0
+      - name: Apply migration patch
+        run: python3 .github/scripts/v56_cloudflare_migrate.py
+      - name: Validate browser runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save eslint@8 react@18 react-dom@18 esbuild@0.25.8 >/dev/null 2>&1
+          ./node_modules/.bin/eslint app.jsx --no-eslintrc --env browser,es2021 --parser-options '{"ecmaVersion":2022,"sourceType":"script","ecmaFeatures":{"jsx":true}}' --global React --global ReactDOM --rule 'no-undef:error'
+          node --check cloud.js
+          grep -q "stardewfarm-handbook.pages.dev" cloud.js
+          grep -q "quiet-axis2024.github.io/stardew-tracker/" cloud.js
+          grep -q "migrateFromLegacy" cloud.js
+          grep -q "搬移／重新連接原本手帳" app.jsx
+          grep -q "app.js?v=56" index.html
+          grep -q "stardew-tracker-v56" sw.js
+          mkdir -p build
+          printf '%s\n' "import React from 'react';" "import { createRoot } from 'react-dom/client';" "window.React = React;" "window.ReactDOM = { createRoot };" > build/entry.jsx
+          cat app.jsx >> build/entry.jsx
+          ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=/tmp/v56-app.js
+          test -s /tmp/v56-app.js
+      - name: Commit product changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx cloud.js index.html sw.js
+          git commit -m 'v56: add one-click migration to Cloudflare URL'
+          git push origin HEAD:v56-cloudflare-migration
