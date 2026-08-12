@@ -1,0 +1,42 @@
+name: Audit v66 lookup data
+
+on:
+  push:
+    branches: [v66-lookup-audit-fixes]
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v66-lookup-audit-fixes
+          fetch-depth: 0
+      - name: Inspect lookup rows
+        run: |
+          node <<'NODE'
+          global.window={};
+          require('./lookup-data-v46.js');
+          require('./switch-names-v47.js');
+          const rows=window.SDVLookupV46?.items||[];
+          const names=window.SDVSwitchNamesV47||{};
+          const numeric=x=>/^\d+$/.test(String(x||'').trim());
+          const suspicious=rows.filter(r=>numeric(r.name)||numeric(r.zh)||numeric(r.file)||!String(r.name||'').trim());
+          console.log('TOTAL',rows.length,'SUSPICIOUS',suspicious.length);
+          console.log('SUSPICIOUS ROWS');
+          suspicious.slice(0,250).forEach(r=>console.log(JSON.stringify(r)));
+          const kinds={}; for(const r of rows)(kinds[r.kind]??=[]).push(r);
+          console.log('KIND COUNTS',JSON.stringify(Object.fromEntries(Object.entries(kinds).map(([k,v])=>[k,v.length]))));
+          console.log('BIG ROWS');
+          (kinds.big||[]).slice(0,350).forEach(r=>console.log(JSON.stringify({name:r.name,zh:r.zh,file:r.file,id:r.id,source:r.sources?.[0],mapped:names[r.name]||names[r.file]||''})));
+          const craft=kinds.craft||[];
+          const actual=craft.filter(r=>(r.sources||[]).some(x=>String(x).startsWith('製作：')));
+          const notActual=craft.filter(r=>!(r.sources||[]).some(x=>String(x).startsWith('製作：')));
+          console.log('CRAFT SUMMARY',JSON.stringify({craft:craft.length,actualCraftSource:actual.length,notActual:notActual.length}));
+          console.log('CRAFT ACTUAL'); actual.slice(0,180).forEach(r=>console.log(JSON.stringify({name:r.name,zh:r.zh,file:r.file,id:r.id,sources:r.sources,mapped:names[r.name]||names[r.file]||''})));
+          console.log('CRAFT NOT ACTUAL'); notActual.slice(0,100).forEach(r=>console.log(JSON.stringify({name:r.name,zh:r.zh,file:r.file,id:r.id,sources:r.sources,mapped:names[r.name]||names[r.file]||''})));
+          NODE
