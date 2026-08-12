@@ -18,14 +18,21 @@ jobs:
         with:
           ref: v48-clean-ocr-ui-map
           fetch-depth: 0
-      - name: Make patch tolerant to compact collection array
+      - name: Make patch tolerant to compact JSX
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p=Path('v48_patch.py')
-          lines=p.read_text().splitlines()
-          lines=[('s=re.sub(r\'\\s*\\["letters","信件","Mail"\\],?\', \'\', s, count=1)' if 'remove letters collection tab' in line else line) for line in lines]
-          p.write_text('\n'.join(lines)+'\n')
+          out=[]
+          for line in p.read_text().splitlines():
+            if 'remove letters collection tab' in line:
+              line='s=re.sub(r\'\\s*\\["letters","信件","Mail"\\],?\', \'\', s, count=1)'
+            elif 'remove letters panel' in line:
+              line='s=re.sub(r\'\\n\\s*\\{collectionSection==="letters"&&<Card[^\\n]*\', \'\', s, count=1)'
+            elif 'remove paper wiki link' in line:
+              line='s=re.sub(r\'<a href=\\{isNotes\\?"https://stardewvalleywiki\\.com/Secret_Notes":"https://stardewvalleywiki\\.com/Journal_Scraps"\\} target="_blank" rel="noopener noreferrer" style=\\{\\{.*?\\}\\}>Wiki 完整頁面 ↗</a>\', \'\', s, count=1)'
+            out.append(line)
+          p.write_text('\n'.join(out)+'\n')
           PY
       - name: Apply v48 patch
         run: |
