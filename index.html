@@ -24,15 +24,15 @@
 </head>
 <body>
   <div id="root"><div id="boot-status"><img class="boot-logo" src="https://stardewvalleywiki.com/mediawiki/images/0/07/Main_Logo_ZH.png" alt="星露谷物語"><div class="boot-loading">LOADING…</div></div></div>
-  <script src="./cloud.js?v=54"></script>
-  <script src="./wardrobe-data-v34.js?v=54"></script>
-  <script src="./farmer-preview-v33.js?v=54"></script>
-  <script src="./animal-preview-v33.js?v=54"></script>
-  <script src="./lookup-data-v46.js?v=54"></script>
-  <script src="./lookup-extra-v49.js?v=54"></script>
-  <script src="./social-data-v50.js?v=54"></script>
-  <script src="./machine-data-v51.js?v=54"></script>
-  <script src="./switch-names-v47.js?v=54"></script>
+  <script src="./cloud.js?v=55"></script>
+  <script src="./wardrobe-data-v34.js?v=55"></script>
+  <script src="./farmer-preview-v33.js?v=55"></script>
+  <script src="./animal-preview-v33.js?v=55"></script>
+  <script src="./lookup-data-v46.js?v=55"></script>
+  <script src="./lookup-extra-v49.js?v=55"></script>
+  <script src="./social-data-v50.js?v=55"></script>
+  <script src="./machine-data-v51.js?v=55"></script>
+  <script src="./switch-names-v47.js?v=55"></script>
   <script>
     (async()=>{
       const root=document.getElementById('root');
@@ -56,7 +56,7 @@
       try{ if(window.SDVCloud) await window.SDVCloud.init(); }
       catch(error){ console.warn('Cloud init failed, falling back to local mode:',error); }
       const script=document.createElement('script');
-      script.src='./app.js?v=54';
+      script.src='./app.js?v=55';
       script.onload=()=>{
         window.__SDV_APP_LOADED__=true;
         setTimeout(()=>{
@@ -75,4 +75,4 @@
   </script>
 </body>
 </html>
-<!-- deploy-v54 -->
+<!-- deploy-v55 -->
