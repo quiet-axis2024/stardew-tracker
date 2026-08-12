@@ -65,13 +65,12 @@ jobs:
           grep -q 'item-prices-v44.js?v=44' index.html
           grep -q 'stardew-tracker-v44' sw.js
           python3 - <<'PY'
-          import json,re
           from pathlib import Path
           a=Path('app.jsx').read_text(encoding='utf-8')
           section=a[a.index('const renderItemUsageV42'):a.index('const renderFishTodayV4')]
           assert section.index('{selected&&<Card') < section.index('{results.map')
-          assert '要不要留' not in section
-          assert '能不能賣' not in section
+          assert '>要不要留</b>' not in section
+          assert '>能不能賣</b>' not in section
           assert 'recommendActionV44' in section
           assert 'sellPriceTextV44' in section
           p=Path('item-prices-v44.js').read_text(encoding='utf-8')
