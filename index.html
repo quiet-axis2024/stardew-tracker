@@ -12,9 +12,11 @@
   <title>星露谷農場手帳</title>
   <style>
     html,body,#root{margin:0;min-height:100%;width:100%;max-width:100%;overflow-x:hidden;background:#5a3825}
+    html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     *{box-sizing:border-box}
-    body{-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+    body{position:relative;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
     button,input,textarea,select{font:inherit;max-width:100%}
+    @media (hover:none) and (pointer:coarse){input,textarea,select{font-size:16px!important}}
     #boot-status{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:17vh 24px 0;color:#f4ddb0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-weight:900;text-align:center}
     #boot-status .boot-logo{width:min(704px,88vw);height:auto;image-rendering:pixelated;filter:drop-shadow(0 5px 3px rgba(0,0,0,.18))}
     #boot-status .boot-loading{margin-top:auto;margin-bottom:23vh;font-size:15px;letter-spacing:2px;font-weight:950}
@@ -22,15 +24,15 @@
 </head>
 <body>
   <div id="root"><div id="boot-status"><img class="boot-logo" src="https://stardewvalleywiki.com/mediawiki/images/0/07/Main_Logo_ZH.png" alt="星露谷物語"><div class="boot-loading">LOADING…</div></div></div>
-  <script src="./cloud.js?v=53"></script>
-  <script src="./wardrobe-data-v34.js?v=53"></script>
-  <script src="./farmer-preview-v33.js?v=53"></script>
-  <script src="./animal-preview-v33.js?v=53"></script>
-  <script src="./lookup-data-v46.js?v=53"></script>
-  <script src="./lookup-extra-v49.js?v=53"></script>
-  <script src="./social-data-v50.js?v=53"></script>
-  <script src="./machine-data-v51.js?v=53"></script>
-  <script src="./switch-names-v47.js?v=53"></script>
+  <script src="./cloud.js?v=54"></script>
+  <script src="./wardrobe-data-v34.js?v=54"></script>
+  <script src="./farmer-preview-v33.js?v=54"></script>
+  <script src="./animal-preview-v33.js?v=54"></script>
+  <script src="./lookup-data-v46.js?v=54"></script>
+  <script src="./lookup-extra-v49.js?v=54"></script>
+  <script src="./social-data-v50.js?v=54"></script>
+  <script src="./machine-data-v51.js?v=54"></script>
+  <script src="./switch-names-v47.js?v=54"></script>
   <script>
     (async()=>{
       const root=document.getElementById('root');
@@ -54,7 +56,7 @@
       try{ if(window.SDVCloud) await window.SDVCloud.init(); }
       catch(error){ console.warn('Cloud init failed, falling back to local mode:',error); }
       const script=document.createElement('script');
-      script.src='./app.js?v=53';
+      script.src='./app.js?v=54';
       script.onload=()=>{
         window.__SDV_APP_LOADED__=true;
         setTimeout(()=>{
@@ -73,4 +75,4 @@
   </script>
 </body>
 </html>
-<!-- deploy-v53 -->
+<!-- deploy-v54 -->
