@@ -1,0 +1,35 @@
+name: Apply v48 OCR postfix
+
+on:
+  push:
+    branches: [v48-clean-ocr-ui-map]
+    paths:
+      - 'v48_postfix.py'
+      - '.github/workflows/v48-postfix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v48-clean-ocr-ui-map
+      - name: Apply postfix
+        run: python3 v48_postfix.py
+      - name: Validate bundle and OCR runtime variables
+        run: |
+          npx --yes esbuild@0.25.0 app.jsx --bundle --format=iife --outfile=/tmp/app-v48.js --loader:.jsx=jsx
+          ! grep -q 'compactDate' app.jsx
+          grep -q 'const yearRaw = await recognize(yearCrop' app.jsx
+          grep -q 'const dayRaw = await recognize(dayCrop' app.jsx
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx
+          git rm v48_postfix.py .github/workflows/v48-postfix.yml
+          git commit -m 'fix: remove stale OCR date fallback'
+          git push origin v48-clean-ocr-ui-map
