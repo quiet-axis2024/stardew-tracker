@@ -1,0 +1,167 @@
+name: Finish v67 foundation
+
+on:
+  push:
+    branches: [v67-foundation-polish]
+
+permissions:
+  contents: write
+
+jobs:
+  finish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v67-foundation-polish
+          fetch-depth: 0
+
+      - name: Apply v67
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          from concurrent.futures import ThreadPoolExecutor, as_completed
+          import re, json, hashlib, urllib.request, urllib.parse
+
+          appp=Path('app.jsx'); app=appp.read_text()
+          pairs={
+            '点人物卡 → 社交速查；点礼物 → 物品资料':'點人物卡 → 社交速查；點禮物 → 物品資料',
+            '城镇修复路线':'城鎮修復路線',
+            'Joja 仓库路线内容':'Joja 倉庫｜路線內容',
+            '社区中心路线内容':'社区中心｜路線內容',
+            '农场设备':'農場設備',
+            '按用途分成工匠加工／精炼功能／农务设备；已补裁缝机、电话、迷你冰箱、迷你点唱机、精通雕像、分解机、铁砧、迷你锻造台与蟹笼等实用设施。':'按用途分成工匠加工／精煉功能／農務設備；已補裁縫機、電話、迷你冰箱、迷你點唱機、精通雕像、分解機、鐵砧、迷你鍛造台與蟹籠等實用設施。',
+            '通用喜好分类':'通用喜好分類','点击查看详细用途／来源':'點擊查看詳細用途／來源','特殊物品／分类':'特殊物品／分類','功能／服务':'功能／服務',
+            '游戏里社区中心与 Joja 是二选一路线。确定把手帐当前路线切换成「${label}」吗？\\n另一条路线已记录的数据会保留，但不会同时计入当前路线。':'遊戲中社区中心與 Joja 是二選一路線。確定把手帳目前路線切換成「${label}」嗎？\\n另一條路線已記錄的資料會保留，但不會同時計入目前路線。'
+          }
+          for a,b in pairs.items(): app=app.replace(a,b)
+
+          def drop_duplicate(text,key,value):
+              n=f'"{key}":"{value}"'; hits=list(re.finditer(re.escape(n),text))
+              if len(hits)<2:return text
+              m=hits[-1]; a=text[:m.start()]; b=text[m.end():]
+              if a.endswith(','):a=a[:-1]
+              elif b.startswith(','):b=b[1:]
+              return a+b
+          app=drop_duplicate(app,'仙人掌果子','Cactus Fruit')
+          app=drop_duplicate(app,'野山葵','Wild Horseradish')
+
+          old='const WIKI_FILE = (name) => `https://stardewvalleywiki.com/Special:Redirect/file/${encodeURIComponent(name + ".png")}`;\nconst iconMap = (names) => Object.fromEntries(names.map((name, i) => [i, WIKI_FILE(name)]));\n\n\nconst GAME_FILE = WIKI_FILE;'
+          new='const WIKI_FILE = (name) => `https://stardewvalleywiki.com/Special:Redirect/file/${encodeURIComponent(name + ".png")}`;\nconst GAME_FILE = (name) => window.SDVLocalGameFilesV67?.[name] || WIKI_FILE(name);\nconst iconMap = (names) => Object.fromEntries(names.map((name, i) => [i, GAME_FILE(name)]));'
+          if old not in app: raise SystemExit('image resolver anchor missing')
+          app=app.replace(old,new,1)
+
+          old='selected:{hat:typeof safe.hat==="string"?safe.hat:"",shirt:typeof safe.shirt==="string"?safe.shirt:"",pants:typeof safe.pants==="string"?safe.pants:"",boots:typeof safe.boots==="string"?safe.boots:""},'
+          new='selected:{hat:typeof safe.hat==="string"?safe.hat:"",shirt:(typeof safe.shirt==="string"&&safe.shirt)?safe.shirt:"Shirt003",pants:(typeof safe.pants==="string"&&safe.pants)?safe.pants:"Farmer Pants",boots:typeof safe.boots==="string"?safe.boots:""},'
+          if old not in app: raise SystemExit('wardrobe fallback anchor missing')
+          app=app.replace(old,new,1).replace('api.draw(ref.current,{...opts,selected:{hat:"",shirt:"",pants:"",boots:""},accessoryIndex:-1})','api.draw(ref.current,{...opts,selected:{hat:"",shirt:"Shirt003",pants:"Farmer Pants",boots:""},accessoryIndex:-1})',1)
+
+          anchor='  const [wardrobeAppearanceMetaV37, setWardrobeAppearanceMetaV37] = useState({hairCount:64,skinCount:24,accessoryCount:29,defaultEyeColor:"#5B4636"});\n'
+          if anchor not in app: raise SystemExit('lazy state anchor missing')
+          app=app.replace(anchor,anchor+'  const [, setLazyDataRevisionV67] = useState(0);\n',1)
+          anchor='  const profileInputRef = useRef(null);\n  const saveTimer = useRef(null);\n\n  useEffect(()=>{\n    let alive=true;'
+          lazy='''  const profileInputRef = useRef(null);\n  const saveTimer = useRef(null);\n\n  const loadLazyDataV67 = async group => {\n    const api=window.SDVLazyDataV67;\n    if(!api?.load)return false;\n    try{await api.load(group);setLazyDataRevisionV67(v=>v+1);return true;}\n    catch(error){console.warn(`lazy data load failed: ${group}`,error);return false;}\n  };\n  useEffect(()=>{\n    if(tab==="wardrobe")loadLazyDataV67("wardrobe");\n    if(tab==="fishing"||tab==="people")loadLazyDataV67("lookup");\n  },[tab]);\n  useEffect(()=>{\n    const run=()=>{if(!window.SDVLookupV46)loadLazyDataV67("lookup")};\n    if("requestIdleCallback" in window){const id=window.requestIdleCallback(run,{timeout:5000});return()=>window.cancelIdleCallback?.(id);}\n    const id=window.setTimeout(run,2800);return()=>window.clearTimeout(id);\n  },[]);\n\n  useEffect(()=>{\n    let alive=true;'''
+          if anchor not in app: raise SystemExit('lazy effect anchor missing')
+          app=app.replace(anchor,lazy,1)
+          old='  const openItemLookupV54 = (raw, preferredKey="") => {\n    const row = lookupRowV54(raw);'
+          new='  const openItemLookupV54 = async (raw, preferredKey="") => {\n    if(!window.SDVLookupV46) await loadLazyDataV67("lookup");\n    const row = lookupRowV54(raw);'
+          if old not in app: raise SystemExit('lookup opener anchor missing')
+          app=app.replace(old,new,1); appp.write_text(app)
+
+          assets=Path('assets/game'); assets.mkdir(parents=True,exist_ok=True)
+          core={'Warp Totem Farm','Stardew Valley Almanac','Bouquet','Magnifying Glass','Deluxe Cowboy Hat','Journal Scrap','Calendar','Golden Scroll','Golden Tag','Book Of Stars','Pickaxe','Stardrop','Silo','Sunfish','Friendship 101','Letter','Chest','Map','Ginger Island Map','Calendar Spring ZH','Calendar Summer ZH','Calendar Fall ZH','Calendar Winter ZH','Farm Computer'}
+          names=set(core)
+          for const in ('NPC_ICON_FILES','SECTION_ICON_FILES_V65'):
+              m=re.search(rf'const {const} = \{{(.*?)\n\}};',app,re.S)
+              if m:names.update(re.findall(r':\s*"([^"]+)"',m.group(1)))
+          m=re.search(r'const TABS = \[(.*?)\n\];',app,re.S)
+          if m:names.update(re.findall(r'file:\s*"([^"]+)"',m.group(1)))
+
+          def wiki_url(filename):
+              h=hashlib.md5(filename.encode()).hexdigest()
+              return f'https://stardewvalleywiki.com/mediawiki/images/{h[0]}/{h[:2]}/{urllib.parse.quote(filename)}'
+          def fetch_one(name):
+              filename=name.replace(' ','_')+'.png'
+              req=urllib.request.Request(wiki_url(filename),headers={'User-Agent':'Mozilla/5.0'})
+              with urllib.request.urlopen(req,timeout=15) as r:data=r.read()
+              if not data.startswith(b'\x89PNG'):raise RuntimeError('not png')
+              out=hashlib.sha1(name.encode()).hexdigest()[:14]+'.png'; (assets/out).write_bytes(data)
+              return name,'./assets/game/'+out
+          mapping={};failed=[]
+          with ThreadPoolExecutor(max_workers=8) as ex:
+              fs={ex.submit(fetch_one,n):n for n in names}
+              for f in as_completed(fs):
+                  try:k,v=f.result();mapping[k]=v
+                  except Exception as e:failed.append((fs[f],str(e)))
+          logo_name='Main_Logo_ZH.png'; req=urllib.request.Request(wiki_url(logo_name),headers={'User-Agent':'Mozilla/5.0'})
+          with urllib.request.urlopen(req,timeout=15) as r:logo=r.read()
+          if not logo.startswith(b'\x89PNG'):raise SystemExit('logo not png')
+          (assets/'main-logo-zh.png').write_bytes(logo)
+          (assets/'local-assets-v67.js').write_text('window.SDVLocalGameFilesV67='+json.dumps(mapping,ensure_ascii=False,separators=(',',':'))+';\n')
+          print('local=',len(mapping),'fallback=',len(failed))
+          for x in failed:print('fallback',x)
+          if len(mapping)<20:raise SystemExit('too few local assets')
+
+          ip=Path('index.html'); idx=ip.read_text().replace('https://stardewvalleywiki.com/mediawiki/images/0/07/Main_Logo_ZH.png','./assets/game/main-logo-zh.png')
+          idx=idx.replace('  <script src="./cloud.js?v=66"></script>','  <script src="./assets/game/local-assets-v67.js?v=67"></script>\n  <script src="./cloud.js?v=67"></script>')
+          for src in ('wardrobe-data-v34.js','lookup-data-v46.js','lookup-extra-v49.js'):idx=idx.replace(f'  <script src="./{src}?v=66"></script>\n','')
+          idx=idx.replace('?v=66','?v=67')
+          js='''    window.SDVLazyDataV67=(()=>{\n      const groups={lookup:[\"./lookup-data-v46.js?v=67\",\"./lookup-extra-v49.js?v=67\"],wardrobe:[\"./wardrobe-data-v34.js?v=67\"]};\n      const scripts=new Map(),loads=new Map();\n      const one=src=>{if(scripts.has(src))return scripts.get(src);const p=new Promise((ok,no)=>{const s=document.createElement(\"script\");s.src=src;s.async=true;s.onload=ok;s.onerror=()=>no(new Error(`無法載入 ${src}`));document.head.appendChild(s)});scripts.set(src,p);return p};\n      const load=g=>{if(loads.has(g))return loads.get(g);const p=(groups[g]||[]).reduce((q,s)=>q.then(()=>one(s)),Promise.resolve());loads.set(g,p);return p};\n      return {load};\n    })();\n'''
+          mark='  <script>\n    (async()=>{'
+          if mark not in idx:raise SystemExit('index bootstrap anchor missing')
+          idx=idx.replace(mark,'  <script>\n'+js+'    (async()=>{',1).replace('<!-- deploy-v66 -->','<!-- deploy-v67 -->'); ip.write_text(idx)
+
+          bp=Path('build-cloudflare.sh'); b=bp.read_text().replace('set -euo pipefail\n','set -euo pipefail\npython3 scripts/audit-foundation-v67.py\n',1).replace('switch-names-v47.js dist/','switch-names-v47.js dist/\ncp -R assets dist/');bp.write_text(b)
+          pp=Path('.github/workflows/pages.yml'); p=pp.read_text().replace('          set -euo pipefail\n','          set -euo pipefail\n          python3 scripts/audit-foundation-v67.py\n',1).replace('switch-names-v47.js dist/','switch-names-v47.js dist/\n          cp -R assets dist/');pp.write_text(p)
+
+          sp=Path('sw.js'); sw=sp.read_text().replace("const CACHE='stardew-tracker-v66';","const CACHE='stardew-tracker-v67';")
+          m=re.search(r"const CORE=\[(.*?)\];",sw,re.S); existing=[x for x in re.findall(r"'([^']+)'",m.group(1)) if x not in {'./wardrobe-data-v34.js','./lookup-data-v46.js','./lookup-extra-v49.js'}]
+          add=['./assets/game/local-assets-v67.js','./assets/game/main-logo-zh.png']+[mapping[n] for n in sorted(core) if n in mapping]; merged=[]
+          for x in existing+add:
+              if x not in merged:merged.append(x)
+          sw=sw[:m.start()]+"const CORE=["+','.join(repr(x) for x in merged)+"];"+sw[m.end():];sp.write_text(sw)
+
+          Path('scripts').mkdir(exist_ok=True)
+          lines=['from pathlib import Path','import re,sys',"t=Path('app.jsx').read_text()", "bad=[x for x in ['城镇修复路线','Joja 仓库路线内容','社区中心路线内容','点人物卡 → 社交速查；点礼物 → 物品资料','农场设备','通用喜好分类','点击查看详细用途／来源','特殊物品／分类','功能／服务'] if x in t]", "assert not bad, f'App UI language regressions: {bad}'", "m=re.search(r'const ITEM_FILE_ZH_V26 = \\{(.*?)\\n\\};',t,re.S)", "keys=re.findall(r'\"([^\"]+)\"\\s*:',m.group(1)) if m else []", "dup=sorted({k for k in keys if keys.count(k)>1})", "assert not dup, f'duplicate aliases: {dup}'", "assert 'window.SDVLocalGameFilesV67?.[name] || WIKI_FILE(name)' in t", "assert 'shirt:\"Shirt003\",pants:\"Farmer Pants\"' in t", "idx=Path('index.html').read_text()", "assert all(f'<script src=\"./{x}?v=67\"' not in idx for x in ['wardrobe-data-v34.js','lookup-data-v46.js','lookup-extra-v49.js'])", "print('v67 foundation audit passed')"]
+          Path('scripts/audit-foundation-v67.py').write_text('\n'.join(lines)+'\n')
+
+          rp=Path('README.md'); r=rp.read_text(); a='## 資料來源與聲明\n'; c='## 語言與資產規則\n\n- App 自己的介面、說明與功能文案使用繁體中文（台灣用語）。\n- 遊戲內專有名詞以 Switch 版《星露谷物語》遊戲本體實際顯示為準；搜尋別名另外支援繁中／簡中／英文，不用顯示字串當資料 ID。\n- 高頻導航、NPC 頭像、日曆／地圖等核心圖優先由 repo 內 `assets/game` 提供；未本地化的遊戲圖仍可回退 Stardew Valley Wiki，並由 Service Worker runtime cache。\n- 大型查找與完整衣櫥目錄採延後載入；後續世界／NPC 行程／完整分類等資料模組也沿用此原則。\n\n'
+          if c not in r:r=r.replace(a,c+a)
+          rp.write_text(r)
+          PY
+
+      - name: Validate v67
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/audit-foundation-v67.py
+          node --check sw.js
+          node --check assets/game/local-assets-v67.js
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8 eslint@9
+          mkdir -p build
+          printf '%s\n' "import React from 'react';" "import { createRoot } from 'react-dom/client';" "window.React=React; window.ReactDOM={createRoot};" > build/entry.jsx
+          cat app.jsx >> build/entry.jsx
+          ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=build/app.js 2>build/esbuild.err
+          cat build/esbuild.err
+          ! grep -q '\[WARNING\]' build/esbuild.err
+          cat > build/eslint.config.mjs <<'EOF'
+          export default [{files:['entry.jsx'],languageOptions:{parserOptions:{ecmaVersion:'latest',sourceType:'module',ecmaFeatures:{jsx:true}},globals:{window:'readonly',document:'readonly',navigator:'readonly',localStorage:'readonly',URL:'readonly',Image:'readonly',FileReader:'readonly',Blob:'readonly',confirm:'readonly',alert:'readonly',requestAnimationFrame:'readonly',setTimeout:'readonly',clearTimeout:'readonly',fetch:'readonly',React:'readonly',ReactDOM:'readonly'}},rules:{'no-undef':'error'}}];
+          EOF
+          (cd build && ../node_modules/.bin/eslint --config eslint.config.mjs entry.jsx --no-ignore)
+          test $(find assets/game -name '*.png' | wc -l) -ge 20
+          echo "app=$(wc -c < build/app.js) lookup=$(wc -c < lookup-data-v46.js) wardrobe=$(wc -c < wardrobe-data-v34.js) local=$(find assets/game -name '*.png' | wc -l)"
+          grep -nE '城镇修复路线|Joja 仓库路线内容|社区中心路线内容|点人物卡|农场设备|通用喜好分类|点击查看详细用途|特殊物品／分类|功能／服务' app.jsx && exit 1 || true
+
+      - name: Commit v67
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name quiet-axis2024
+          git config user.email jinx.lin0820@gmail.com
+          git add app.jsx index.html sw.js README.md build-cloudflare.sh .github/workflows/pages.yml scripts assets
+          git commit -m "v67: foundation language loading assets and wardrobe polish"
+          git rm .github/workflows/v67-audit.yml .github/workflows/v67-apply.yml .github/workflows/v67-fix.yml
+          git commit -m "build: remove temporary v67 workflows"
+          git push origin v67-foundation-polish
