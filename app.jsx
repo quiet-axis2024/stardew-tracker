@@ -2090,34 +2090,43 @@ function StardewTracker() {
     const tailoring=selected?[...(wardrobeData.shirts||[]),...(wardrobeData.pants||[])].filter(x=>{const hay=`${x.recipe||""} ${x.sourceZh||""} ${x.source||""}`.toLowerCase();return [selected.name,selected.file,...selected.aliases].some(v=>v&&hay.includes(String(v).toLowerCase()))}).slice(0,6):[];
     const museum=Boolean(selected&&(selected.kinds.has("artifact")||selected.kinds.has("mineral")));
     const shipped=Boolean(selected?.shippable&&(data.shippingV30||[]).includes(selected.file));
-    const saleText=!selected?"":selected.shippable?`可出貨${shipped?"，你的出貨圖鑑已點亮":"，且尚未點亮你的出貨圖鑑"}`:(selected.kinds.has("fish")||selected.kinds.has("artifact")||selected.kinds.has("mineral")||selected.kinds.has("cooking"))?"可出售；但不屬於目前的出貨圖鑑清單":"未列入出貨圖鑑；是否能賣要看物品類型，這裡不亂判";
+    const priceDbV44=window.SDVItemPricesV44||{};
+    const priceAliasV44=selected?[selected.file,...selected.aliases].find(v=>v&&Object.prototype.hasOwnProperty.call(priceDbV44,String(v))):null;
+    const baseSellPriceV44=priceAliasV44!=null?Number(priceDbV44[String(priceAliasV44)]):null;
     const fixedUses=selected?(selected.bundles.length+selected.remix.length+selected.cookNeed+tailoring.length+(museum?1:0)+(usageSpecial?.uses?.length||0)):0;
-    const keepText=!selected?"":usageSpecial?.keep||(museum?"第一次拿到先留 1 個給博物館，再考慮出售。":selected.shippable&&!shipped?"至少先留 1 個出貨，把出貨圖鑑點亮。":fixedUses?"有固定用途；先留夠收集包／料理／裁縫需求，再賣多餘的。":selected.kinds.has("fish")?"普通魚沒有指定用途時可以賣；稀有魚或想養魚塘時先留。":"目前沒有偵測到固定需求，可視金錢與庫存考慮出售。" );
+    const mustKeepV44=Boolean(selected&&(usageSpecial?.keep||museum||(selected.shippable&&!shipped)||fixedUses));
+    const recommendActionV44=!selected?"":mustKeepV44?"留":((baseSellPriceV44!=null&&baseSellPriceV44>0)||selected.kinds.has("fish")||selected.kinds.has("cooking"))?"賣":"留";
+    const recommendReasonV44=!selected?"":usageSpecial?.keep||(museum?"第一次拿到先留 1 個給博物館。":selected.shippable&&!shipped?"先留 1 個完成出貨圖鑑，再處理多餘的。":fixedUses?"有收集包／料理／裁縫等固定用途，先留足需求。":recommendActionV44==="賣"?"目前沒有偵測到固定需求，可賣掉換錢。":"用途或售價資料不足，先留較安全。" );
+    const sellPriceTextV44=baseSellPriceV44==null?"未整理":baseSellPriceV44>0?`${baseSellPriceV44.toLocaleString()}g`:"0g";
+    const usageRowsV44=[];
+    if(selected){
+      (usageSpecial?.uses||[]).forEach(u=>usageRowsV44.push(["⭐",u]));
+      if(museum)usageRowsV44.push(["🏺","博物館：可捐贈 1 個。"]);
+      selected.bundles.forEach(u=>usageRowsV44.push(["📦",u]));
+      selected.remix.forEach(u=>usageRowsV44.push(["📦",u]));
+      if(selected.cookNeed)usageRowsV44.push(["🍳",`料理備料：目前手帳整理的全料理最低備料共需要 ${selected.cookNeed} 個。`]);
+      tailoring.forEach(x=>usageRowsV44.push(["🧵",`裁縫：${x.name||"服飾"}${x.recipe?`（${x.recipe}）`:""}`]));
+      if(selected.shippable)usageRowsV44.push(["🚚",`出貨圖鑑：可出貨${shipped?"，目前已點亮":"，目前尚未點亮"}。`]);
+      if(!usageRowsV44.length)usageRowsV44.push(["・","目前手帳沒有偵測到固定用途。"]);
+    }
     const tag=(text,bg)=> <span style={{fontSize:7.2,fontWeight:900,padding:"2px 5px",borderRadius:8,background:bg,color:C.brown,whiteSpace:"nowrap"}}>{text}</span>;
     const resultTags=it=>{const tags=[];if(it.shippable)tags.push(["出貨","#EAF4D8"]);if(it.kinds.has("artifact")||it.kinds.has("mineral"))tags.push(["博物館","#EEE6F7"]);if(it.bundles.length||it.remix.length)tags.push(["收集包","#FFF0C8"]);if(it.cookNeed)tags.push(["料理","#FBE5D6"]);if(it.kinds.has("fish"))tags.push(["魚","#DDECF7"]);return tags.slice(0,3)};
     return <div style={{marginTop:8}}>
       <Card style={{padding:8,background:"#FFF4D8"}}><div style={{fontSize:10.5,fontWeight:950,color:C.darkBrown}}>拿到東西不知道要不要留，就先查這裡</div><div style={{fontSize:8.5,color:C.muted,lineHeight:1.4,marginTop:2}}>會整理出貨、博物館、收集包、料理、裁縫與重要特殊用途；查不到的再直接進 Wiki。</div></Card>
       <div style={{position:"relative",marginTop:7}}><input value={itemUsageQueryV42} onChange={e=>{setItemUsageQueryV42(e.target.value);setItemUsageSelectedV42("")}} placeholder="可輸入繁中／簡中／English，例如：黃玉、黄玉、Topaz…" style={{width:"100%",border:`1.5px solid ${C.line}`,background:C.paper,borderRadius:9,padding:"9px 34px 9px 10px",fontSize:10.5,color:C.ink,outline:"none"}}/>{itemUsageQueryV42&&<button onClick={()=>{setItemUsageQueryV42("");setItemUsageSelectedV42("")}} style={{position:"absolute",right:6,top:5,border:0,background:"transparent",fontSize:14,color:C.muted}}>×</button>}</div>
+      {selected&&<Card style={{marginTop:7,padding:9,background:"#FFF8E9"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}><GameIcon file={selected.file} size={44}/><div style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:14,color:C.darkBrown}}>{selected.name}</b><div style={{display:"flex",gap:3,flexWrap:"wrap",marginTop:4}}>{resultTags(selected).map(([t,b])=><span key={t}>{tag(t,b)}</span>)}</div></div><WikiBtn name={selected.name}/></div>
+        <div style={{fontSize:12,fontWeight:950,color:C.darkBrown,marginTop:9}}>用途</div>
+        <div style={{display:"grid",gap:5,marginTop:5}}>{usageRowsV44.map(([icon,text],i)=><div key={i} style={{display:"grid",gridTemplateColumns:"18px 1fr",gap:4,alignItems:"start",fontSize:9.4,color:C.ink,lineHeight:1.45}}><span>{icon}</span><span>{text}</span></div>)}</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:9,paddingTop:7,borderTop:`1px dashed ${C.line}`}}>
+          <div style={{minWidth:0}}><span style={{fontSize:7.4,color:C.muted,fontWeight:900}}>建議</span><div style={{fontSize:11,fontWeight:950,color:recommendActionV44==="留"?C.green:C.orange,marginTop:1}}>{recommendActionV44}</div><div style={{fontSize:7.5,color:C.muted,lineHeight:1.3,marginTop:1}}>{recommendReasonV44}</div></div>
+          <div style={{minWidth:0}}><span style={{fontSize:7.4,color:C.muted,fontWeight:900}}>賣價</span><div style={{fontSize:11,fontWeight:950,color:C.brown,marginTop:1}}>{sellPriceTextV44}</div><div style={{fontSize:7.5,color:C.muted,lineHeight:1.3,marginTop:1}}>基礎賣價；品質與職業加成另計。</div></div>
+        </div>
+      </Card>}
       <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:5,marginTop:6}}>{results.map(it=>{const on=selected?.key===it.key;return <button key={it.key} onClick={()=>setItemUsageSelectedV42(it.key)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFF0D2":C.paper,borderRadius:9,padding:"6px 5px",display:"grid",gridTemplateColumns:"34px 1fr",gap:5,alignItems:"center",textAlign:"left",minWidth:0}}><GameIcon file={it.file} size={32}/><span style={{minWidth:0}}><b style={{display:"block",fontSize:8.8,color:C.ink,lineHeight:1.12,overflow:"hidden",textOverflow:"ellipsis"}}>{it.name}</b><span style={{display:"flex",gap:2,flexWrap:"wrap",marginTop:3}}>{resultTags(it).map(([t,b])=><span key={t}>{tag(t,b)}</span>)}</span></span></button>})}</div>
       {!q&&<div style={{fontSize:7.8,color:C.muted,marginTop:4}}>上面先放常查的例子；輸入名稱後會搜尋手帳目前整理到的物品。</div>}
       {q&&!results.length&&<Card style={{marginTop:7,textAlign:"center",fontSize:9.5,color:C.muted}}>目前本機資料沒有找到；可改用繁中／簡中／英文名稱，或直接用 Wiki 查。</Card>}
-      {selected&&<Card style={{marginTop:8,padding:9,background:"#FFF8E9"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}><GameIcon file={selected.file} size={44}/><div style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:14,color:C.darkBrown}}>{selected.name}</b><div style={{display:"flex",gap:3,flexWrap:"wrap",marginTop:4}}>{resultTags(selected).map(([t,b])=><span key={t}>{tag(t,b)}</span>)}</div></div><WikiBtn name={selected.name}/></div>
-        <div style={{display:"grid",gridTemplateColumns:"58px 1fr",gap:6,marginTop:8,padding:"7px 8px",borderRadius:8,background:"#EAF4D8"}}><b style={{fontSize:8.5,color:C.green}}>要不要留</b><span style={{fontSize:9,color:C.ink,lineHeight:1.4}}>{keepText}</span></div>
-        <div style={{display:"grid",gridTemplateColumns:"58px 1fr",gap:6,marginTop:5,padding:"7px 8px",borderRadius:8,background:"#F4EAD8"}}><b style={{fontSize:8.5,color:C.brown}}>能不能賣</b><span style={{fontSize:9,color:C.ink,lineHeight:1.4}}>{saleText}</span></div>
-        <div style={{fontSize:9,fontWeight:950,color:C.brown,marginTop:8}}>用途</div>
-        <div style={{display:"grid",gap:4,marginTop:4}}>
-          {usageSpecial?.uses?.map((u,i)=><div key={`s${i}`} style={{fontSize:8.7,color:C.ink,lineHeight:1.4}}>⭐ {u}</div>)}
-          {museum&&<div style={{fontSize:8.7,color:C.ink,lineHeight:1.4}}>🏺 博物館：可捐贈 1 個；第一次拿到不要急著賣。</div>}
-          {selected.bundles.map((u,i)=><div key={`b${i}`} style={{fontSize:8.7,color:C.ink,lineHeight:1.4}}>📦 {u}</div>)}
-          {selected.remix.slice(0,4).map((u,i)=><div key={`r${i}`} style={{fontSize:8.7,color:C.ink,lineHeight:1.4}}>🎲 {u}</div>)}
-          {selected.cookNeed>0&&<div style={{fontSize:8.7,color:C.ink,lineHeight:1.4}}>🍳 全料理一次性備料：最低合計需要 ×{selected.cookNeed}。</div>}
-          {tailoring.length>0&&<div style={{fontSize:8.7,color:C.ink,lineHeight:1.4}}>🧵 裁縫：可做 {tailoring.slice(0,4).map(x=>x.name).join("、")}{tailoring.length>4?` 等 ${tailoring.length} 件`:""}。</div>}
-          {selected.shippable&&<div style={{fontSize:8.7,color:C.ink,lineHeight:1.4}}>📮 出貨圖鑑：{shipped?"你已經出貨過。":"至少出貨 1 個可點亮。"}</div>}
-          {selected.kinds.has("fish")&&selected.bundles.length===0&&<div style={{fontSize:8.7,color:C.ink,lineHeight:1.4}}>🐟 魚類：沒有固定收集包需求時，主要再看料理、魚塘、送禮或售價需求。</div>}
-          {!fixedUses&&!selected.shippable&&<div style={{fontSize:8.7,color:C.muted,lineHeight:1.4}}>目前手帳沒有偵測到固定用途；點右上 Wiki 可查完整特殊用途。</div>}
-        </div>
-      </Card>}
+
     </div>;
   };
 
