@@ -1,0 +1,209 @@
+name: Apply v65 navigation search copy and fish fixes
+
+on:
+  push:
+    branches: [v65-navigation-search-copy-fish]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v65-navigation-search-copy-fish
+          fetch-depth: 0
+
+      - name: Apply v65 fixes
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess, re
+
+          p=Path('app.jsx')
+          s=p.read_text(encoding='utf-8')
+          old=subprocess.check_output(['git','show','ab826db642b9af5daea64b05d02cb5d91f932dd2:app.jsx'], text=True)
+
+          # v62 removed three lookup/fishing renderers. v64 restored item lookup only;
+          # restore both remaining fishing renderers from the last known-good version.
+          if '  const renderFishFindV4 = () => {' not in s:
+              a=old.index('  const renderFishFindV4 = () => {')
+              b=old.index('  const renderItemUsageV42 = () => {',a)
+              block=old[a:b]
+              marker='  const renderItemUsageV42 = () => {'
+              if s.count(marker)!=1: raise SystemExit('item lookup insertion marker mismatch')
+              s=s.replace(marker,block+marker,1)
+          if '  const renderFishTodayV4 = () => {' not in s:
+              a=old.index('  const renderFishTodayV4 = () => {')
+              b=old.index('  const renderFishHubV4 = () =>',a)
+              block=old[a:b]
+              marker='  const renderFishHubV4 = () =>'
+              if s.count(marker)!=1: raise SystemExit('fish hub insertion marker mismatch')
+              s=s.replace(marker,block+marker,1)
+
+          # Section headings should use transparent in-game items rather than framed menu-tab art.
+          section_marker='/* ================= 小元件 ================= */\nfunction SectionTitle({ icon, children, right }) {'
+          section_map='''/* ================= 小元件 ================= */\nconst SECTION_ICON_FILES_V65 = {\n  "📅":"Calendar", "📊":"Stardew Valley Almanac", "🏆":"Golden Tag", "🎒":"Chest", "⭐":"Book Of Stars",\n  "⛏️":"Pickaxe", "✨":"Stardrop", "📦":"Golden Scroll", "🏠":"House (tier 1)", "🔧":"Pickaxe",\n  "🏗️":"Silo", "🐔":"White Chicken", "🐄":"Cow", "🐟":"Sunfish", "💛":"Friendship 101", "💘":"Bouquet",\n  "🏘️":"Friendship 101", "📖":"Book of Mysteries", "📝":"Journal Scrap", "📤":"Letter", "💾":"Chest"\n};\nfunction SectionTitle({ icon, children, right }) {'''
+          if section_marker not in s: raise SystemExit('SectionTitle marker missing')
+          s=s.replace(section_marker,section_map,1)
+          old_line='  const file = typeof icon==="string"&&icon.startsWith("game:")?icon.slice(5):UI_ICON_FILES[icon];'
+          new_line='  const file = typeof icon==="string"&&icon.startsWith("game:")?icon.slice(5):(SECTION_ICON_FILES_V65[icon]||UI_ICON_FILES[icon]);'
+          if old_line not in s: raise SystemExit('SectionTitle icon resolver missing')
+          s=s.replace(old_line,new_line,1)
+
+          # Make lookup category/tags a first-class filter and preserve it through cross-page back navigation.
+          state_marker='  const [selectedAchievementV64, setSelectedAchievementV64] = useState("");\n'
+          if state_marker not in s: raise SystemExit('v64 state marker missing')
+          s=s.replace(state_marker,state_marker+'  const [itemUsageFilterV65, setItemUsageFilterV65] = useState("");\n',1)
+
+          old_snapshot='itemUsageQueryV42,itemUsageSelectedV42,selectedShippingV64,selectedAchievementV64,scrollY:Number(window.scrollY||0)'
+          new_snapshot='itemUsageQueryV42,itemUsageSelectedV42,selectedShippingV64,selectedAchievementV64,itemUsageFilterV65,scrollY:Number(window.scrollY||0)'
+          if old_snapshot not in s: raise SystemExit('nav snapshot marker missing')
+          s=s.replace(old_snapshot,new_snapshot,1)
+          old_restore='setSelectedShippingV64(prev.selectedShippingV64||""); setSelectedAchievementV64(prev.selectedAchievementV64||"");'
+          new_restore=old_restore+' setItemUsageFilterV65(prev.itemUsageFilterV65||"");'
+          if old_restore not in s: raise SystemExit('nav restore marker missing')
+          s=s.replace(old_restore,new_restore,1)
+          old_open='setItemUsageQueryV42(row?.name || raw); setItemUsageSelectedV42(key); setFishViewV4("items"); setTab("fishing");'
+          new_open='setItemUsageQueryV42(row?.name || raw); setItemUsageSelectedV42(key); setItemUsageFilterV65(""); setFishViewV4("items"); setTab("fishing");'
+          if old_open not in s: raise SystemExit('open item lookup marker missing')
+          s=s.replace(old_open,new_open,1)
+
+          old_results='''    const q=normalizeItemSearchV43(itemUsageQueryV42);\n    const quickNames=["五彩碎片","恐龍蛋","遠古種子","兔子的腳","電池組","硬木","鑽石","茶葉"];\n    const results=(q?all.filter(it=>[it.name,it.file,...it.aliases].some(alias=>normalizeItemSearchV43(alias).includes(q))):quickNames.map(name=>all.find(it=>it.aliases.has(name)||it.name===name)).filter(Boolean)).slice(0,30);'''
+          new_results='''    const q=normalizeItemSearchV43(itemUsageQueryV42);\n    const itemTagKeysV65=it=>{const tags=[];if(itemCurrentSeasonV49(it))tags.push("當季");if(["crop","seed","fruit","sapling"].includes(it?.farmingKind))tags.push("耕種");if(it?.farmingKind==="food"||it?.cookNeed||it?.kinds?.has("cooking"))tags.push("料理");if(it?.shippable)tags.push("出貨");if(it?.kinds?.has("artifact")||it?.kinds?.has("mineral"))tags.push("博物館");if(it?.bundles?.length||it?.remix?.length)tags.push("收集包");if(it?.kinds?.has("fish"))tags.push("魚");if(it?.kinds?.has("craft"))tags.push("製作");if(it?.kinds?.has("big"))tags.push("設備");return [...new Set(tags)]};\n    const ITEM_TAG_ALIASES_V65={"當季":["當季","当季","season"],"耕種":["耕種","耕种","農作","农作","farming","crop"],"料理":["料理","烹飪","烹饪","cooking","food"],"出貨":["出貨","出货","shipping"],"博物館":["博物館","博物馆","museum"],"收集包":["收集包","bundle"],"魚":["魚","鱼","fish"],"製作":["製作","制作","craft","crafting"],"設備":["設備","设备","machine"]};\n    const typedTagV65=q?(Object.entries(ITEM_TAG_ALIASES_V65).find(([tag,aliases])=>[tag,...aliases].some(x=>normalizeItemSearchV43(x)===q))?.[0]||""):"";\n    const activeTagV65=itemUsageFilterV65||typedTagV65;\n    const nameQueryV65=typedTagV65?"":q;\n    const matchesNameV65=it=>!nameQueryV65||[it.name,it.file,...it.aliases].some(alias=>normalizeItemSearchV43(alias).includes(nameQueryV65));\n    const matchesTagV65=it=>!activeTagV65||itemTagKeysV65(it).includes(activeTagV65);\n    const quickNames=["五彩碎片","恐龍蛋","遠古種子","兔子的腳","電池組","硬木","鑽石","茶葉"];\n    const results=((nameQueryV65||activeTagV65)?all.filter(it=>matchesNameV65(it)&&matchesTagV65(it)):quickNames.map(name=>all.find(it=>it.aliases.has(name)||it.name===name)).filter(Boolean)).slice(0,activeTagV65?80:30);'''
+          if old_results not in s: raise SystemExit('lookup results marker missing')
+          s=s.replace(old_results,new_results,1)
+
+          old_tag='''    const tag=(text,bg)=> <span style={{fontSize:7.2,fontWeight:900,padding:"2px 5px",borderRadius:8,background:bg,color:C.brown,whiteSpace:"nowrap"}}>{text}</span>;\n    const resultTags=it=>{const tags=[];if(itemCurrentSeasonV49(it))tags.push(["當季","#DFF0CD"]);if(it.farmingKind==="crop"||it.farmingKind==="seed"||it.farmingKind==="fruit"||it.farmingKind==="sapling")tags.push(["耕種","#EAF4D8"]);if(it.farmingKind==="food")tags.push(["料理","#FBE5D6"]);if(it.shippable)tags.push(["出貨","#EAF4D8"]);if(it.kinds.has("artifact")||it.kinds.has("mineral"))tags.push(["博物館","#EEE6F7"]);if(it.bundles.length||it.remix.length)tags.push(["收集包","#FFF0C8"]);if(it.cookNeed)tags.push(["料理","#FBE5D6"]);if(it.kinds.has("fish"))tags.push(["魚","#DDECF7"]);if(it.kinds.has("craft"))tags.push(["製作","#F4E4C7"]);if(it.kinds.has("big"))tags.push(["設備","#E8E1D4"]);return tags.slice(0,4)};'''
+          new_tag='''    const ITEM_TAG_COLORS_V65={"當季":"#DFF0CD","耕種":"#EAF4D8","料理":"#FBE5D6","出貨":"#EAF4D8","博物館":"#EEE6F7","收集包":"#FFF0C8","魚":"#DDECF7","製作":"#F4E4C7","設備":"#E8E1D4"};\n    const tag=(text,bg)=> <span role="button" tabIndex={0} onClick={e=>{e.stopPropagation();setItemUsageFilterV65(itemUsageFilterV65===text?"":text);setItemUsageSelectedV42("")}} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();e.stopPropagation();setItemUsageFilterV65(itemUsageFilterV65===text?"":text);setItemUsageSelectedV42("")}}} style={{fontSize:7.2,fontWeight:900,padding:"2px 5px",borderRadius:8,background:bg,color:C.brown,whiteSpace:"nowrap",cursor:"pointer",outline:itemUsageFilterV65===text?`1.5px solid ${C.orange}`:"none"}}>{text}</span>;\n    const resultTags=it=>itemTagKeysV65(it).map(t=>[t,ITEM_TAG_COLORS_V65[t]||"#F4E4C7"]).slice(0,4);'''
+          if old_tag not in s: raise SystemExit('lookup tag marker missing')
+          s=s.replace(old_tag,new_tag,1)
+
+          input_line='''      <div style={{position:"relative",marginTop:7}}><input value={itemUsageQueryV42} onChange={e=>{setItemUsageQueryV42(e.target.value);setItemUsageSelectedV42("")}} placeholder="可輸入繁中／簡中／English，例如：黃玉、黄玉、Topaz…" style={{width:"100%",border:`1.5px solid ${C.line}`,background:C.paper,borderRadius:9,padding:"9px 34px 9px 10px",fontSize:10.5,color:C.ink,outline:"none"}}/>{itemUsageQueryV42&&<button onClick={()=>{setItemUsageQueryV42("");setItemUsageSelectedV42("")}} style={{position:"absolute",right:6,top:5,border:0,background:"transparent",fontSize:14,color:C.muted}}>×</button>}</div>'''
+          filter_row='''      <div style={{display:"flex",alignItems:"center",gap:4,overflowX:"auto",WebkitOverflowScrolling:"touch",padding:"6px 1px 1px"}}><span style={{fontSize:7.5,color:C.muted,fontWeight:950,flex:"0 0 auto"}}>分類</span>{["","當季","耕種","出貨","博物館","收集包","料理","魚","製作","設備"].map(t=>{const on=(itemUsageFilterV65||typedTagV65)===t;return <span key={t||"all"} role="button" tabIndex={0} onClick={()=>{setItemUsageFilterV65(t);setItemUsageSelectedV42("")}} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setItemUsageFilterV65(t);setItemUsageSelectedV42("")}}} style={{flex:"0 0 auto",border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFE8B8":C.paper,borderRadius:12,padding:"3px 7px",fontSize:7.8,fontWeight:900,color:on?C.darkBrown:C.muted,cursor:"pointer"}}>{t||"全部"}</span>})}</div>'''
+          if input_line not in s: raise SystemExit('lookup input marker missing')
+          s=s.replace(input_line,input_line+'\n'+filter_row,1)
+
+          s=s.replace('{!q&&<div style={{fontSize:7.8,color:C.muted,marginTop:4}}>上面先放常查的例子；輸入名稱後會搜尋手帳目前整理到的物品。</div>}', '{!q&&!activeTagV65&&<div style={{fontSize:7.8,color:C.muted,marginTop:4}}>未輸入名稱時會顯示常查物品，也可以直接用上方分類篩選。</div>}')
+          s=s.replace('{q&&!results.length&&<Card style={{marginTop:7,textAlign:"center",fontSize:9.5,color:C.muted}}>目前沒有找到；可改用繁中／簡中／英文名稱或常見別名。</Card>}', '{(q||activeTagV65)&&!results.length&&<Card style={{marginTop:7,textAlign:"center",fontSize:9.5,color:C.muted}}>找不到符合的物品；可換一個名稱，或清除分類條件。</Card>}')
+
+          # Back is a navigation control, not page content: keep it reachable at any scroll position.
+          old_main='''    <main style={{width:"100%",maxWidth:680,minWidth:0,margin:"0 auto",padding:"8px 12px 24px",overflowX:"hidden"}}>{navStackV62.length>0&&<div style={{position:"sticky",top:"calc(54px + env(safe-area-inset-top))",zIndex:28,display:"flex",justifyContent:"flex-start",pointerEvents:"none",margin:"0 0 6px"}}><button onClick={goBackV62} style={{pointerEvents:"auto",border:`1.5px solid ${C.orange}`,background:"#FFF8E2",color:C.brown,borderRadius:9,padding:"6px 10px",fontSize:10,fontWeight:950,boxShadow:`0 2px 7px ${C.shadow}`}}>← 返回上一步</button></div>}{content()}</main>'''
+          new_main='''    <main style={{width:"100%",maxWidth:680,minWidth:0,margin:"0 auto",padding:"8px 12px 24px",overflowX:"hidden"}}>{content()}</main>\n    {navStackV62.length>0&&<button aria-label="返回上一頁" onClick={goBackV62} style={{position:"fixed",left:10,bottom:"calc(67px + env(safe-area-inset-bottom))",zIndex:49,border:`1.5px solid ${C.orange}`,background:"rgba(255,248,226,.97)",color:C.brown,borderRadius:18,padding:"7px 11px",fontSize:9.5,fontWeight:950,boxShadow:"0 3px 10px rgba(65,40,20,.24)",cursor:"pointer"}}>← 返回</button>}'''
+          if old_main not in s: raise SystemExit('old sticky back control missing')
+          s=s.replace(old_main,new_main,1)
+
+          # User-facing copy audit: remove implementation/development-note tone and mixed UI Chinese.
+          replacements={
+            '這頁以遊玩時「查人」為主：生日、角色簡介、完整個人偏好、物品來源、特殊訂單與商店資訊；好感度只保留成小型記錄。':'查生日、送禮偏好、特殊訂單、商店與角色服務；好感度可直接在人物卡上記錄。',
+            '點具體物品會直接切到「查找 → 物品用途」，顯示更完整的用途與取得方式；「全部××」這類通用分類則不跳轉。':'點禮物可查看用途與取得方式；「全部××」這類通用分類不另開物品頁。',
+            '對應 1.6 遊戲「＋ → 特殊物品與能力」：特殊物品、書籍能力、精通能力分開記錄。':'記錄特殊物品、永久書籍能力與五項技能精通。',
+            '這裡列固定普通礦井的主要礦物、特殊魚與寶箱層，方便決定今天要去哪段刷；怪物與礦點仍會受當日生成影響。':'快速查看普通礦井各區段的主要礦物、特殊魚與寶箱層；怪物和礦點會依當日生成。',
+            '拿到東西不知道要不要留，就先查這裡':'查物品用途與取得方式',
+            '會整理用途、取得方式、收集包、料理、裁縫、製作與重要特殊用途。':'輸入物品名稱，查看用途、取得方式與相關收集需求；也可以直接用分類篩選。',
+            '目前手帳沒有偵測到固定用途。':'暫無其他固定用途。',
+            '料理備料：目前手帳整理的全料理最低備料共需要 ${selected.cookNeed} 個。':'全料理最低備料需求：×${selected.cookNeed}。',
+            '查物品用途與來源，或從地圖和條件反查魚的位置。':'查物品用途與取得方式，或依地點、季節、天氣與時間找魚。',
+            '料理备料图鉴':'料理備料',
+            '备料图鉴':'備料',
+            '点亮＝已按攻略准备最低需求量；这里只记准备进度，不当库存管理。':'勾選代表已準備到最低需求量；這裡只記備料進度，不追蹤庫存。',
+            '只看还没准备的材料':'只看還沒準備的材料',
+            '全料理一次性备料最低需求 ×${need}':'全料理最低備料需求 ×${need}',
+            '料理图鉴；右上角圆点记录是否已经制作过。':'料理圖鑑；點卡片看說明，右上角 ○／✓ 記錄是否做過。',
+            '舊版只記過「{extrasState.shippedCount} 項」總數，無法知道是哪幾項；請照遊戲圖鑑重新點亮一次。':'已找到舊版的出貨總數（{extrasState.shippedCount} 項），但沒有各物品明細；請依遊戲圖鑑重新勾選。',
+            '目前不可直接制作／特殊取得':'特殊取得／無法直接製作',
+            '选择这个存档的城镇修复路线｜游戏中二选一':'選擇這個存檔的城鎮修復路線｜遊戲中二選一',
+            '尚未选择路线；选择后才展开下一层的路线内容。':'尚未選擇路線；選好後才顯示對應內容。',
+            '目前路线':'目前路線',
+            '游戏里社区中心与 Joja 是二选一路线。确定把手帐当前路线切换成「${label}」吗？\\n 另一条路线已记录的数据会保留，但不会同时计入当前路线。':'遊戲中社區中心與 Joja 是二選一路線。確定把手帳切換成「${label}」嗎？\\n另一條路線的既有記錄會保留。',
+            '✓ 已更新角色圖；目前可自动读取 16:9 原图与横向 4:3 手机照片／裁切图，其他比例先不覆盖文字资料':'✓ 已更新角色圖；16:9 原圖與常見橫向 4:3 照片可自動讀取文字，其他比例不會覆蓋現有資料',
+            '第 {pondPicker+1} 座鱼塘｜选鱼':'第 {pondPicker+1} 座魚塘｜選魚',
+            '搜鱼名，例如：熔岩鳗鱼、水滴鱼…':'搜尋魚名，例如：熔岩鰻魚、水滴魚…',
+            '常用／高价值鱼塘':'常用／高價值魚塘',
+            '搜索结果 · ${rows.length}':'搜尋結果 · ${rows.length}',
+            '全部可养鱼种 · ${rows.length}':'全部可養魚種 · ${rows.length}',
+            '删除这座鱼塘':'刪除這座魚塘',
+            '先選大區，再直接從地圖選地點':'先選區域，再從地圖挑釣點',
+            '選具體水域／位置':'選擇釣點',
+            '特殊水域不在同一張世界地圖上，直接用入口／樓層圖示選。':'特殊水域分散在不同場景，直接選入口或樓層。',
+            '這個地點沒有符合目前季節／天氣／時間條件的魚。':'這個釣點目前沒有符合條件的魚。',
+            '預設跟隨手帳目前季節；也可以臨時切季節查魚，不會改動你的存檔日期。':'預設使用手帳日期；切換季節只影響這次查詢，不會修改存檔。',
+            '共 {total} 個「地點 × 魚」；地點預設收起。':'找到 {total} 筆可釣結果。',
+            '目前條件下沒有符合的魚；可切換季節、天氣、時間或關閉「只看未收集」。':'目前沒有符合條件的魚；可調整季節、天氣、時間或關閉「只看未收集」。',
+            '魚類：收藏＋找魚＋今日決策':'魚類查詢',
+            '圖鑑看收集；找魚按地點反查；今日可釣直接依你的存檔日期／時間篩選。':'查看魚類圖鑑、依地點找魚，或按目前日期與時間篩選。'
+          }
+          for old_text,new_text in replacements.items():
+              s=s.replace(old_text,new_text)
+
+          # Explicitly avoid the two framed heading icons reported from real-device screenshots.
+          s=s.replace('<SectionTitle icon="⭐">技能・專精・精通</SectionTitle>','<SectionTitle icon="game:Book Of Stars">技能・專精・精通</SectionTitle>')
+          s=s.replace('<SectionTitle icon="💛">社交速查</SectionTitle>','<SectionTitle icon="game:Friendship 101">社交速查</SectionTitle>')
+
+          p.write_text(s,encoding='utf-8')
+
+          # Bump PWA/runtime cache to force iPhone home-screen clients off the broken v64 bundle.
+          p=Path('index.html'); h=p.read_text(encoding='utf-8')
+          if '?v=64' not in h: raise SystemExit('index v64 marker missing')
+          h=h.replace('?v=64','?v=65').replace('<!-- deploy-v64 -->','<!-- deploy-v65 -->')
+          p.write_text(h,encoding='utf-8')
+          p=Path('sw.js'); w=p.read_text(encoding='utf-8')
+          if 'stardew-tracker-v64' not in w: raise SystemExit('sw v64 marker missing')
+          p.write_text(w.replace('stardew-tracker-v64','stardew-tracker-v65'),encoding='utf-8')
+          PY
+
+      - name: Validate v65
+        run: |
+          set -euo pipefail
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8 eslint@8.57.1
+          mkdir -p .verify
+          cat > .verify/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> .verify/entry.jsx
+          ./node_modules/.bin/esbuild .verify/entry.jsx --bundle --format=iife --target=safari15 --outfile=.verify/app.js
+          ./node_modules/.bin/eslint app.jsx --no-eslintrc --env browser,es2021 --parser-options '{"ecmaVersion":2022,"sourceType":"script","ecmaFeatures":{"jsx":true}}' --rule 'no-undef:error' --rule 'no-unused-vars:off' --global React:readonly --global ReactDOM:readonly
+          node --check sw.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('app.jsx').read_text(encoding='utf-8')
+          for name in ['renderFishFindV4','renderFishTodayV4','renderItemUsageV42','renderDexCollection','renderFishingV30','renderPeople','renderSkills']:
+              n=len(re.findall(rf'const\s+{re.escape(name)}\s*=',s))
+              assert n==1,(name,n)
+          refs=set(re.findall(r'\b(render[A-Z][A-Za-z0-9_]*)\s*\(',s))
+          defs=set(re.findall(r'\bconst\s+(render[A-Z][A-Za-z0-9_]*)\s*=|\bfunction\s+(render[A-Z][A-Za-z0-9_]*)\s*\(',s))
+          defs={a or b for a,b in defs}
+          missing=sorted(refs-defs)
+          assert not missing, f'missing renderers: {missing}'
+          assert 'itemUsageFilterV65' in s and 'ITEM_TAG_ALIASES_V65' in s and '博物館' in s and '耕種' in s
+          assert 'position:"sticky"' not in s[s.index('<main style='):s.index('smoke-title-compat')]
+          assert 'aria-label="返回上一頁"' in s and '>← 返回</button>' in s
+          assert '<SectionTitle icon="⭐">技能・專精・精通</SectionTitle>' not in s
+          assert '<SectionTitle icon="💛">社交速查</SectionTitle>' not in s
+          assert 'SECTION_ICON_FILES_V65' in s
+          assert 'renderFishFindV4():render' not in s
+          h=Path('index.html').read_text(encoding='utf-8'); w=Path('sw.js').read_text(encoding='utf-8')
+          assert '?v=65' in h and 'stardew-tracker-v65' in w
+          print('v65 renderer/navigation/filter checks ok')
+          PY
+          echo '--- remaining visible-copy audit hints ---'
+          grep -nE '這頁以|目前手帳|只記|不當庫存|第 [34] 層|返回上一步|自动读取|选择这个存档|搜索结果|可养鱼种|删除这座鱼塘|备料图鉴|料理图鉴' app.jsx || true
+
+      - name: Commit v65
+        run: |
+          set -euo pipefail
+          rm -rf .verify node_modules package-lock.json package.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx index.html sw.js
+          git rm -f .github/workflows/v65-apply.yml
+          git commit -m 'v65: fix fish finder navigation filters and copy'
+          git push origin HEAD:v65-navigation-search-copy-fish
