@@ -1,0 +1,45 @@
+name: Apply v58 profile OCR accuracy
+on:
+  push:
+    branches: [v58-profile-ocr-accuracy]
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v58-profile-ocr-accuracy
+          fetch-depth: 0
+      - name: Apply OCR patch
+        run: python3 .github/scripts/v58_profile_ocr.py
+      - name: Validate runtime and OCR fields
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save eslint@8 react@18 react-dom@18 esbuild@0.25.8 >/dev/null 2>&1
+          ./node_modules/.bin/eslint app.jsx --no-eslintrc --env browser,es2021 --parser-options '{"ecmaVersion":2022,"sourceType":"script","ecmaFeatures":{"jsx":true}}' --global React --global ReactDOM --rule 'no-undef:error'
+          grep -q 'parseOcrNumberV58' app.jsx
+          grep -q 'panelMoneyCrop = makeCrop(img, 0.600, 0.638, 0.110, 0.060, 6, 110)' app.jsx
+          grep -q 'farmCropMono = makeCrop(img, 0.480, 0.565, 0.142, 0.060, 8, 90)' app.jsx
+          grep -q 'seasonCrop = makeCrop(img, 0.565, 0.760, 0.060, 0.065, 8, 100)' app.jsx
+          grep -q "makeWorkerV58('eng','英文／數字辨識')" app.jsx
+          grep -q "makeWorkerV58(\['chi_sim','chi_tra'\],'中文辨識')" app.jsx
+          grep -q 'app.js?v=58' index.html
+          grep -q 'stardew-tracker-v58' sw.js
+          mkdir -p build
+          printf '%s\n' "import React from 'react';" "import { createRoot } from 'react-dom/client';" "window.React = React;" "window.ReactDOM = { createRoot };" > build/entry.jsx
+          cat app.jsx >> build/entry.jsx
+          ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=/tmp/v58-app.js
+          test -s /tmp/v58-app.js
+      - name: Commit product changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx index.html sw.js
+          git commit -m 'v58: improve Switch profile OCR accuracy'
+          git push origin HEAD:v58-profile-ocr-accuracy
