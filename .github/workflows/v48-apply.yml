@@ -19,7 +19,17 @@ jobs:
           ref: v48-clean-ocr-ui-map
           fetch-depth: 0
       - name: Apply v48 patch
-        run: python3 v48_patch.py
+        run: |
+          if ! python3 v48_patch.py > v48_patch.log 2>&1; then
+            cat v48_patch.log
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add -f v48_patch.log
+            git commit -m 'chore: record v48 patch failure'
+            git push origin v48-clean-ocr-ui-map
+            exit 1
+          fi
+          cat v48_patch.log
       - name: Build browser bundle
         run: npx --yes esbuild@0.25.0 app.jsx --bundle --format=iife --outfile=/tmp/app-v48.js --loader:.jsx=jsx
       - name: Validate requested changes
@@ -36,8 +46,7 @@ jobs:
             'image retry':'retryWikiImageV48',
             'map transform':'translate(-${thumb.x}%,-${thumb.y}%)',
           }
-          for k,v in checks.items():
-            assert v in s, k
+          for k,v in checks.items(): assert v in s, k
           assert '["letters","信件","Mail"]' not in s
           assert 'stardewvalleywiki.com/Secret_Notes' not in s
           assert 'stardewvalleywiki.com/Journal_Scraps' not in s
@@ -51,6 +60,6 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add app.jsx index.html sw.js
-          git rm v48_patch.py .github/workflows/v48-apply.yml
+          git rm -f v48_patch.py .github/workflows/v48-apply.yml v48_patch.log 2>/dev/null || true
           git commit -m 'v48: clean state, profile OCR, compact data UI and fish maps'
           git push origin v48-clean-ocr-ui-map
