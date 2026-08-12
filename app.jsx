@@ -1079,9 +1079,11 @@ const TOOL_NAMES = [
 ];
 
 const TABS = [
-  { id: "overview", name: "總覽", icon: "🏡", file: TAB_ICON_FILES.overview },
-  { id: "data", name: "資料", icon: "⭐", file: TAB_ICON_FILES.skills },
-  { id: "people", name: "社交", icon: "💛", file: TAB_ICON_FILES.people },
+  // v61: all six bottom tabs use transparent in-game item icons. The old first three
+  // used framed menu-tab art, which made them visually much heavier than Search/Wardrobe/Notes.
+  { id: "overview", name: "總覽", icon: "🏡", file: "Stardrop" },
+  { id: "data", name: "資料", icon: "⭐", file: "Book Of Stars" },
+  { id: "people", name: "社交", icon: "💛", file: "Bouquet" },
   { id: "fishing", name: "查找", icon: "🔎", file: "Magnifying Glass" },
   { id: "wardrobe", name: "衣櫥", icon: "🎩", file: "Deluxe Cowboy Hat" },
   { id: "notes", name: "備註", icon: "📝", file: "Journal Scrap" },
@@ -1601,6 +1603,12 @@ function StardewTracker() {
       // Player/farm names remain manual: free-form text and symbols are too easy for OCR
       // to hallucinate, and bad guesses should never overwrite a correct name.
       const psmWordV59 = Tesseract.PSM?.SINGLE_WORD || 8;
+      // Names are convenient to prefill even when imperfect, so v61 restores them as
+      // editable OCR suggestions. Numeric/date fields keep the conservative v60 rules.
+      const farmerCropColorV61 = makeCrop(img, 0.285, 0.780, 0.130, 0.060, 8, false);
+      const farmerCropMonoV61 = makeCrop(img, 0.285, 0.780, 0.130, 0.060, 8, 90);
+      const farmCropColorV61 = makeCrop(img, 0.480, 0.565, 0.180, 0.060, 8, false);
+      const farmCropMonoV61 = makeCrop(img, 0.480, 0.565, 0.180, 0.060, 8, 90);
       const hudMoneyColorV59 = makeCrop(img, 0.890, 0.205, 0.090, 0.050, 8, false);
       const hudMoneyMonoV59 = makeCrop(img, 0.890, 0.205, 0.090, 0.050, 8, 120);
       const panelMoneyV59 = makeCrop(img, 0.608, 0.638, 0.064, 0.060, 8, 110);
@@ -1631,7 +1639,10 @@ function StardewTracker() {
       const seasonCharV59 = raw => String(raw||"").match(/[春夏秋冬]/u)?.[0] || null;
 
       setProfileOcrStatus("第一次使用會下載辨識資料；之後會直接使用快取。");
-      const engWorker = await makeWorkerV58('eng','數字辨識');
+      const engWorker = await makeWorkerV58('eng','英文／數字辨識');
+      const nameWhitelistV61 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789®©·・._@☆★♡♥♪♫~～*+- ";
+      const farmerEngResultV61 = await recognizeDetailedWithV58(engWorker, farmerCropMonoV61, nameWhitelistV61);
+      const farmEngResultV61 = await recognizeDetailedWithV58(engWorker, farmCropMonoV61, nameWhitelistV61);
       const moneyHudColorRawV59 = await recognizeWithV58(engWorker, hudMoneyColorV59, "0123456789", psmWordV59);
       const moneyHudMonoRawV59 = await recognizeWithV58(engWorker, hudMoneyMonoV59, "0123456789", psmWordV59);
       const moneyPanelRawV59 = await recognizeWithV58(engWorker, panelMoneyV59, "0123456789,", psmWordV59);
@@ -1647,9 +1658,11 @@ function StardewTracker() {
       const clockRaw = await recognizeWithV58(engWorker, clockCrop, "0123456789:：");
       await engWorker.terminate();
 
-      const zhWorker = await makeWorkerV58('chi_sim','季節辨識');
+      const zhWorker = await makeWorkerV58('chi_sim','中文／季節辨識');
       const seasonColorRawV59 = await recognizeWithV58(zhWorker, seasonColorV59, "", psmWordV59);
       const seasonMonoRawV59 = await recognizeWithV58(zhWorker, seasonMonoV59, "", psmWordV59);
+      const farmerZhResultV61 = await recognizeDetailedWithV58(zhWorker, farmerCropColorV61, "");
+      const farmZhResultV61 = await recognizeDetailedWithV58(zhWorker, farmCropColorV61, "");
       await zhWorker.terminate();
 
       const moneyRaw = [moneyHudColorRawV59,moneyHudMonoRawV59,moneyPanelRawV59].join(' | ');
@@ -1677,8 +1690,10 @@ function StardewTracker() {
       // Season is only written when both preprocessing passes independently agree.
       const seasonConsensusV59 = seasonA59 && seasonB59 && seasonA59 === seasonB59 ? seasonA59 : null;
 
-      const farmerRaw = "";
-      const farmRaw = "";
+      const farmerBestV61 = bestNameResult(farmerEngResultV61, farmerZhResultV61);
+      const farmBestV61 = bestNameResult(farmEngResultV61, farmZhResultV61);
+      const farmerRaw = farmerBestV61.text;
+      const farmRaw = farmBestV61.text;
 
       // 不再只保留英數／中文：玩家名稱可合法包含 ®、©、·、☆ 等符號。
       let farmerName = cleanNameCandidate(farmerRaw)
@@ -1711,7 +1726,9 @@ function StardewTracker() {
 
       const patch = {};
       const updated = [];
-      // v59: screenshot upload no longer overwrites player/farm names.
+      // Names are best-effort convenience fields. They remain directly editable below.
+      if (farmerName && farmerName.length >= 2) { patch.name = farmerName; updated.push("農夫名字"); }
+      if (farmName && farmName.length >= 2) { patch.farm = farmName; updated.push("農場名"); }
       if (year && year >= 1 && year <= 99) { patch.year = year; updated.push("年份"); }
       if (season) { patch.season = season; updated.push("季節"); }
       if (day && day >= 1 && day <= 28) { patch.day = day; updated.push("日期"); }
@@ -1725,7 +1742,9 @@ function StardewTracker() {
         moneyHudColorRawV59, moneyHudMonoRawV59, moneyPanelRawV59,
         incomeColorRawV59, incomeMonoRawV59, incomeWideRawV59,
         seasonColorRawV59, seasonMonoRawV59,
-        hudDayColorRawV60, hudDayMonoRawV60
+        hudDayColorRawV60, hudDayMonoRawV60,
+        farmerEngRawV61:farmerEngResultV61.text, farmerZhRawV61:farmerZhResultV61.text,
+        farmEngRawV61:farmEngResultV61.text, farmZhRawV61:farmZhResultV61.text
       });
       const skippedV59 = [];
       if (currentMoney === null) skippedV59.push("目前金錢");
