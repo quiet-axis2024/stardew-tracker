@@ -1,0 +1,65 @@
+name: Apply v35 preview polish
+
+on:
+  push:
+    branches: [v35-preview-polish]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v35-preview-polish
+          fetch-depth: 0
+      - name: Apply v35 patch
+        run: |
+          set -euo pipefail
+          python3 v35_patch.py
+      - name: Validate v35 runtime
+        run: |
+          set -euo pipefail
+          node --check farmer-preview-v33.js
+          node --check animal-preview-v33.js
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8
+          mkdir -p .verify
+          cat > .verify/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> .verify/entry.jsx
+          ./node_modules/.bin/esbuild .verify/entry.jsx --bundle --format=iife --target=safari15 --outfile=.verify/app.js
+          grep -q '白天／夜晚雙場景' app.jsx
+          grep -q 'shoeColors' farmer-preview-v33.js
+          grep -q 'hats_animals.png' animal-preview-v33.js
+          grep -q 'PET_HAT_POS' animal-preview-v33.js
+          grep -q 'HORSE_HAT_POS' animal-preview-v33.js
+          grep -q 'farmer-preview-v33.js?v=35' index.html
+          grep -q 'animal-preview-v33.js?v=35' index.html
+          grep -q 'app.js?v=35' index.html
+          grep -q 'stardew-tracker-v35' sw.js
+          python3 - <<'PY'
+          import re
+          a=open('app.jsx',encoding='utf-8').read()
+          assert 'gridTemplateColumns:"1fr 1fr"' in a
+          f=open('farmer-preview-v33.js',encoding='utf-8').read()
+          assert "'Space Boots':10" in f and "'Crystal Shoes':18" in f
+          an=open('animal-preview-v33.js',encoding='utf-8').read()
+          assert 'useAnimalTexture:true' in an or 'hats_animals.png' in an
+          print('v35 checks ok')
+          PY
+      - name: Commit v35 code
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx index.html sw.js farmer-preview-v33.js animal-preview-v33.js
+          git rm -f v35_patch.py
+          git commit -m 'v35: native animal hats, boots, and dual scene preview'
+          git push origin HEAD:v35-preview-polish
