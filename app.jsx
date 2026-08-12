@@ -1611,6 +1611,9 @@ function StardewTracker() {
       const yearMonoV59 = makeCrop(img, 0.533, 0.768, 0.019, 0.050, 8, 110);
       const dayColorV59 = makeCrop(img, 0.615, 0.768, 0.033, 0.050, 8, false);
       const dayMonoV59 = makeCrop(img, 0.615, 0.768, 0.033, 0.050, 8, 110);
+      // Cross-check the profile date against the large day number in the HUD.
+      const hudDayColorV60 = makeCrop(img, 0.882, 0.018, 0.018, 0.050, 10, false);
+      const hudDayMonoV60 = makeCrop(img, 0.882, 0.018, 0.018, 0.050, 10, 120);
       // Exact crop around the two glyphs only (e.g. 夏季). The previous wide crop also
       // contained 年/day text and frequently returned no season, leaving the default 春.
       const seasonColorV59 = makeCrop(img, 0.575, 0.758, 0.035, 0.060, 10, false);
@@ -1639,6 +1642,8 @@ function StardewTracker() {
       const yearMonoRawV59 = await recognizeWithV58(engWorker, yearMonoV59, "0123456789", psmWordV59);
       const dayColorRawV59 = await recognizeWithV58(engWorker, dayColorV59, "0123456789", psmWordV59);
       const dayMonoRawV59 = await recognizeWithV58(engWorker, dayMonoV59, "0123456789", psmWordV59);
+      const hudDayColorRawV60 = await recognizeWithV58(engWorker, hudDayColorV60, "0123456789", psmWordV59);
+      const hudDayMonoRawV60 = await recognizeWithV58(engWorker, hudDayMonoV60, "0123456789", psmWordV59);
       const clockRaw = await recognizeWithV58(engWorker, clockCrop, "0123456789:：");
       await engWorker.terminate();
 
@@ -1650,7 +1655,7 @@ function StardewTracker() {
       const moneyRaw = [moneyHudColorRawV59,moneyHudMonoRawV59,moneyPanelRawV59].join(' | ');
       const incomeRaw = [incomeColorRawV59,incomeMonoRawV59,incomeWideRawV59].join(' | ');
       const yearRaw = [yearColorRawV59,yearMonoRawV59].join(' | ');
-      const dayRaw = [dayColorRawV59,dayMonoRawV59].join(' | ');
+      const dayRaw = [dayColorRawV59,dayMonoRawV59,hudDayColorRawV60,hudDayMonoRawV60].join(' | ');
       const seasonRaw = [seasonColorRawV59,seasonMonoRawV59].join(' | ');
 
       const moneyConsensusV59 = numberConsensusV59(
@@ -1664,10 +1669,13 @@ function StardewTracker() {
         parseOcrNumberV58(incomeWideRawV59)
       );
       const yearConsensusV59 = numberConsensusV59(digitsOnly(yearColorRawV59), digitsOnly(yearMonoRawV59));
-      const dayConsensusV59 = numberConsensusV59(digitsOnly(dayColorRawV59), digitsOnly(dayMonoRawV59));
+      const profileDayV60 = numberConsensusV59(digitsOnly(dayColorRawV59), digitsOnly(dayMonoRawV59));
+      const hudDayV60 = numberConsensusV59(digitsOnly(hudDayColorRawV60), digitsOnly(hudDayMonoRawV60));
+      const dayConsensusV59 = profileDayV60 !== null && hudDayV60 !== null && profileDayV60 === hudDayV60 ? profileDayV60 : null;
       const seasonA59 = seasonCharV59(seasonColorRawV59);
       const seasonB59 = seasonCharV59(seasonMonoRawV59);
-      const seasonConsensusV59 = seasonA59 && seasonB59 ? (seasonA59 === seasonB59 ? seasonA59 : null) : (seasonA59 || seasonB59);
+      // Season is only written when both preprocessing passes independently agree.
+      const seasonConsensusV59 = seasonA59 && seasonB59 && seasonA59 === seasonB59 ? seasonA59 : null;
 
       const farmerRaw = "";
       const farmRaw = "";
@@ -1716,7 +1724,8 @@ function StardewTracker() {
         farmerRaw, farmRaw, moneyRaw, incomeRaw, yearRaw, seasonRaw, dayRaw, clockRaw, applied:patch,
         moneyHudColorRawV59, moneyHudMonoRawV59, moneyPanelRawV59,
         incomeColorRawV59, incomeMonoRawV59, incomeWideRawV59,
-        seasonColorRawV59, seasonMonoRawV59
+        seasonColorRawV59, seasonMonoRawV59,
+        hudDayColorRawV60, hudDayMonoRawV60
       });
       const skippedV59 = [];
       if (currentMoney === null) skippedV59.push("目前金錢");
