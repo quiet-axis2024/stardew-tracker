@@ -22,8 +22,6 @@ jobs:
           from pathlib import Path
           import json, re, urllib.request
 
-          # Pinned multilingual game-data export. Every record pairs the game's
-          # data-en-US display name with its data-zh-CN display name.
           PIN='45fd0615158f0c93f355b04ee33bf3f3d8afe303'
           ROOT=f'https://raw.githubusercontent.com/Andre-Favero/stardew-valley/{PIN}/jsons'
           FILES=[
@@ -49,14 +47,32 @@ jobs:
                   labels=row.get('names') or {}
                   en=str(labels.get('data-en-US') or '').strip()
                   zh=str(labels.get('data-zh-CN') or '').strip()
-                  # Keep only actually localized Chinese display names. Some hidden
-                  # map nodes intentionally remain English even in the zh-CN data.
+                  item_id=str(row.get('id') or '').strip()
+                  # Some hidden map nodes intentionally remain English in zh-CN;
+                  # don't let those replace an existing useful Chinese label.
                   if en and zh and cjk.search(zh):
                       official[en.lower()]=zh
+                      # Named game IDs (Book_Horse, BigChest, BasiliskPaw...) are
+                      # also used as lookup asset keys. Numeric IDs are category-
+                      # scoped, so don't add them as global aliases.
+                      if item_id and not item_id.isdigit():
+                          official[item_id.lower()]=zh
                       count+=1
               source_counts[fname]=count
 
-          if len(official)<700:
+          # Exact official game/wiki display names for source-name variants used by
+          # the social snapshot. These are aliases only; the displayed Chinese is
+          # still the official zh-CN wording.
+          official.update({
+              'large goat milk':'大瓶羊奶',
+              'jack be nimble jack be thick':'铜墙铁壁',
+              'jack be nimble, jack be thick':'铜墙铁壁',
+              'strange doll (green)':'诡异玩偶（绿）',
+              'strange doll (yellow)':'诡异玩偶（黄）',
+              'cookie':'饼干'
+          })
+
+          if len(official)<900:
               raise RuntimeError(f'official zh-CN map unexpectedly small: {len(official)}; {source_counts}')
 
           p=Path('switch-names-v47.js')
@@ -65,9 +81,7 @@ jobs:
           if marker not in old_text:
               raise RuntimeError('switch name map marker missing')
           old=json.loads(old_text.split(marker,1)[1].rsplit(';',1)[0])
-          names=dict(old)  # retain non-item aliases used by bundle/UI metadata
-
-          # Official game localization wins over old partial/manual names.
+          names=dict(old)
           for key in list(names):
               if isinstance(key,str) and key.lower() in official:
                   names[key]=official[key.lower()]
@@ -80,28 +94,30 @@ jobs:
               'non-item aliases are retained. */\n'
           )
           p.write_text(header+'window.SDVSwitchNamesV47='+json.dumps(names,ensure_ascii=False,separators=(',',':'))+';\n',encoding='utf-8')
-          print('localized official names',len(official),'total aliases',len(names),source_counts)
+          print('localized official aliases',len(official),'total aliases',len(names),source_counts)
 
-          # All consumers use the same helper; allow file/name case-insensitive lookup
-          # because some game datasets use lowercase asset keys.
           app=Path('app.jsx'); s=app.read_text(encoding='utf-8')
           old_line='  const direct=map[String(file||"")]||map[String(name||"")];'
           new_line='  const fileKey=String(file||""),nameKey=String(name||"");\n  const direct=map[fileKey]||map[nameKey]||map[fileKey.toLowerCase()]||map[nameKey.toLowerCase()];'
-          if old_line not in s:
+          if old_line in s:
+              s=s.replace(old_line,new_line,1)
+          elif 'map[fileKey.toLowerCase()]' not in s:
               raise RuntimeError('switchNameV47 direct lookup marker missing')
-          app.write_text(s.replace(old_line,new_line,1),encoding='utf-8')
+          app.write_text(s,encoding='utf-8')
 
-          # Force iPhone/PWA to load the expanded name table and updated bundle.
           ip=Path('index.html'); h=ip.read_text(encoding='utf-8')
-          if '?v=52' not in h:
-              raise RuntimeError('expected v52 asset query marker missing')
-          h=h.replace('?v=52','?v=53').replace('<!-- deploy-v52 -->','<!-- deploy-v53 -->')
+          if '?v=52' in h:
+              h=h.replace('?v=52','?v=53').replace('<!-- deploy-v52 -->','<!-- deploy-v53 -->')
+          elif '?v=53' not in h:
+              raise RuntimeError('asset query version marker missing')
           ip.write_text(h,encoding='utf-8')
 
           sw=Path('sw.js'); w=sw.read_text(encoding='utf-8')
-          if 'stardew-tracker-v52' not in w:
-              raise RuntimeError('expected v52 service-worker cache marker missing')
-          sw.write_text(w.replace('stardew-tracker-v52','stardew-tracker-v53',1),encoding='utf-8')
+          if 'stardew-tracker-v52' in w:
+              w=w.replace('stardew-tracker-v52','stardew-tracker-v53',1)
+          elif 'stardew-tracker-v53' not in w:
+              raise RuntimeError('service-worker cache version marker missing')
+          sw.write_text(w,encoding='utf-8')
           PY
 
       - name: Validate official names and coverage
@@ -116,29 +132,34 @@ jobs:
           require('./lookup-data-v46.js');
           require('./social-data-v50.js');
           const map=window.SDVSwitchNamesV47;
-          const nameOf=(x)=>map[x]||map[String(x||'').toLowerCase()]||x;
+          const nameOf=(name,file='')=>map[file]||map[name]||map[String(file||'').toLowerCase()]||map[String(name||'').toLowerCase()]||name;
           const expected={
             'Ancient Sword':'古剑',
             'Basilisk Paw':'蜥怪的爪子',
             'Combat Quarterly':'战斗季刊',
-            'Monster Compendium':'怪物图鉴'
+            'Monster Compendium':'怪物图鉴',
+            'Holly':'冬青树',
+            'Large Goat Milk':'大瓶羊奶',
+            'Jack Be Nimble Jack Be Thick':'铜墙铁壁',
+            'Strange Doll (green)':'诡异玩偶（绿）',
+            'Strange Doll (yellow)':'诡异玩偶（黄）',
+            'Cookie':'饼干'
           };
           for(const [en,zh] of Object.entries(expected)){
             if(nameOf(en)!==zh) throw new Error(`${en}: expected ${zh}, got ${nameOf(en)}`);
           }
-          if(nameOf('Holly')==='Holly'||!/[\u3400-\u9fff]/.test(nameOf('Holly'))) throw new Error('Holly is still not localized');
 
           const rows=window.SDVLookupV46.items||[];
           const englishRows=rows.filter(r=>/[A-Za-z]/.test(String(r.name||'')));
-          const covered=englishRows.filter(r=>{
-            const candidates=[r.name,r.file].filter(Boolean);
-            return candidates.some(x=>{const v=nameOf(x);return v!==x&&/[\u3400-\u9fff]/.test(v)});
-          });
-          const ratio=covered.length/Math.max(1,englishRows.length);
-          console.log(`lookup Chinese-name coverage ${covered.length}/${englishRows.length} = ${(ratio*100).toFixed(1)}%`);
-          const missingLookup=englishRows.filter(r=>!covered.includes(r)).slice(0,40).map(r=>r.name);
-          console.log('sample lookup names without Chinese mapping',missingLookup);
-          if(ratio<0.90) throw new Error('official-name coverage below 90%');
+          const uncovered=[];
+          for(const r of englishRows){
+            const zh=nameOf(r.name,r.file);
+            if(zh===r.name||!/[\u3400-\u9fff]/.test(zh)) uncovered.push(r.name);
+          }
+          const ratio=(englishRows.length-uncovered.length)/Math.max(1,englishRows.length);
+          console.log(`lookup Chinese-name coverage ${englishRows.length-uncovered.length}/${englishRows.length} = ${(ratio*100).toFixed(1)}%`);
+          console.log('sample lookup names without Chinese mapping',uncovered.slice(0,40));
+          if(ratio<0.97) throw new Error('official-name coverage below 97%');
 
           const generic=/^(All |Any |Most |Every |Universal )|\(except|except |items$|category$/i;
           const missingSocial=[];
@@ -150,8 +171,8 @@ jobs:
             }
           }
           const uniq=[...new Set(missingSocial)];
-          console.log('concrete social names still untranslated',uniq.length,uniq.slice(0,40));
-          if(uniq.length>5) throw new Error('too many concrete social names still untranslated');
+          console.log('concrete social names still untranslated',uniq.length,uniq);
+          if(uniq.length!==0) throw new Error('concrete social names still untranslated');
           NODE
           grep -q 'map\[fileKey.toLowerCase()\]' app.jsx
           grep -q '?v=53' index.html
@@ -183,5 +204,9 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add app.jsx switch-names-v47.js index.html sw.js
-          git commit -m 'v53: use complete official Chinese item names'
-          git push origin HEAD:v53-switch-official-names
+          if git diff --cached --quiet; then
+            echo 'No product changes to commit'
+          else
+            git commit -m 'v53: complete official Chinese item names'
+            git push origin HEAD:v53-switch-official-names
+          fi
