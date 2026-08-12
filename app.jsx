@@ -953,7 +953,11 @@ function WikiBtn({ name }) {
 }
 
 const WARDROBE_DIR_LABEL_V33 = {front:"正面",right:"右側",back:"背面",left:"左側"};
-function FarmerSpritePreviewV33({player,direction="front",large=false,shirtDyeable=false,pantsDyeable=false}) {
+const WARDROBE_SCENE_V35 = {
+  day:{label:"☀️ 白天",bg:"linear-gradient(#8FD0F3 0 62%,#78AD57 62% 70%,#C9A66A 70%)",labelBg:"rgba(255,248,227,.9)",labelColor:"#604329"},
+  night:{label:"🌙 夜晚",bg:"linear-gradient(#17264B 0 62%,#35513A 62% 70%,#665342 70%)",labelBg:"rgba(27,28,49,.82)",labelColor:"#F7EBC8"}
+};
+function FarmerSpritePreviewV33({player,direction="front",large=false,scene="day",shirtDyeable=false,pantsDyeable=false}) {
   const ref=useRef(null);
   useEffect(()=>{
     const api=window.SDVFarmerSpriteV33;
@@ -966,23 +970,29 @@ function FarmerSpritePreviewV33({player,direction="front",large=false,shirtDyeab
       shirtDyeable,pantsDyeable
     }).catch(e=>console.warn("farmer sprite preview failed",e));
   },[player.gender,player.hat,player.shirt,player.pants,player.boots,player.shirtColor,player.pantsColor,player.hairColor,player.hairIndex,direction,shirtDyeable,pantsDyeable]);
-  const w=large?120:52,h=large?210:91;
-  return <div style={{position:"relative",height:large?226:105,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",borderRadius:9,background:"linear-gradient(#DCEEC9 0 68%,#D5B77B 68%)",border:`1px solid ${C.line}`}}>
+  const sc=WARDROBE_SCENE_V35[scene]||WARDROBE_SCENE_V35.day;
+  // Helper backing is 48x84. 48x84 (small) and 96x168 (large) are exact integer scales.
+  const w=large?96:48,h=large?168:84;
+  return <div style={{position:"relative",height:large?182:100,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",borderRadius:9,background:sc.bg,border:`1px solid ${C.line}`}}>
     <canvas ref={ref} aria-label={`玩家${WARDROBE_DIR_LABEL_V33[direction]||""}遊戲 sprite 預覽`} style={{width:w,height:h,imageRendering:"pixelated",display:"block"}}/>
-    <span style={{position:"absolute",left:4,bottom:3,fontSize:large?9:6.8,fontWeight:950,color:"#604329",background:"rgba(255,248,227,.88)",padding:"1px 4px",borderRadius:5}}>{WARDROBE_DIR_LABEL_V33[direction]}</span>
+    {large&&<span style={{position:"absolute",right:4,top:4,fontSize:7.5,fontWeight:950,color:sc.labelColor,background:sc.labelBg,padding:"2px 5px",borderRadius:5}}>{sc.label}</span>}
+    <span style={{position:"absolute",left:4,bottom:3,fontSize:large?8:6.8,fontWeight:950,color:"#604329",background:"rgba(255,248,227,.9)",padding:"1px 4px",borderRadius:5}}>{WARDROBE_DIR_LABEL_V33[direction]}</span>
   </div>;
 }
-function AnimalSpritePreviewV33({type,hat,direction="front",large=false}) {
+function AnimalSpritePreviewV33({type,hat,direction="front",large=false,scene="day"}) {
   const ref=useRef(null);
   useEffect(()=>{
     const api=window.SDVAnimalSpriteV33;
     if(!api?.draw||!ref.current)return;
     api.draw(ref.current,{type,hat,direction}).catch(e=>console.warn("animal sprite preview failed",e));
   },[type,hat,direction]);
-  const size=large?176:76;
-  return <div style={{position:"relative",height:large?210:105,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",borderRadius:9,background:"linear-gradient(#DCEEC9 0 68%,#D5B77B 68%)",border:`1px solid ${C.line}`}}>
-    <canvas ref={ref} aria-label={`${type}${WARDROBE_DIR_LABEL_V33[direction]||""}遊戲 sprite 預覽`} style={{width:size,height:size,imageRendering:"pixelated",display:"block"}}/>
-    <span style={{position:"absolute",left:4,bottom:3,fontSize:large?9:6.8,fontWeight:950,color:"#604329",background:"rgba(255,248,227,.88)",padding:"1px 4px",borderRadius:5}}>{WARDROBE_DIR_LABEL_V33[direction]}</span>
+  const sc=WARDROBE_SCENE_V35[scene]||WARDROBE_SCENE_V35.day;
+  // Helper backing is 104x96. Small is exact 1/2, large is exact 1x.
+  const w=large?104:52,h=large?96:48;
+  return <div style={{position:"relative",height:large?126:100,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",borderRadius:9,background:sc.bg,border:`1px solid ${C.line}`}}>
+    <canvas ref={ref} aria-label={`${type}${WARDROBE_DIR_LABEL_V33[direction]||""}遊戲 sprite 預覽`} style={{width:w,height:h,imageRendering:"pixelated",display:"block"}}/>
+    {large&&<span style={{position:"absolute",right:4,top:4,fontSize:7.5,fontWeight:950,color:sc.labelColor,background:sc.labelBg,padding:"2px 5px",borderRadius:5}}>{sc.label}</span>}
+    <span style={{position:"absolute",left:4,bottom:3,fontSize:large?8:6.8,fontWeight:950,color:"#604329",background:"rgba(255,248,227,.9)",padding:"1px 4px",borderRadius:5}}>{WARDROBE_DIR_LABEL_V33[direction]}</span>
   </div>;
 }
 
@@ -2006,18 +2016,22 @@ function StardewTracker() {
     const hexRgb=hex=>{const m=String(hex||"").match(/^#([0-9a-f]{6})$/i);if(!m)return[0,0,0];const n=parseInt(m[1],16);return[(n>>16)&255,(n>>8)&255,n&255]};
     const rgbHex=rgb=>`#${rgb.map(v=>Math.max(0,Math.min(255,Number(v)||0)).toString(16).padStart(2,"0")).join("")}`;
     const rgbEditor=(kind,color,enabled)=>{const rgb=hexRgb(color);const set=(i,v)=>{const next=[...rgb];next[i]=Math.max(0,Math.min(255,Number(v)||0));setPlayer({[kind+"Color"]:rgbHex(next)})};return <div style={{display:"grid",gridTemplateColumns:"42px repeat(3,1fr)",gap:4,alignItems:"center",opacity:enabled?1:.42}}><input type="color" disabled={!enabled} value={color} onChange={e=>setPlayer({[kind+"Color"]:e.target.value})} style={{width:40,height:31,border:0,padding:0,background:"transparent"}}/>{rgb.map((v,i)=><input key={i} type="number" min="0" max="255" disabled={!enabled} value={v} onChange={e=>set(i,e.target.value)} style={{width:"100%",border:`1px solid ${C.line}`,borderRadius:6,padding:"5px 2px",fontSize:8.5,textAlign:"center",background:C.cream,color:C.ink}}/>)}</div>};
-    const preview=(dir,large=false)=>wardrobeTargetV30==="player"?<FarmerSpritePreviewV33 player={player} direction={dir} large={large} shirtDyeable={shirtDyeable} pantsDyeable={pantsDyeable}/>:<AnimalSpritePreviewV33 type={wardrobeTargetV30} hat={target.hat||""} direction={dir} large={large}/>;
+    const preview=(dir,large=false,scene="day")=>wardrobeTargetV30==="player"?<FarmerSpritePreviewV33 player={player} direction={dir} large={large} scene={scene} shirtDyeable={shirtDyeable} pantsDyeable={pantsDyeable}/>:<AnimalSpritePreviewV33 type={wardrobeTargetV30} hat={target.hat||""} direction={dir} large={large} scene={scene}/>;
     const summaryRow=(label,meta,color)=>{if(!meta)return <div style={{display:"grid",gridTemplateColumns:"42px 1fr",gap:6,padding:"5px 0",borderBottom:`1px dashed ${C.line}`}}><b style={{fontSize:9,color:C.brown}}>{label}</b><span style={{fontSize:9,color:C.muted}}>未選</span></div>;const m=meta[4]||{};return <div style={{display:"grid",gridTemplateColumns:"42px 1fr",gap:6,padding:"5px 0",borderBottom:`1px dashed ${C.line}`}}><b style={{fontSize:9,color:C.brown}}>{label}</b><div><div style={{fontSize:9.5,fontWeight:950,color:C.ink}}>{meta[1]}</div><div style={{fontSize:8,color:C.muted,lineHeight:1.35,marginTop:2}}>{m.recipe?`製作：${m.recipe}`:(meta[2]||"取得方式待補")}</div>{m.recipe&&meta[2]&&meta[2]!==m.recipe&&<div style={{fontSize:7.5,color:C.muted,lineHeight:1.3,marginTop:1}}>{meta[2]}</div>}{color&&<div style={{fontSize:8,color:C.blue,fontWeight:900,marginTop:2}}>染色 RGB：{hexRgb(color).join(" / ")} ・ {color.toUpperCase()}</div>}</div></div>};
 
     return <div>
       <SectionTitle icon="🎩">衣櫥搭配</SectionTitle>
-      <Card style={{padding:8,background:"#FFF4D8"}}><div style={{fontSize:9.5,color:C.muted,lineHeight:1.45}}>v34：拿來自己配穿搭。帽子／上衣／下裝改成完整遊戲清單；選完直接看角色成品，下面同時列出裁縫材料與染色 RGB。馬、貓、狗帽子位置也改成依遊戲角色幀自動抓頭部，不再固定猜座標。</div></Card>
+      <Card style={{padding:8,background:"#FFF4D8"}}><div style={{fontSize:9.5,color:C.muted,lineHeight:1.45}}>v35：穿搭預覽加入白天／夜晚雙場景與清晰整數像素倍率；鞋子改按遊戲 shoeColors 色盤顯示。貓／狗使用遊戲動物專用帽子素材與原生幀定位，馬使用遊戲自己的馬帽定位規則。</div></Card>
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:5,marginTop:7}}>{targets.map(([id,name,file])=>{const on=wardrobeTargetV30===id;return <button key={id} onClick={()=>{setWardrobeTargetV30(id);setWardrobeQueryV34("");if(id!=="player")setWardrobeCategoryV30("hat")}} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFE2A8":C.paper,borderRadius:9,padding:"5px 2px",fontSize:8.5,fontWeight:950,color:C.brown,minWidth:0}}>{id==="player"?(data.profilePortrait?<img src={data.profilePortrait} alt="" style={{width:27,height:34,objectFit:"cover",borderRadius:4,imageRendering:"pixelated"}}/>:<GameIcon file="Inventory Tab" size={27}/>):<GameIcon file={file} size={27}/>}<div>{name}</div></button>})}</div>
 
       <Card style={{marginTop:7,padding:8}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4}}>{directions.map(([id])=><button key={id} onClick={()=>setWardrobeDirectionV32(id)} style={{border:`1.5px solid ${wardrobeDirectionV32===id?C.orange:C.line}`,background:wardrobeDirectionV32===id?"#FFF0D2":C.paper,borderRadius:8,padding:3,minWidth:0}}>{preview(id,false)}</button>)}</div>
-        <div style={{marginTop:7}}>{preview(wardrobeDirectionV32,true)}</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5,marginTop:7}}>
+          {preview(wardrobeDirectionV32,true,"day")}
+          {preview(wardrobeDirectionV32,true,"night")}
+        </div>
+        <div style={{textAlign:"center",fontSize:8,color:C.muted,marginTop:5}}>同一方向同時看白天／夜晚；使用固定整數像素倍率，不再把角色硬撐大。</div>
       </Card>
 
       {wardrobeTargetV30==="player"&&<>
