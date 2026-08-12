@@ -1,4 +1,4 @@
-const CACHE='stardew-tracker-v47';
+const CACHE='stardew-tracker-v48';
 const CORE=['./index.html','./app.js','./cloud.js','./wardrobe-data-v34.js','./farmer-preview-v33.js','./animal-preview-v33.js','./lookup-data-v46.js','./switch-names-v47.js','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{
@@ -22,7 +22,22 @@ async function networkFirst(request){
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
   const url=new URL(event.request.url);
-  if(url.origin!==self.location.origin){event.respondWith(fetch(event.request));return;}
+  if(url.origin!==self.location.origin){
+    if(event.request.destination==='image'){
+      event.respondWith((async()=>{
+        const cache=await caches.open(CACHE);
+        const cached=await cache.match(event.request);
+        if(cached){
+          fetch(event.request).then(r=>cache.put(event.request,r.clone())).catch(()=>{});
+          return cached;
+        }
+        const response=await fetch(event.request);
+        cache.put(event.request,response.clone()).catch(()=>{});
+        return response;
+      })());
+    }else event.respondWith(fetch(event.request));
+    return;
+  }
   const isCore=/\/(index\.html|app\.js|cloud\.js)$/.test(url.pathname);
   if(event.request.mode==='navigate'||isCore){
     event.respondWith(networkFirst(event.request).catch(async()=>{
