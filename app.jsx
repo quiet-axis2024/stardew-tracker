@@ -342,7 +342,7 @@ const COOKING_DISHES_V3 = [
 ];
 
 const COLLECTION_TABS_V3 = [
- ["shipping","出貨","Mini-Shipping Bin"],["fish","魚類","Pufferfish"],["artifact","古物","Dwarf Scroll I"],["mineral","礦物","Diamond"],["cooking","烹飪","Fried Egg"],["achievements","成就","Stardrop"],["notes","秘密紙條","Secret Note"],["scraps","日誌殘頁","Journal Scrap"]
+ ["shipping","出貨","Mini-Shipping Bin"],["fish","魚類","Pufferfish"],["artifact","古物","Dwarf Scroll I"],["mineral","礦物","Diamond"],["cooking","烹飪","Fried Egg"],["achievements","成就","Achievements Icon"],["notes","秘密紙條","Secret Note"],["scraps","日誌殘頁","Journal Scrap"]
 ];
 
 const SHIPPING_ITEMS_V30 = [
@@ -1081,7 +1081,7 @@ const TOOL_NAMES = [
 const TABS = [
   // v61: all six bottom tabs use transparent in-game item icons. The old first three
   // used framed menu-tab art, which made them visually much heavier than Search/Wardrobe/Notes.
-  { id: "overview", name: "總覽", icon: "🏡", file: "Warp Totem: Farm" },
+  { id: "overview", name: "總覽", icon: "🏡", file: "Warp Totem Farm" },
   { id: "data", name: "資料", icon: "⭐", file: "Stardew Valley Almanac" },
   { id: "people", name: "社交", icon: "💛", file: "Bouquet" },
   { id: "fishing", name: "查找", icon: "🔎", file: "Magnifying Glass" },
@@ -1293,6 +1293,8 @@ function StardewTracker() {
   const [fishTimesV42, setFishTimesV42] = useState([]);
   const [itemUsageQueryV42, setItemUsageQueryV42] = useState("");
   const [itemUsageSelectedV42, setItemUsageSelectedV42] = useState("");
+  const [selectedShippingV64, setSelectedShippingV64] = useState("");
+  const [selectedAchievementV64, setSelectedAchievementV64] = useState("");
   const [navStackV62, setNavStackV62] = useState([]);
   const [wardrobeCategoryV30, setWardrobeCategoryV30] = useState("hat");
   const [wardrobeTargetV30, setWardrobeTargetV30] = useState("player");
@@ -1346,7 +1348,7 @@ function StardewTracker() {
   const updateExtras = patch => update({ extras: { ...extrasState, ...patch } });
 
   const pushNavV62 = () => {
-    const snapshot={tab,dataSection,farmSection,skillSection,bundleRoom,collectionSection,selectedCollection,selectedItem,selectedCookingV62,socialGroup,expandedNPC,fishViewV4,itemUsageQueryV42,itemUsageSelectedV42,scrollY:Number(window.scrollY||0)};
+    const snapshot={tab,dataSection,farmSection,skillSection,bundleRoom,collectionSection,selectedCollection,selectedItem,selectedCookingV62,socialGroup,expandedNPC,fishViewV4,itemUsageQueryV42,itemUsageSelectedV42,selectedShippingV64,selectedAchievementV64,scrollY:Number(window.scrollY||0)};
     setNavStackV62(stack=>[...stack.slice(-9),snapshot]);
   };
   const goBackV62 = () => {
@@ -1355,7 +1357,7 @@ function StardewTracker() {
     setNavStackV62(stack=>stack.slice(0,-1));
     setTab(prev.tab||"overview"); setDataSection(prev.dataSection||"skills"); setFarmSection(prev.farmSection||"animals"); setSkillSection(prev.skillSection||"milestones");
     setBundleRoom(prev.bundleRoom||""); setCollectionSection(prev.collectionSection||"fish"); setSelectedCollection(prev.selectedCollection||"fish"); setSelectedItem(prev.selectedItem??null); setSelectedCookingV62(prev.selectedCookingV62||null);
-    setSocialGroup(prev.socialGroup||"single"); setExpandedNPC(prev.expandedNPC||null); setFishViewV4(prev.fishViewV4||"items"); setItemUsageQueryV42(prev.itemUsageQueryV42||""); setItemUsageSelectedV42(prev.itemUsageSelectedV42||"");
+    setSocialGroup(prev.socialGroup||"single"); setExpandedNPC(prev.expandedNPC||null); setFishViewV4(prev.fishViewV4||"items"); setItemUsageQueryV42(prev.itemUsageQueryV42||""); setItemUsageSelectedV42(prev.itemUsageSelectedV42||""); setSelectedShippingV64(prev.selectedShippingV64||""); setSelectedAchievementV64(prev.selectedAchievementV64||"");
     requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:Number(prev.scrollY||0),left:0,behavior:"auto"})));
   };
 
@@ -1914,7 +1916,7 @@ function StardewTracker() {
     const powerKind=powerSection==="books"?"books":"special";
     const powerList=powerKind==="books"?BOOK_POWERS_V2:SPECIAL_ITEMS_V2;
     return <div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:8}}><SkillTab id="milestones" label="里程碑" file="Golden Tag"/><SkillTab id="skills" label="技能" file="Book Of Stars"/><SkillTab id="mine" label="礦井" file="Pickaxe"/><SkillTab id="special" label="特殊能力" file="Galaxy Soul"/><SkillTab id="stardrops" label="星之果實" file="Stardrop"/></div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:8}}><SkillTab id="milestones" label="里程碑" file="Golden Tag"/><SkillTab id="skills" label="技能" file="Book Of Stars"/><SkillTab id="mine" label="礦井" file="Pickaxe"/><SkillTab id="special" label="特殊能力" file="Magic Rock Candy"/><SkillTab id="stardrops" label="星之果實" file="Stardrop"/></div>
       {skillSection==="milestones"&&<><SectionTitle icon="game:Golden Tag">重要里程碑</SectionTitle><Card style={{padding:8}}>{MILESTONES.map(m => <CheckRow key={m.id} checked={data.milestones.includes(m.id)} onChange={v => update({ milestones: v ? [...new Set([...data.milestones, m.id])] : data.milestones.filter(x => x !== m.id) })} sub={m.desc}>{m.name}</CheckRow>)}</Card></>}
       {skillSection==="skills"&&<><SectionTitle icon="⭐">技能・專精・精通</SectionTitle><Card style={{padding:7}}>{SKILLS.map((sk,si)=>{const lv=Number(data.skills?.[sk.id]||0),l5=sk.id+"5",p5=data.prof?.[l5]||"";const branches=Object.entries(PROF[sk.id].l10);const mastery=MASTERY_POWERS_V2.find(x=>x.id===sk.id);const mastered=(data.mastery||[]).includes(sk.id);return <div key={sk.id} style={{padding:"7px 0",borderBottom:si<SKILLS.length-1?`1px dashed ${C.line}`:"none"}}>
         <div style={{display:"flex",alignItems:"center",gap:6}}><GameIcon file={SKILL_ICON_FILES[sk.id]} size={31}/><div style={{minWidth:0,flex:1}}><div style={{display:"flex",alignItems:"center",gap:5}}><b style={{fontSize:11.5,color:C.ink}}>{sk.name}</b><span style={{fontSize:8,color:C.muted}}>{SKILL_BASE_DESC_V27[sk.id]}</span></div></div><button onClick={()=>updateNested("skills",{[sk.id]:Math.max(0,lv-1)})} style={{border:0,background:C.cream,borderRadius:6,width:21,height:21,padding:0,fontWeight:950,color:C.brown}}>−</button><b style={{fontSize:10.5,color:C.green,minWidth:31,textAlign:"center"}}>Lv.{lv}</b><button onClick={()=>updateNested("skills",{[sk.id]:Math.min(10,lv+1)})} style={{border:0,background:C.cream,borderRadius:6,width:21,height:21,padding:0,fontWeight:950,color:C.brown}}>＋</button></div>
@@ -1933,7 +1935,7 @@ function StardewTracker() {
         <div style={{fontSize:8.3,color:C.muted,lineHeight:1.45,marginTop:6}}>這裡列固定普通礦井的主要礦物、特殊魚與寶箱層，方便決定今天要去哪段刷；怪物與礦點仍會受當日生成影響。</div>
       </>}
 
-      {skillSection==="special"&&<><SectionTitle icon="game:Galaxy Soul">特殊物品與能力</SectionTitle><div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:6,marginBottom:7}}><button onClick={()=>setPowerSection("special")} style={{border:`2px solid ${powerKind==="special"?C.orange:C.line}`,background:powerKind==="special"?"#FFE2A8":C.paper,borderRadius:9,padding:6,fontSize:9,fontWeight:950,color:C.brown}}><GameIcon file="Galaxy Soul" size={28}/>特殊物品</button><button onClick={()=>setPowerSection("books")} style={{border:`2px solid ${powerKind==="books"?C.orange:C.line}`,background:powerKind==="books"?"#FFE2A8":C.paper,borderRadius:9,padding:6,fontSize:9,fontWeight:950,color:C.brown}}><GameIcon file="Book Of Stars" size={28}/>書籍能力</button></div><div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:6}}>{powerList.map(it=>{const checked=isPowerChecked(powerKind,it);return <button key={it.id} onClick={()=>togglePower(powerKind,it)} style={{border:`1.5px solid ${checked?C.green:C.line}`,background:checked?"#EAF4D8":C.paper,borderRadius:9,padding:7,textAlign:"left",cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:5}}><GameIcon file={it.file} size={31}/><b style={{fontSize:9.5,color:checked?C.green:C.ink}}>{checked?"✓ ":""}{it.name}</b></div><div style={{fontSize:7.4,color:C.muted,lineHeight:1.3,marginTop:3}}>{it.desc}</div></button>})}</div></>}
+      {skillSection==="special"&&<><SectionTitle icon="game:Magic Rock Candy">特殊物品與能力</SectionTitle><div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:6,marginBottom:7}}><button onClick={()=>setPowerSection("special")} style={{border:`2px solid ${powerKind==="special"?C.orange:C.line}`,background:powerKind==="special"?"#FFE2A8":C.paper,borderRadius:9,padding:6,fontSize:9,fontWeight:950,color:C.brown}}><GameIcon file="Galaxy Soul" size={28}/>特殊物品</button><button onClick={()=>setPowerSection("books")} style={{border:`2px solid ${powerKind==="books"?C.orange:C.line}`,background:powerKind==="books"?"#FFE2A8":C.paper,borderRadius:9,padding:6,fontSize:9,fontWeight:950,color:C.brown}}><GameIcon file="Book of Mysteries" size={28}/>書籍能力</button></div><div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:6}}>{powerList.map(it=>{const checked=isPowerChecked(powerKind,it);return <button key={it.id} onClick={()=>togglePower(powerKind,it)} style={{border:`1.5px solid ${checked?C.green:C.line}`,background:checked?"#EAF4D8":C.paper,borderRadius:9,padding:7,textAlign:"left",cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:5}}><GameIcon file={it.file} size={31}/><b style={{fontSize:9.5,color:checked?C.green:C.ink}}>{checked?"✓ ":""}{it.name}</b></div><div style={{fontSize:7.4,color:C.muted,lineHeight:1.3,marginTop:3}}>{it.desc}</div></button>})}</div></>}
       {skillSection==="stardrops"&&<><SectionTitle icon="✨">7 顆星之果實</SectionTitle><div style={{display:"grid",gap:6}}>{STARDROP_SOURCES_V26.map(d=>{const auto=autoDrop(d.id),on=auto||drops.includes(d.id);return <Card key={d.id} style={{padding:8,background:on?"#EEF7DD":C.paper}}><div style={{display:"flex",alignItems:"center",gap:7}}><GameIcon file="Stardrop" size={31}/><div style={{flex:1}}><b style={{fontSize:11,color:on?C.green:C.ink}}>{d.name}</b><div style={{fontSize:8.8,color:C.muted,lineHeight:1.35,marginTop:2}}>{d.desc}</div></div><button disabled={auto} onClick={()=>toggleDrop(d.id)} style={{border:`1.5px solid ${on?C.green:C.line}`,background:on?C.lightGreen:C.cream,borderRadius:7,padding:"4px 6px",fontWeight:950,color:on?C.green:C.muted,fontSize:10}}>{on?"✓":"○"}</button></div></Card>})}</div></>}
     </div>;
   };
@@ -2139,7 +2141,7 @@ function StardewTracker() {
 
   const renderData = () => {
     const DataTab=({id,label,file})=>{const active=dataSection===id;return <button onClick={()=>setDataSection(id)} style={{border:`1.5px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.paper,borderRadius:9,padding:"5px 3px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",minWidth:0}}><GameIcon file={file} size={30}/><span style={{fontSize:8.8,fontWeight:950,color:active?C.darkBrown:C.muted}}>{label}</span></button>};
-    return <div><SectionTitle icon="game:Stardew Valley Almanac">資料</SectionTitle><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:6,marginTop:7}}><DataTab id="skills" label="角色" file="Stardrop"/><DataTab id="farm" label="農場" file="Farm Computer"/><DataTab id="bundles" label="社區" file="Golden Scroll"/><DataTab id="collection" label="收藏" file="Treasure Chest"/></div>{dataSection==="skills"&&renderSkills()}{dataSection==="farm"&&renderFarm()}{dataSection==="bundles"&&renderBundles()}{dataSection==="collection"&&renderCollection()}</div>;
+    return <div><SectionTitle icon="game:Stardew Valley Almanac">資料</SectionTitle><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:6,marginTop:7}}><DataTab id="skills" label="角色" file="Stardew Hero Trophy"/><DataTab id="farm" label="農場" file="Farm Computer"/><DataTab id="bundles" label="社區" file="Golden Scroll"/><DataTab id="collection" label="收藏" file="Treasure Chest"/></div>{dataSection==="skills"&&renderSkills()}{dataSection==="farm"&&renderFarm()}{dataSection==="bundles"&&renderBundles()}{dataSection==="collection"&&renderCollection()}</div>;
   };
 
   const renderPeople = () => {
@@ -2189,7 +2191,7 @@ function StardewTracker() {
     const sections={special:SPECIAL_ITEMS_V2,books:BOOK_POWERS_V2,mastery:MASTERY_POWERS_V2};
     const labels={special:"特殊物品",books:"書籍能力",mastery:"精通能力"};
     return <div>
-      <SectionTitle icon="game:Galaxy Soul">特殊物品與能力</SectionTitle>
+      <SectionTitle icon="game:Magic Rock Candy">特殊物品與能力</SectionTitle>
       <Card style={{background:"#FFF4D8",fontSize:11,color:C.muted,lineHeight:1.5}}>對應 1.6 遊戲「＋ → 特殊物品與能力」：特殊物品、書籍能力、精通能力分開記錄。</Card>
       <div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:9}}>{Object.keys(sections).map(k=><Pill key={k} active={powerSection===k} onClick={()=>setPowerSection(k)}>{labels[k]}</Pill>)}</div>
       <div style={{display:"grid",gap:7,marginTop:9}}>{sections[powerSection].map(it=>{
@@ -2201,24 +2203,13 @@ function StardewTracker() {
 
   const renderAchievements = () => {
     const count=ACHIEVEMENTS_V2.filter(a=>achievementChecked(a.id)).length;
+    const selected=selectedAchievementV64?ACHIEVEMENTS_V2.find(a=>a.id===selectedAchievementV64):null;
     return <div style={{marginTop:8}}>
       <Card style={{padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:900,color:C.muted,marginBottom:5}}><span>成就</span><span>{count}/{ACHIEVEMENTS_V2.length}</span></div><ProgressBar value={count} max={ACHIEVEMENTS_V2.length}/></Card>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:8}}>{ACHIEVEMENTS_V2.map(a=>{const auto=derivedAchievement(a.id),on=achievementChecked(a.id);return <button key={a.id} disabled={auto} onClick={()=>toggleAchievement(a.id)} title={a.desc} style={{position:"relative",border:`2px solid ${on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:9,padding:"6px 3px",minHeight:82,cursor:auto?"default":"pointer",opacity:auto?.85:1}}><GameIcon file="Achievement Star 01" size={35}/><div style={{fontSize:8.7,fontWeight:900,color:on?C.green:C.ink,lineHeight:1.08,marginTop:2}}>{a.name}</div><span style={{position:"absolute",right:2,top:2,fontSize:12,color:on?C.green:"#C9B99A",fontWeight:950}}>{on?"✓":"○"}</span>{auto&&<span style={{position:"absolute",left:2,top:2,fontSize:5.8,color:C.green,fontWeight:950}}>自動</span>}</button>})}</div>
+      {selected&&<Card style={{marginTop:7,padding:9,background:"#FFF8E2",border:`1.5px solid ${C.orange}`}}><div style={{display:"grid",gridTemplateColumns:"46px minmax(0,1fr)",gap:8,alignItems:"center"}}><GameIcon file="Achievement Star 01" size={42}/><div style={{minWidth:0}}><b style={{display:"block",fontSize:13,color:C.darkBrown}}>{selected.name}</b><span style={{display:"block",fontSize:9.2,color:C.muted,lineHeight:1.4,marginTop:2}}>{selected.desc}</span>{derivedAchievement(selected.id)&&<span style={{display:"block",fontSize:7.5,color:C.green,fontWeight:950,marginTop:3}}>此項依手帳進度自動判定</span>}</div></div></Card>}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:8}}>{ACHIEVEMENTS_V2.map(a=>{const auto=derivedAchievement(a.id),on=achievementChecked(a.id),selectedNow=selectedAchievementV64===a.id;return <button key={a.id} onClick={()=>setSelectedAchievementV64(a.id)} title={a.desc} style={{position:"relative",border:`2px solid ${selectedNow?C.orange:on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:9,padding:"6px 3px",minHeight:82,cursor:"pointer",opacity:auto?.9:1}}><GameIcon file="Achievement Star 01" size={35}/><div style={{fontSize:8.7,fontWeight:900,color:on?C.green:C.ink,lineHeight:1.08,marginTop:2}}>{a.name}</div><span onClick={e=>{e.stopPropagation();if(!auto)toggleAchievement(a.id)}} style={{position:"absolute",right:2,top:2,fontSize:12,color:on?C.green:"#C9B99A",fontWeight:950,padding:2,cursor:auto?"default":"pointer"}}>{on?"✓":"○"}</span>{auto&&<span style={{position:"absolute",left:2,top:2,fontSize:5.8,color:C.green,fontWeight:950}}>自動</span>}</button>})}</div>
     </div>;
   };
-
-  const renderDexCollection = () => {
-    const c=COLLECTIONS[selectedCollection];
-    const got=data.collections[selectedCollection]||[];
-    const selectedName=selectedItem!=null?c.items[selectedItem]:"";
-    return <div style={{marginTop:8}}>
-      <Card style={{padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:900,color:C.muted,marginBottom:5}}><span>{selectedCollection==="artifact"?"古物圖鑑":"礦物圖鑑"}</span><span>{got.length}/{c.items.length}</span></div><ProgressBar value={got.length} max={c.items.length}/></Card>
-      {selectedName&&<SimpleItemInfoV62 name={selectedName} file={itemFileZhV26(selectedName)||selectedName} info={c.info?.[selectedItem]||""}/>} 
-      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:8}}>{c.items.map((it,i)=>{const checked=got.includes(i),file=ICON_URLS[selectedCollection]?.[i];return <button key={i} onClick={()=>setSelectedItem(i)} onDoubleClick={()=>updateNested("collections",{[selectedCollection]:checked?got.filter(x=>x!==i):[...got,i]})} style={{position:"relative",border:`2px solid ${selectedItem===i?C.orange:checked?C.green:C.line}`,background:checked?"#E5F3CF":C.paper,borderRadius:9,padding:"6px 3px",minHeight:78,cursor:"pointer"}}>{file?<img src={file} alt="" style={{width:36,height:36,imageRendering:"pixelated",objectFit:"contain"}}/>:<GameIcon file={itemFileZhV26(it)||it} size={36}/>}<div style={{fontSize:9,fontWeight:900,color:C.ink,lineHeight:1.1,marginTop:2}}>{switchNameV47(it,itemFileZhV26(it))}</div><span onClick={e=>{e.stopPropagation();updateNested("collections",{[selectedCollection]:checked?got.filter(x=>x!==i):[...got,i]})}} style={{position:"absolute",right:2,top:2,fontSize:13,color:checked?C.green:"#C9B99A",fontWeight:950,padding:2}}>{checked?"✓":"○"}</span></button>})}</div>
-    </div>;
-  };
-
-
 
   const prepSetV3 = data.cookingPrepV3 || [];
   const cookedSetV3 = data.cookingCollectionV3 || [];
@@ -2292,9 +2283,11 @@ function StardewTracker() {
   const renderShippingV30 = () => {
     const shipped=data.shippingV30||[];
     const toggle=file=>update({shippingV30:shipped.includes(file)?shipped.filter(x=>x!==file):[...shipped,file]});
+    const selectedRow=selectedShippingV64?SHIPPING_ITEMS_V30.find(([file])=>file===selectedShippingV64):null;
     return <div style={{marginTop:8}}>
       <Card style={{padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:900,color:C.muted,marginBottom:5}}><span>出貨圖鑑</span><span>{shipped.length}/{SHIPPING_ITEMS_V30.length}</span></div><ProgressBar value={shipped.length} max={SHIPPING_ITEMS_V30.length}/>{!shipped.length&&Number(extrasState.shippedCount||0)>0&&<div style={{fontSize:8.5,color:C.muted,marginTop:5}}>舊版只記過「{extrasState.shippedCount} 項」總數，無法知道是哪幾項；請照遊戲圖鑑重新點亮一次。</div>}</Card>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:8}}>{SHIPPING_ITEMS_V30.map(([file,name])=>{const on=shipped.includes(file);return <button key={file} onClick={()=>toggle(file)} style={{position:"relative",border:`1.5px solid ${on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:8,padding:"5px 2px",minHeight:70,cursor:"pointer"}}><GameIcon file={file} size={34} alt={name}/><div style={{fontSize:7.7,fontWeight:900,color:on?C.green:C.ink,lineHeight:1.05,marginTop:2}}>{name}</div><span style={{position:"absolute",right:2,top:1,fontSize:10,color:on?C.green:"#C9B99A",fontWeight:950}}>{on?"✓":"○"}</span></button>})}</div>
+      {selectedRow&&<SimpleItemInfoV62 name={selectedRow[1]} file={selectedRow[0]} info="出貨圖鑑物品；右上角圓點記錄是否已出貨。"/>}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:8}}>{SHIPPING_ITEMS_V30.map(([file,name])=>{const on=shipped.includes(file),selected=selectedShippingV64===file;return <button key={file} onClick={()=>setSelectedShippingV64(file)} style={{position:"relative",border:`1.5px solid ${selected?C.orange:on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:8,padding:"5px 2px",minHeight:70,cursor:"pointer"}}><GameIcon file={file} size={34} alt={name}/><div style={{fontSize:7.7,fontWeight:900,color:on?C.green:C.ink,lineHeight:1.05,marginTop:2}}>{name}</div><span onClick={e=>{e.stopPropagation();toggle(file)}} style={{position:"absolute",right:2,top:1,fontSize:11,color:on?C.green:"#C9B99A",fontWeight:950,padding:2}}>{on?"✓":"○"}</span></button>})}</div>
     </div>;
   };
 
@@ -2376,6 +2369,133 @@ function StardewTracker() {
     if(!raw)return;
     try { window.SDVCloud?.connectFromManagementUrl?.(raw); window.location.reload(); }
     catch(e){ alert(e?.message||"這不是有效的管理連結"); }
+  };
+
+  const renderItemUsageV42 = () => {
+    const cleanName=name=>String(name||"").replace(/(?:金星|銀星|银星|銥星|铱星)/g,"").replace(/\s*[×x]\s*\d+.*/,"").trim();
+    const index=new Map();
+    const ensure=(rawName,file,kind="item")=>{
+      const name=cleanName(rawName); if(!name||/^\d[\d,]*g$/i.test(name))return null;
+      const resolved=file||itemFileZhV26(name)||name;
+      const key=String(resolved||name);
+      if(!index.has(key))index.set(key,{key,name,file:resolved,aliases:new Set(),kinds:new Set(),sources:new Set(),uses:new Set(),recommend:"",bundles:[],remix:[],cookNeed:0,cookGroups:new Set(),shippable:false,seasons:[],energy:null,health:null,poison:false,buffs:[],buffDuration:null,farmingKind:""});
+      const it=index.get(key);it.aliases.add(name);it.kinds.add(kind);
+      if(kind!=="shipping"&&it.kinds.size<=2)it.name=name;
+      return it;
+    };
+    (window.SDVLookupV46?.items||[]).forEach(row=>{const it=ensure(row.zh||row.name,row.file||row.name,row.kind||"game");if(!it)return;it.aliases.add(row.name);(row.aliases||[]).forEach(x=>it.aliases.add(x));(row.sources||[]).forEach(x=>it.sources.add(x));(row.uses||[]).forEach(x=>it.uses.add(x));if(row.recommend)it.recommend=row.recommend;});
+    SHIPPING_ITEMS_V30.forEach(([file,name])=>{const it=ensure(name,file,"shipping");if(it)it.shippable=true});
+    COLLECTIONS.fish.items.forEach((name,i)=>{const it=ensure(name,FISH_ICON_FILES[i],"fish");if(it){it.fishIndex=i;if(FISH_INFO[i])it.sources.add(FISH_INFO[i])}});
+    COLLECTIONS.artifact.items.forEach((name,i)=>{const it=ensure(name,ARTIFACT_ICON_FILES[i],"artifact");if(it&&ARTIFACT_INFO[i])it.sources.add(ARTIFACT_INFO[i])});
+    COLLECTIONS.mineral.items.forEach((name,i)=>{const it=ensure(name,MINERAL_ICON_FILES[i],"mineral");if(it&&MINERAL_INFO[i])it.sources.add(MINERAL_INFO[i])});
+    COOKING_DISHES_V3.forEach(([,name,file])=>{const it=ensure(name,file,"cooking");if(it)it.sources.add("烹飪製作")});
+    BUNDLE_ROOMS.forEach(room=>room.bundles.forEach(bundle=>bundle.items.forEach(raw=>{const it=ensure(raw,null,"bundle");if(it)it.bundles.push(`${room.name} · ${bundle.name}：${raw}`)})));
+    Object.entries(REMIX_EXTRA_ITEMS_V28||{}).forEach(([roomId,items])=>{const room=BUNDLE_ROOMS.find(r=>r.id===roomId);(items||[]).forEach(raw=>{const it=ensure(raw,null,"remix");if(it)it.remix.push(`${room?.name||roomId}的混合收集包可能需要：${raw}`)})});
+    COOKING_PREP_GROUPS_V3.forEach(group=>group.items.forEach(([,name,file,need])=>{const it=ensure(name,file,"ingredient");if(it){it.cookNeed+=Number(need||0);it.cookGroups.add(group.name)}}));
+    (MINE_BANDS_V28||[]).forEach(group=>(group.items||[]).forEach(([file,name])=>{const it=ensure(name,file,"mine");if(it)it.sources.add(`礦井 ${group.range} 層${group.note?` · ${group.note}`:""}`)}));
+    const extraLookupV49=window.SDVLookupExtraV49?.byName||{};
+    const applyExtraV49=(it,meta)=>{if(!it||!meta)return;if(Array.isArray(meta.seasons)&&meta.seasons.length)it.seasons=[...new Set(meta.seasons)];if(meta.energy!==null&&meta.energy!==undefined)it.energy=Number(meta.energy);if(meta.health!==null&&meta.health!==undefined)it.health=Number(meta.health);it.poison=Boolean(meta.poison);if(Array.isArray(meta.buffs))it.buffs=meta.buffs;if(meta.buffDuration!==null&&meta.buffDuration!==undefined)it.buffDuration=Number(meta.buffDuration);if(meta.kind)it.farmingKind=meta.kind;if(meta.growDays!==null&&meta.growDays!==undefined)it.growDays=Number(meta.growDays);if(meta.regrowDays!==null&&meta.regrowDays!==undefined)it.regrowDays=Number(meta.regrowDays);};
+    Object.entries(extraLookupV49).forEach(([english,meta])=>{let it=[...index.values()].find(x=>x.name===english||x.file===english||x.aliases.has(english));if(!it)it=ensure(english,english,meta.kind||"game");if(it){it.aliases.add(english);applyExtraV49(it,meta);}});
+
+    // v43：物品搜尋統一支援繁中／簡中／英文。
+    // 同一個英文素材名在既有中英對照表中的所有繁簡名稱，都自動加入 alias。
+    const aliasesByFileV43=new Map();
+    Object.entries(ITEM_FILE_ZH_V26||{}).forEach(([alias,file])=>{
+      const key=String(file||""); if(!key)return;
+      if(!aliasesByFileV43.has(key))aliasesByFileV43.set(key,new Set());
+      aliasesByFileV43.get(key).add(cleanName(alias));
+    });
+    index.forEach(it=>{const localAliases=aliasesByFileV43.get(String(it.file||""))||[];localAliases.forEach(alias=>it.aliases.add(alias));if(/^[\x00-\x7F]+$/.test(String(it.name||""))){const z=[...localAliases].find(alias=>/[\u3400-\u9fff]/.test(alias));if(z)it.name=z;}});
+
+    // 常見攻略／口語別名：不改顯示名稱，只增加搜尋命中。
+    const ITEM_SEARCH_EXTRA_ALIASES_V43={
+      "Topaz":["黃寶石","黄宝石"],
+      "Prismatic Shard":["彩虹碎片"],
+      "Ancient Seed":["古代種子","古代种子"],
+      "Battery Pack":["電池","电池"],
+      "Cherry Bomb":["櫻桃炸彈","樱桃炸弹"],
+      "Bomb":["炸彈","炸弹"],
+      "Mega Bomb":["超級炸彈","超级炸弹"],
+      "Sonar Bobber":["聲納浮標","声纳浮标","聲納魚標","声纳鱼标"],
+      "Treasure Hunter":["尋寶者","寻宝者","尋寶魚標","寻宝鱼标"]
+    };
+    Object.entries(ITEM_SEARCH_EXTRA_ALIASES_V43).forEach(([file,aliases])=>{const it=index.get(file);if(it)aliases.forEach(x=>it.aliases.add(x))});
+
+    // 將常見繁體字正規化成簡體後再比對；英文統一小寫並忽略空白／分隔符。
+    const SEARCH_T2S_PAIRS_V43=[
+      "黃黄","藍蓝","彈弹","聲声","尋寻","綠绿","紅红","銀银","銅铜","鐵铁","銥铱","礦矿","寶宝","鑽钻","遠远","種种","樹树","葉叶","電电","爐炉","鍋锅","製制","煉炼","絲丝","繩绳","體体","馬马","雞鸡","鴨鸭","龍龙","豬猪","貓猫","魚鱼","蝦虾","蝸蜗","蠣蛎","鸚鹦","鵡鹉","鮭鲑","鱸鲈","鯉鲤","鯰鲶","鯛鲷","鱒鳟","鯡鲱","鰻鳗","魷鱿","鱘鲟","槍枪","蔥葱","蘿萝","蔔卜","蘋苹","櫻樱","醬酱","麥麦","乾干","薑姜","蘚藓","蕪芜","纖纤","維维","濃浓","鬆松","餅饼","麵面","湯汤","飯饭","餃饺","燴烩","燻熏","鹽盐","鋼钢","鎬镐","鋤锄","劍剑","環环","鏡镜","褲裤","飾饰","項项","鏈链","鈴铃","鑰钥","滾滚","輪轮","機机","殘残","頁页","筆笔","記记","書书","圖图","鑑鉴","場场","鎮镇","島岛","灣湾","澤泽","層层","區区","傳传","說说","獎奖","勵励","殺杀","敵敌","萬万","數数","據据","應应","該该","夠够","賣卖","買买","獲获","釣钓","採采","網网","燈灯","漿浆","鳳凤","鬱郁","蘭兰","楓枫","膠胶","鴕鸵","鳥鸟","殼壳","貝贝","塊块","錠锭","髮发","顏颜","齒齿","頭头","盔盔","樂乐","鐘钟","劉刘","亞亚","麗丽","羅罗","喬乔","爾尔","薩萨","蘇苏","魯鲁"
+    ];
+    const SEARCH_T2S_V43=Object.fromEntries(SEARCH_T2S_PAIRS_V43.map(x=>[x[0],x[1]]));
+    const normalizeItemSearchV43=value=>String(value||"").normalize("NFKC").toLowerCase().replace(/[\s·・_'’\-]+/g,"").split("").map(ch=>SEARCH_T2S_V43[ch]||ch).join("");
+
+    const all=[...index.values()].sort((a,b)=>a.name.localeCompare(b.name,"zh-Hant"));
+    const itemFarmKindV49=it=>["crop","seed","fruit","sapling"].includes(it?.farmingKind);
+    const itemCurrentSeasonV49=it=>{if(!it)return false;if(itemFarmKindV49(it)&&Array.isArray(it.seasons)&&it.seasons.includes(data.base.season))return true;if(it.fishIndex!==undefined){const r=fishRuleV4(it.fishIndex);return (r?.s||[]).includes(data.base.season);}return false;};
+    const seasonLabelV49=s=>s==="ginger island"?"薑島全年":s;
+    const itemSeasonTextV49=it=>(it?.seasons||[]).length===4?"四季":((it?.seasons||[]).map(seasonLabelV49).join("／"));
+    const itemSeasonTitleV49=it=>it?.fishIndex!==undefined?"出現季節":itemFarmKindV49(it)?"耕種季節":"出現季節";
+    const itemSeasonIconV49=it=>it?.fishIndex!==undefined?"🐟":itemFarmKindV49(it)?"🌱":"🍃";
+    const buffStatZhV49={Farming:"耕種",Fishing:"釣魚",Foraging:"採集",Mining:"採礦",Luck:"運氣",Speed:"速度",Defense:"防禦",Attack:"攻擊",Magnetism:"磁力",MaxStamina:"最大體力","Max Energy":"最大體力",Combat:"戰鬥",Immunity:"免疫",CritChance:"暴擊率"};
+    const buffTextV49=it=>(it?.buffs||[]).map(b=>`${buffStatZhV49[b.stat]||b.stat} ${Number(b.value)>0?"+":""}${b.value}`).join("、");
+    const durationTextV49=sec=>{const n=Number(sec);if(!Number.isFinite(n)||n<=0)return "";const m=Math.floor(n/60),s=n%60;return `${m}分${String(s).padStart(2,"0")}秒`;};
+    const q=normalizeItemSearchV43(itemUsageQueryV42);
+    const quickNames=["五彩碎片","恐龍蛋","遠古種子","兔子的腳","電池組","硬木","鑽石","茶葉"];
+    const results=(q?all.filter(it=>[it.name,it.file,...it.aliases].some(alias=>normalizeItemSearchV43(alias).includes(q))):quickNames.map(name=>all.find(it=>it.aliases.has(name)||it.name===name)).filter(Boolean)).slice(0,30);
+    const selected=all.find(it=>it.key===itemUsageSelectedV42)||null;
+    const usageSpecial=selected?Object.entries(ITEM_USAGE_SPECIAL_V42).find(([name])=>selected.aliases.has(name)||selected.name===name)?.[1]:null;
+    const wardrobeData=window.SDVWardrobeV34||{};
+    const tailoring=selected?[...(wardrobeData.shirts||[]),...(wardrobeData.pants||[])].filter(x=>{const hay=`${x.recipe||""} ${x.sourceZh||""} ${x.source||""}`.toLowerCase();return [selected.name,selected.file,...selected.aliases].some(v=>v&&hay.includes(String(v).toLowerCase()))}).slice(0,6):[];
+    const museum=Boolean(selected&&(selected.kinds.has("artifact")||selected.kinds.has("mineral")));
+    const shipped=Boolean(selected?.shippable&&(data.shippingV30||[]).includes(selected.file));
+    const sourceFallbackV45=()=>{
+      if(!selected)return "";
+      const known=[...selected.sources].filter(Boolean);
+      if(known.length)return known.slice(0,3).join("；");
+      const hay=`${selected.name} ${selected.file}`;
+      if(/Egg|Milk|Wool|Duck Feather|Rabbit's Foot|Truffle|雞蛋|牛奶|羊奶|羊毛|鴨毛|兔子的腳|松露/i.test(hay))return "飼養動物取得";
+      if(/Mayonnaise|Cheese|Oil|Jelly|Wine|Juice|Beer|Pale Ale|Mead|Pickles|Cloth|Caviar|Aged Roe|Smoked Fish|Dried|Green Tea|蛋黃醬|奶酪|油|果醬|果酒|果汁|啤酒|蜂蜜酒|醃菜|布料|魚子醬|陳年魚籽|燻魚|果乾|蘑菇乾|綠茶/i.test(hay))return "加工設備製作";
+      if(/Ore|Bar|Coal|Quartz|Stone|Geode|Crystal|礦|錠|煤|石英|晶球|水晶/i.test(hay))return "採礦／晶球／冶煉等";
+      if(/Wood|Hardwood|Sap|Fiber|Moss|木材|硬木|樹液|纖維|苔蘚/i.test(hay))return "砍樹／野外採集";
+      if(/Seed|種子/i.test(hay))return "商店、採集或相關解鎖取得";
+      if(selected.shippable)return "農作、採集、養殖或加工取得";
+      return "農作、採集、養殖、加工、商店、掉落或任務取得";
+    };
+    const sourceTextV45=sourceFallbackV45();
+    const usageRowsV44=[];
+    if(selected){
+      (usageSpecial?.uses||[]).forEach(u=>usageRowsV44.push(["⭐",u]));
+      [...selected.uses].forEach(u=>usageRowsV44.push(["🔧",u]));
+      if(museum)usageRowsV44.push(["🏺","博物館：可捐贈 1 個。"]);
+      selected.bundles.forEach(u=>usageRowsV44.push(["📦",u]));
+      selected.remix.forEach(u=>usageRowsV44.push(["📦",u]));
+      if(selected.cookNeed)usageRowsV44.push(["🍳",`料理備料：目前手帳整理的全料理最低備料共需要 ${selected.cookNeed} 個。`]);
+      tailoring.forEach(x=>usageRowsV44.push(["🧵",`裁縫：${x.name||"服飾"}${x.recipe?`（${x.recipe}）`:""}`]));
+      if(selected.shippable)usageRowsV44.push(["🚚",`出貨圖鑑：${shipped?"已點亮":"賣出 1 個即可點亮"}。`]);
+      if(!usageRowsV44.length)usageRowsV44.push(["・","目前手帳沒有偵測到固定用途。"]);
+    }
+    const tag=(text,bg)=> <span style={{fontSize:7.2,fontWeight:900,padding:"2px 5px",borderRadius:8,background:bg,color:C.brown,whiteSpace:"nowrap"}}>{text}</span>;
+    const resultTags=it=>{const tags=[];if(itemCurrentSeasonV49(it))tags.push(["當季","#DFF0CD"]);if(it.farmingKind==="crop"||it.farmingKind==="seed"||it.farmingKind==="fruit"||it.farmingKind==="sapling")tags.push(["耕種","#EAF4D8"]);if(it.farmingKind==="food")tags.push(["料理","#FBE5D6"]);if(it.shippable)tags.push(["出貨","#EAF4D8"]);if(it.kinds.has("artifact")||it.kinds.has("mineral"))tags.push(["博物館","#EEE6F7"]);if(it.bundles.length||it.remix.length)tags.push(["收集包","#FFF0C8"]);if(it.cookNeed)tags.push(["料理","#FBE5D6"]);if(it.kinds.has("fish"))tags.push(["魚","#DDECF7"]);if(it.kinds.has("craft"))tags.push(["製作","#F4E4C7"]);if(it.kinds.has("big"))tags.push(["設備","#E8E1D4"]);return tags.slice(0,4)};
+    return <div style={{marginTop:8}}>
+      <Card style={{padding:8,background:"#FFF4D8"}}><div style={{fontSize:10.5,fontWeight:950,color:C.darkBrown}}>拿到東西不知道要不要留，就先查這裡</div><div style={{fontSize:8.5,color:C.muted,lineHeight:1.4,marginTop:2}}>會整理用途、取得方式、收集包、料理、裁縫、製作與重要特殊用途。</div></Card>
+      <div style={{position:"relative",marginTop:7}}><input value={itemUsageQueryV42} onChange={e=>{setItemUsageQueryV42(e.target.value);setItemUsageSelectedV42("")}} placeholder="可輸入繁中／簡中／English，例如：黃玉、黄玉、Topaz…" style={{width:"100%",border:`1.5px solid ${C.line}`,background:C.paper,borderRadius:9,padding:"9px 34px 9px 10px",fontSize:10.5,color:C.ink,outline:"none"}}/>{itemUsageQueryV42&&<button onClick={()=>{setItemUsageQueryV42("");setItemUsageSelectedV42("")}} style={{position:"absolute",right:6,top:5,border:0,background:"transparent",fontSize:14,color:C.muted}}>×</button>}</div>
+      {selected&&<Card id="lookup-detail-v62" style={{marginTop:7,padding:9,background:"#FFF8E9",scrollMarginTop:"calc(104px + env(safe-area-inset-top))"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}><GameIcon file={selected.file} size={44}/><div style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:14,color:C.darkBrown}}>{switchNameV47(selected.name,selected.file)}</b><div style={{display:"flex",gap:3,flexWrap:"wrap",marginTop:4}}>{resultTags(selected).map(([t,b])=><span key={t}>{tag(t,b)}</span>)}</div></div></div>
+        {(selected.seasons?.length>0||selected.energy!==null||selected.health!==null||(selected.buffs||[]).length>0)&&<div style={{marginTop:8,padding:"7px 8px",background:"#FFF4D8",borderRadius:8,border:`1px solid ${C.line}`,display:"grid",gap:4}}>
+          {selected.seasons?.length>0&&<div style={{fontSize:9.5,color:C.ink,lineHeight:1.35}}>{itemSeasonIconV49(selected)} <b>{itemSeasonTitleV49(selected)}：</b>{itemSeasonTextV49(selected)}{itemCurrentSeasonV49(selected)&&<span style={{marginLeft:5,color:C.green,fontWeight:950}}>● 當季</span>}{itemFarmKindV49(selected)&&selected.growDays?` · 成熟 ${selected.growDays} 天`:""}{itemFarmKindV49(selected)&&selected.regrowDays?` · 再生 ${selected.regrowDays} 天`:""}</div>}
+          {(selected.energy!==null||selected.health!==null)&&<div style={{fontSize:9.5,color:C.ink,lineHeight:1.35}}>⚡ <b>食用：</b>體力 {selected.energy!==null?(selected.energy>0?`+${selected.energy}`:selected.energy):"—"}　❤️ 生命 {selected.health!==null?(selected.health>0?`+${selected.health}`:selected.health):"—"}{selected.poison?<span style={{color:C.red,fontWeight:950}}> · 有負面食用效果</span>:null}</div>}
+          {(selected.buffs||[]).length>0&&<div style={{fontSize:9.5,color:C.ink,lineHeight:1.35}}>✨ <b>技能／狀態加成：</b>{buffTextV49(selected)}{selected.buffDuration?` · ${durationTextV49(selected.buffDuration)}`:""}</div>}
+        </div>}
+        <div style={{fontSize:12,fontWeight:950,color:C.darkBrown,marginTop:9}}>用途</div>
+        <div style={{display:"grid",gap:5,marginTop:5}}>{usageRowsV44.map(([icon,text],i)=><div key={i} style={{display:"grid",gridTemplateColumns:"18px 1fr",gap:4,alignItems:"start",fontSize:9.4,color:C.ink,lineHeight:1.45}}><span>{icon}</span><span>{text}</span></div>)}</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8,alignItems:"center",marginTop:9,paddingTop:7,borderTop:`1px dashed ${C.line}`}}>
+          <div style={{minWidth:0}}><span style={{fontSize:8,color:C.muted,fontWeight:950}}>來源／取得方式</span><div style={{fontSize:9.4,color:C.ink,lineHeight:1.4,marginTop:2,fontWeight:750}}>{sourceTextV45}</div></div>
+        </div>
+      </Card>}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:5,marginTop:6}}>{results.map(it=>{const on=selected?.key===it.key,current=itemCurrentSeasonV49(it);return <button key={it.key} onClick={()=>setItemUsageSelectedV42(it.key)} style={{border:`1.5px solid ${on?C.orange:current?C.green:C.line}`,background:on?"#FFF0D2":current?"#EEF7DD":C.paper,borderRadius:9,padding:"6px 5px",display:"grid",gridTemplateColumns:"34px 1fr",gap:5,alignItems:"center",textAlign:"left",minWidth:0}}><GameIcon file={it.file} size={32}/><span style={{minWidth:0}}><b style={{display:"block",fontSize:8.8,color:current?C.green:C.ink,lineHeight:1.12,overflow:"hidden",textOverflow:"ellipsis"}}>{switchNameV47(it.name,it.file)}</b><span style={{display:"flex",gap:2,flexWrap:"wrap",marginTop:3}}>{resultTags(it).map(([t,b])=><span key={t}>{tag(t,b)}</span>)}</span></span></button>})}</div>
+      {!q&&<div style={{fontSize:7.8,color:C.muted,marginTop:4}}>上面先放常查的例子；輸入名稱後會搜尋手帳目前整理到的物品。</div>}
+      {q&&!results.length&&<Card style={{marginTop:7,textAlign:"center",fontSize:9.5,color:C.muted}}>目前沒有找到；可改用繁中／簡中／英文名稱或常見別名。</Card>}
+
+    </div>;
   };
 
   const renderFishingV30 = () => {
