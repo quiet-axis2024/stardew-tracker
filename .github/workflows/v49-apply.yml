@@ -1,0 +1,98 @@
+name: Apply v49 tracker fixes
+
+on:
+  push:
+    branches: [v49-pwa-search-share-data]
+    paths:
+      - 'v49_patch.py'
+      - '.github/workflows/v49-apply.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v49-pwa-search-share-data
+          fetch-depth: 0
+
+      - name: Apply v49 patch
+        run: |
+          python3 v49_patch.py
+          # Turn the two intentionally escaped CSS line separators into real newlines.
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('\\n    #boot-status .boot-logo','\n    #boot-status .boot-logo')
+          s=s.replace('\\n    #boot-status .boot-loading','\n    #boot-status .boot-loading')
+          p.write_text(s)
+          PY
+
+      - name: Build browser bundle
+        run: npx --yes esbuild@0.25.0 app.jsx --bundle --format=iife --outfile=/tmp/app-v49.js --loader:.jsx=jsx
+
+      - name: Validate JavaScript
+        run: |
+          node --check cloud.js
+          node --check lookup-extra-v49.js
+
+      - name: Validate requested changes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re
+          app=Path('app.jsx').read_text()
+          idx=Path('index.html').read_text()
+          cloud=Path('cloud.js').read_text()
+          sw=Path('sw.js').read_text()
+          extra=Path('lookup-extra-v49.js').read_text()
+          checks={
+            'skill tab':'<SkillTab id="skills" label="技能"',
+            'farm skill tile':'["技能",`${skillTotal}/50`]',
+            'no notes textarea':'<SectionTitle icon="📝">備註</SectionTitle>',
+            'app url share':'分享 App 網址',
+            'reconnect cloud':'reconnectCloudV49',
+            'filters direct':'清除全部條件',
+            'mountain marker':'label:"山湖",x:66,y:29',
+            'island south':'南部／東南部海域',
+            'current season':'itemCurrentSeasonV49',
+            'nutrition':'技能／狀態加成',
+            'summary no platform':'；平台：',
+            'plain text icon':'game:Journal Scrap',
+          }
+          assert checks['skill tab'] in app
+          assert checks['farm skill tile'] in app
+          assert checks['no notes textarea'] not in app
+          assert checks['app url share'] in app
+          assert checks['reconnect cloud'] in app
+          assert 'fishFiltersOpenV46' not in app
+          assert checks['mountain marker'] in app
+          assert checks['island south'] in app
+          assert checks['current season'] in app
+          assert checks['nutrition'] in app
+          assert checks['summary no platform'] not in app
+          assert checks['plain text icon'] in app
+          assert '分享給朋友</SectionTitle>' not in app
+          assert 'switch-names-v48.js' not in idx
+          assert 'lookup-extra-v49.js?v=49' in idx
+          assert 'main-logo-zh.png?v=49' in idx
+          assert 'LOADING…' in idx
+          assert 'connectFromManagementUrl' in cloud and 'OWNER_COOKIE' in cloud
+          assert "stardew-tracker-v49" in sw and 'lookup-extra-v49.js' in sw and 'main-logo-zh.png' in sw
+          assert 'Parsnip' in extra and 'Fried Egg' in extra and 'Pancakes' in extra
+          assert Path('main-logo-zh.png').read_bytes().startswith(b'\x89PNG')
+          print('v49 validation passed')
+          PY
+
+      - name: Commit product files only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx index.html cloud.js sw.js lookup-extra-v49.js main-logo-zh.png
+          git rm -f v49_patch.py .github/workflows/v49-apply.yml
+          git commit -m 'v49: PWA sharing, lookup seasons and nutrition, search UI polish'
+          git push origin v49-pwa-search-share-data
