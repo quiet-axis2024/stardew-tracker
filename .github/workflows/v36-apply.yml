@@ -39,13 +39,8 @@ jobs:
           grep -q 'daybg.png' app.jsx
           grep -q 'nightbg.png' app.jsx
           grep -q 'PetVariantPreviewV36' app.jsx
-          grep -q '款式 6' app.jsx
           ! grep -q 'type="range" min="0" max="55"' app.jsx
           grep -q 'sourceZh||x.source' app.jsx
-          grep -q 'cat5.png' <(python3 - <<'PY'
-          s=open('animal-preview-v33.js',encoding='utf-8').read(); print(s.replace("${kind}${v===0?'':v}", 'cat5.png'))
-          PY
-          ) || true
           grep -q 'HORSE_HAT_POS={front:\[7,9\],right:\[16,1\],back:\[6.5,-7\],left:\[-4,1\]}' animal-preview-v33.js
           grep -q 'hats_animals.png' animal-preview-v33.js
           grep -q 'sourceZh=zhHatSourceV36' wardrobe-data-v34.js
@@ -56,6 +51,7 @@ jobs:
           import re,json
           s=open('wardrobe-data-v34.js',encoding='utf-8').read()
           m=re.search(r'const data=(\{.*?\});\n  const ACH_ZH_V36=',s,re.S)
+          assert m
           d=json.loads(m.group(1))
           assert len(d['hats'])==94
           assert len(d['shirts'])>=296
@@ -63,8 +59,10 @@ jobs:
           a=open('app.jsx',encoding='utf-8').read()
           assert 'type="number" min="1" max="56"' in a
           assert 'variant={Number(target.variant||0)}' in a
+          assert '[0,1,2,3,4,5].map' in a
           animal=open('animal-preview-v33.js',encoding='utf-8').read()
           assert "Animals/${kind}${v===0?'':v}.png" in animal
+          assert "Math.min(5,Number(opts?.variant)||0)" in animal
           print('v36 validation ok')
           PY
       - name: Commit v36 code
