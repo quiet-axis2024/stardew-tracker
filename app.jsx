@@ -342,7 +342,7 @@ const COOKING_DISHES_V3 = [
 ];
 
 const COLLECTION_TABS_V3 = [
- ["shipping","出貨","Mini-Shipping Bin"],["fish","魚類","Pufferfish"],["artifact","古物","Dwarf Scroll I"],["mineral","礦物","Diamond"],["cooking","烹飪","Cooking Icon"],["achievements","成就","Achievements Icon"],["notes","秘密紙條","Secret Note Icon"],["scraps","日誌殘頁","Journal Scrap"]
+ ["shipping","出貨","Mini-Shipping Bin"],["fish","魚類","Pufferfish"],["artifact","古物","Dwarf Scroll I"],["mineral","礦物","Diamond"],["cooking","烹飪","Fried Egg"],["achievements","成就","Stardrop"],["notes","秘密紙條","Secret Note"],["scraps","日誌殘頁","Journal Scrap"]
 ];
 
 const SHIPPING_ITEMS_V30 = [
@@ -1097,8 +1097,8 @@ function SectionTitle({ icon, children, right }) {
     {right && <span style={{ marginLeft: "auto", fontSize: 12, fontWeight: 800, color: C.muted }}>{right}</span>}
   </div>;
 }
-function Card({ children, style }) {
-  return <div style={{ background: C.paper, border: `2px solid ${C.line}`, borderRadius: 12, padding: 13, boxShadow: `0 3px 8px ${C.shadow}`, ...style }}>{children}</div>;
+function Card({ children, style, ...props }) {
+  return <div {...props} style={{ background: C.paper, border: `2px solid ${C.line}`, borderRadius: 12, padding: 13, boxShadow: `0 3px 8px ${C.shadow}`, ...style }}>{children}</div>;
 }
 function Pill({ children, active, onClick, small }) {
   return <button onClick={onClick} style={{
@@ -1268,6 +1268,7 @@ function StardewTracker() {
   const [powerSection, setPowerSection] = useState("special");
   const [collectionSection, setCollectionSection] = useState("fish");
   const [cookingModeV3, setCookingModeV3] = useState("prep");
+  const [selectedCookingV62, setSelectedCookingV62] = useState(null);
   const [prepMissingOnlyV3, setPrepMissingOnlyV3] = useState(false);
   const [selectedPaperV3, setSelectedPaperV3] = useState(null);
   const [cookingMode, setCookingMode] = useState("ingredients");
@@ -1292,6 +1293,7 @@ function StardewTracker() {
   const [fishTimesV42, setFishTimesV42] = useState([]);
   const [itemUsageQueryV42, setItemUsageQueryV42] = useState("");
   const [itemUsageSelectedV42, setItemUsageSelectedV42] = useState("");
+  const [navStackV62, setNavStackV62] = useState([]);
   const [wardrobeCategoryV30, setWardrobeCategoryV30] = useState("hat");
   const [wardrobeTargetV30, setWardrobeTargetV30] = useState("player");
   const [wardrobeDirectionV32, setWardrobeDirectionV32] = useState("front");
@@ -1342,6 +1344,20 @@ function StardewTracker() {
   /* v54: shared runtime helpers. Keep every tab on the same persisted data model. */
   const extrasState = data.extras || {};
   const updateExtras = patch => update({ extras: { ...extrasState, ...patch } });
+
+  const pushNavV62 = () => {
+    const snapshot={tab,dataSection,farmSection,skillSection,bundleRoom,collectionSection,selectedCollection,selectedItem,selectedCookingV62,socialGroup,expandedNPC,fishViewV4,itemUsageQueryV42,itemUsageSelectedV42,scrollY:Number(window.scrollY||0)};
+    setNavStackV62(stack=>[...stack.slice(-9),snapshot]);
+  };
+  const goBackV62 = () => {
+    const prev=navStackV62[navStackV62.length-1];
+    if(!prev)return;
+    setNavStackV62(stack=>stack.slice(0,-1));
+    setTab(prev.tab||"overview"); setDataSection(prev.dataSection||"skills"); setFarmSection(prev.farmSection||"animals"); setSkillSection(prev.skillSection||"milestones");
+    setBundleRoom(prev.bundleRoom||""); setCollectionSection(prev.collectionSection||"fish"); setSelectedCollection(prev.selectedCollection||"fish"); setSelectedItem(prev.selectedItem??null); setSelectedCookingV62(prev.selectedCookingV62||null);
+    setSocialGroup(prev.socialGroup||"single"); setExpandedNPC(prev.expandedNPC||null); setFishViewV4(prev.fishViewV4||"items"); setItemUsageQueryV42(prev.itemUsageQueryV42||""); setItemUsageSelectedV42(prev.itemUsageSelectedV42||"");
+    requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:Number(prev.scrollY||0),left:0,behavior:"auto"})));
+  };
 
   const powerBucketV54 = kind => kind === "special" ? "wallet" : kind === "books" ? "abilities" : "mastery";
   const powerValuesV54 = kind => data[powerBucketV54(kind)] || [];
@@ -1418,19 +1434,25 @@ function StardewTracker() {
   const openItemLookupV54 = (raw, preferredKey="") => {
     const row = lookupRowV54(raw);
     const key = preferredKey || row?.file || itemFileZhV26(raw) || row?.name || raw;
-    setItemUsageQueryV42(row?.name || raw);
-    setItemUsageSelectedV42(key);
-    setFishViewV4("items");
-    setTab("fishing");
-    requestAnimationFrame(() => window.scrollTo({top:0,left:0,behavior:"auto"}));
+    pushNavV62();
+    setItemUsageQueryV42(row?.name || raw); setItemUsageSelectedV42(key); setFishViewV4("items"); setTab("fishing");
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{const target=document.getElementById("lookup-detail-v62"); if(target)target.scrollIntoView({block:"start",behavior:"auto"}); else window.scrollTo({top:0,left:0,behavior:"auto"});}));
   };
 
   const openSocialNpcV55 = npc => {
     const group=NPC_GROUPS.find(g=>g.list.includes(npc));
-    if(group)setSocialGroup(group.id);
-    setExpandedNPC(npc);
-    setTab("people");
-    requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:"auto"}));
+    pushNavV62();
+    if(group)setSocialGroup(group.id); setExpandedNPC(npc); setTab("people");
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{const target=document.getElementById(`npc-card-${npc}`); if(target)target.scrollIntoView({block:"start",behavior:"auto"}); else window.scrollTo({top:0,left:0,behavior:"auto"});}));
+  };
+
+  const SimpleItemInfoV62 = ({name,file="",info=""}) => {
+    const row=lookupRowV54(name)||lookupRowV54(file);
+    const resolvedFile=row?.file||file||itemFileZhV26(name)||name;
+    const display=switchNameV47(row?.name||name,resolvedFile);
+    const brief=info||row?.uses?.[0]||row?.sources?.[0]||"點這張卡查看完整用途與取得方式。";
+    const canLookup=Boolean(row);
+    return <button type="button" disabled={!canLookup} onClick={()=>canLookup&&openItemLookupV54(row?.name||name,row?.file||resolvedFile)} style={{width:"100%",marginTop:7,border:`1.5px solid ${canLookup?C.orange:C.line}`,background:"#FFF8E2",borderRadius:10,padding:"8px 9px",display:"grid",gridTemplateColumns:"48px minmax(0,1fr) auto",gap:8,alignItems:"center",textAlign:"left",cursor:canLookup?"pointer":"default",opacity:canLookup?1:.82}}><GameIcon file={resolvedFile} size={46}/><span style={{minWidth:0}}><b style={{display:"block",fontSize:13,color:C.darkBrown}}>{display}</b><span style={{display:"block",fontSize:9.2,color:C.muted,lineHeight:1.35,marginTop:2}}>{brief}</span>{canLookup&&<span style={{display:"block",fontSize:7.5,color:C.orange,fontWeight:950,marginTop:3}}>點卡片查看完整物品資料</span>}</span><span style={{fontSize:16,color:C.orange,fontWeight:950}}>{canLookup?"›":""}</span></button>;
   };
 
   const roomDone = (room) => data.bundleDone.includes(room.id);
@@ -1526,13 +1548,17 @@ function StardewTracker() {
       const img = new Image();
       await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url; });
       const ratio = img.width / img.height;
+      const is16x9V62 = ratio > 1.6 && ratio < 1.9;
+      const isPhoto43V62 = ratio > 1.15 && ratio < 1.55;
 
-      // 先保留角色肖像：Switch 16:9 的「＋ → 玩家／背包」頁面位置固定。
       const portraitCanvas = document.createElement("canvas");
       portraitCanvas.width = 180; portraitCanvas.height = 240;
       const pctx = portraitCanvas.getContext("2d");
-      if (ratio > 1.6 && ratio < 1.9) {
+      if (is16x9V62) {
         const sx = img.width * 0.298, sy = img.height * 0.548, sw = img.width * 0.092, sh = img.height * 0.218;
+        pctx.drawImage(img, sx, sy, sw, sh, 0, 0, portraitCanvas.width, portraitCanvas.height);
+      } else if (isPhoto43V62) {
+        const sx = img.width * 0.105, sy = img.height * 0.390, sw = img.width * 0.190, sh = img.height * 0.350;
         pctx.drawImage(img, sx, sy, sw, sh, 0, 0, portraitCanvas.width, portraitCanvas.height);
       } else {
         const sideW = Math.min(img.width, img.height * 0.76), sideH = Math.min(img.height, img.width / 0.76);
@@ -1540,9 +1566,9 @@ function StardewTracker() {
       }
       const portrait = portraitCanvas.toDataURL("image/jpeg", 0.84);
 
-      if (!(ratio > 1.6 && ratio < 1.9)) {
+      if (!is16x9V62 && !isPhoto43V62) {
         setData(d => ({...d, profilePortrait:portrait}));
-        setProfileOcrStatus("✓ 已更新角色圖；這張圖片不是標準 16:9 玩家資料畫面，因此未自動改文字資料");
+        setProfileOcrStatus("✓ 已更新角色圖；目前可自动读取 16:9 原图与横向 4:3 手机照片／裁切图，其他比例先不覆盖文字资料");
         return;
       }
 
@@ -1599,34 +1625,28 @@ function StardewTracker() {
         .map(r => ({...r, text: cleanNameCandidate(r.text)}))
         .filter(r => r.text)
         .sort((a,b) => nameScore(b) - nameScore(a))[0] || {text:"", confidence:0};
-      // v59: only auto-apply fields that are safe to verify from the fixed Switch UI.
-      // Player/farm names remain manual: free-form text and symbols are too easy for OCR
-      // to hallucinate, and bad guesses should never overwrite a correct name.
       const psmWordV59 = Tesseract.PSM?.SINGLE_WORD || 8;
-      // Names are convenient to prefill even when imperfect, so v61 restores them as
-      // editable OCR suggestions. Numeric/date fields keep the conservative v60 rules.
-      const farmerCropColorV61 = makeCrop(img, 0.285, 0.780, 0.130, 0.060, 8, false);
-      const farmerCropMonoV61 = makeCrop(img, 0.285, 0.780, 0.130, 0.060, 8, 90);
-      const farmCropColorV61 = makeCrop(img, 0.480, 0.565, 0.180, 0.060, 8, false);
-      const farmCropMonoV61 = makeCrop(img, 0.480, 0.565, 0.180, 0.060, 8, 90);
-      const hudMoneyColorV59 = makeCrop(img, 0.890, 0.205, 0.090, 0.050, 8, false);
-      const hudMoneyMonoV59 = makeCrop(img, 0.890, 0.205, 0.090, 0.050, 8, 120);
-      const panelMoneyV59 = makeCrop(img, 0.608, 0.638, 0.064, 0.060, 8, 110);
-      const incomeColorV59 = makeCrop(img, 0.575, 0.695, 0.075, 0.060, 8, false);
-      const incomeMonoV59 = makeCrop(img, 0.575, 0.695, 0.075, 0.060, 8, 110);
-      const incomeWideV59 = makeCrop(img, 0.570, 0.695, 0.120, 0.060, 6, 110);
-      const yearColorV59 = makeCrop(img, 0.533, 0.768, 0.019, 0.050, 8, false);
-      const yearMonoV59 = makeCrop(img, 0.533, 0.768, 0.019, 0.050, 8, 110);
-      const dayColorV59 = makeCrop(img, 0.615, 0.768, 0.033, 0.050, 8, false);
-      const dayMonoV59 = makeCrop(img, 0.615, 0.768, 0.033, 0.050, 8, 110);
-      // Cross-check the profile date against the large day number in the HUD.
-      const hudDayColorV60 = makeCrop(img, 0.882, 0.018, 0.018, 0.050, 10, false);
-      const hudDayMonoV60 = makeCrop(img, 0.882, 0.018, 0.018, 0.050, 10, 120);
-      // Exact crop around the two glyphs only (e.g. 夏季). The previous wide crop also
-      // contained 年/day text and frequently returned no season, leaving the default 春.
-      const seasonColorV59 = makeCrop(img, 0.575, 0.758, 0.035, 0.060, 10, false);
-      const seasonMonoV59 = makeCrop(img, 0.575, 0.758, 0.035, 0.060, 10, 100);
-      const clockCrop = makeCrop(img, 0.868, 0.139, 0.095, 0.055, 4, 90);
+      const rectV62=(standardRect,photoRect)=>isPhoto43V62?photoRect:standardRect;
+      const cropV62=(rect,scale,threshold)=>makeCrop(img,rect[0],rect[1],rect[2],rect[3],scale,threshold);
+      const farmerRectV62=rectV62([0.285,0.780,0.130,0.060],[0.100,0.730,0.240,0.130]);
+      const farmRectV62=rectV62([0.480,0.565,0.180,0.060],[0.500,0.390,0.450,0.110]);
+      const moneyHudRectV62=rectV62([0.890,0.205,0.090,0.050],[0.490,0.510,0.470,0.120]);
+      const moneyPanelRectV62=rectV62([0.608,0.638,0.064,0.060],[0.490,0.510,0.470,0.120]);
+      const incomeRectV62=rectV62([0.575,0.695,0.075,0.060],[0.490,0.600,0.470,0.120]);
+      const incomeWideRectV62=rectV62([0.570,0.695,0.120,0.060],[0.470,0.590,0.500,0.140]);
+      const yearRectV62=rectV62([0.533,0.768,0.019,0.050],[0.610,0.720,0.080,0.120]);
+      const dayRectV62=rectV62([0.615,0.768,0.033,0.050],[0.750,0.720,0.120,0.120]);
+      const hudDayRectV62=rectV62([0.882,0.018,0.018,0.050],[0.750,0.720,0.120,0.120]);
+      const seasonRectV62=rectV62([0.575,0.758,0.035,0.060],[0.660,0.710,0.140,0.130]);
+      const farmerCropColorV61 = cropV62(farmerRectV62,8,false), farmerCropMonoV61 = cropV62(farmerRectV62,8,90);
+      const farmCropColorV61 = cropV62(farmRectV62,8,false), farmCropMonoV61 = cropV62(farmRectV62,8,90);
+      const hudMoneyColorV59 = cropV62(moneyHudRectV62,8,false), hudMoneyMonoV59 = cropV62(moneyHudRectV62,8,120), panelMoneyV59 = cropV62(moneyPanelRectV62,8,110);
+      const incomeColorV59 = cropV62(incomeRectV62,8,false), incomeMonoV59 = cropV62(incomeRectV62,8,110), incomeWideV59 = cropV62(incomeWideRectV62,6,110);
+      const yearColorV59 = cropV62(yearRectV62,8,false), yearMonoV59 = cropV62(yearRectV62,8,110);
+      const dayColorV59 = cropV62(dayRectV62,8,false), dayMonoV59 = cropV62(dayRectV62,8,110);
+      const hudDayColorV60 = cropV62(hudDayRectV62,10,false), hudDayMonoV60 = cropV62(hudDayRectV62,10,120);
+      const seasonColorV59 = cropV62(seasonRectV62,10,false), seasonMonoV59 = cropV62(seasonRectV62,10,100);
+      const clockCrop = cropV62([0.868,0.139,0.095,0.055],4,90);
 
       const numberConsensusV59 = (...values) => {
         const nums = values.filter(v => Number.isFinite(v) && v >= 0);
@@ -1655,7 +1675,7 @@ function StardewTracker() {
       const dayMonoRawV59 = await recognizeWithV58(engWorker, dayMonoV59, "0123456789", psmWordV59);
       const hudDayColorRawV60 = await recognizeWithV58(engWorker, hudDayColorV60, "0123456789", psmWordV59);
       const hudDayMonoRawV60 = await recognizeWithV58(engWorker, hudDayMonoV60, "0123456789", psmWordV59);
-      const clockRaw = await recognizeWithV58(engWorker, clockCrop, "0123456789:：");
+      const clockRaw = is16x9V62 ? await recognizeWithV58(engWorker, clockCrop, "0123456789:：") : "";
       await engWorker.terminate();
 
       const zhWorker = await makeWorkerV58('chi_sim','中文／季節辨識');
@@ -1894,7 +1914,7 @@ function StardewTracker() {
     const powerKind=powerSection==="books"?"books":"special";
     const powerList=powerKind==="books"?BOOK_POWERS_V2:SPECIAL_ITEMS_V2;
     return <div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:8}}><SkillTab id="milestones" label="里程碑" file="Achievement Star 01"/><SkillTab id="skills" label="技能" file="Skills Tab Icon"/><SkillTab id="mine" label="礦井" file="MinesEntrance"/><SkillTab id="special" label="特殊能力" file="Special Items & Powers Tab"/><SkillTab id="stardrops" label="星之果實" file="Stardrop"/></div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:8}}><SkillTab id="milestones" label="里程碑" file="Stardrop Tea"/><SkillTab id="skills" label="技能" file="Book Of Stars"/><SkillTab id="mine" label="礦井" file="Pickaxe"/><SkillTab id="special" label="特殊能力" file="Treasure Chest"/><SkillTab id="stardrops" label="星之果實" file="Stardrop"/></div>
       {skillSection==="milestones"&&<><SectionTitle icon="🏆">重要里程碑</SectionTitle><Card style={{padding:8}}>{MILESTONES.map(m => <CheckRow key={m.id} checked={data.milestones.includes(m.id)} onChange={v => update({ milestones: v ? [...new Set([...data.milestones, m.id])] : data.milestones.filter(x => x !== m.id) })} sub={m.desc}>{m.name}</CheckRow>)}</Card></>}
       {skillSection==="skills"&&<><SectionTitle icon="⭐">技能・專精・精通</SectionTitle><Card style={{padding:7}}>{SKILLS.map((sk,si)=>{const lv=Number(data.skills?.[sk.id]||0),l5=sk.id+"5",p5=data.prof?.[l5]||"";const branches=Object.entries(PROF[sk.id].l10);const mastery=MASTERY_POWERS_V2.find(x=>x.id===sk.id);const mastered=(data.mastery||[]).includes(sk.id);return <div key={sk.id} style={{padding:"7px 0",borderBottom:si<SKILLS.length-1?`1px dashed ${C.line}`:"none"}}>
         <div style={{display:"flex",alignItems:"center",gap:6}}><GameIcon file={SKILL_ICON_FILES[sk.id]} size={31}/><div style={{minWidth:0,flex:1}}><div style={{display:"flex",alignItems:"center",gap:5}}><b style={{fontSize:11.5,color:C.ink}}>{sk.name}</b><span style={{fontSize:8,color:C.muted}}>{SKILL_BASE_DESC_V27[sk.id]}</span></div></div><button onClick={()=>updateNested("skills",{[sk.id]:Math.max(0,lv-1)})} style={{border:0,background:C.cream,borderRadius:6,width:21,height:21,padding:0,fontWeight:950,color:C.brown}}>−</button><b style={{fontSize:10.5,color:C.green,minWidth:31,textAlign:"center"}}>Lv.{lv}</b><button onClick={()=>updateNested("skills",{[sk.id]:Math.min(10,lv+1)})} style={{border:0,background:C.cream,borderRadius:6,width:21,height:21,padding:0,fontWeight:950,color:C.brown}}>＋</button></div>
@@ -1934,12 +1954,12 @@ function StardewTracker() {
     const setCustomBundle=(b,items,need=bundleNeedFor(b))=>update({bundleCustomV28:{...customItems,[b.id]:items},bundleNeedV28:{...customNeeds,[b.id]:Math.max(1,Math.min(items.length||1,Number(need)||1))}});
     const setCustomName=(b,name)=>update({bundleNameV28:{...customNames,[b.id]:name||b.name}});
     const RoomTab=({r})=>{const rd=roomDone(r),active=bundleRoom===r.id;return <button onClick={()=>{setBundleRoom(active?"":r.id);setBundleEditV28(null)}} style={{border:`1.5px solid ${active?C.orange:rd?C.green:C.line}`,background:active?"#FFE2A8":rd?"#EEF7DD":C.paper,borderRadius:8,padding:"5px 2px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",minWidth:0}}><GameIcon file={ROOM_ICON_FILES[r.id]} size={24}/><span style={{fontSize:8.2,fontWeight:950,color:active?C.darkBrown:rd?C.green:C.muted}}>{rd?"✓ ":""}{r.name}</span></button>};
-    const RouteLevelV55=({label,file,children})=><div style={{marginTop:9,marginLeft:6,paddingLeft:9,borderLeft:`3px solid ${C.orange}`}}><div style={{display:"flex",alignItems:"center",gap:6,padding:"4px 2px 2px",fontSize:8,fontWeight:950,color:C.orange}}><span style={{background:"#FFF0D2",borderRadius:7,padding:"2px 5px"}}>第 4 层</span><GameIcon file={file} size={20}/><span>{label}</span></div>{children}</div>;
+    const RouteLevelV55=({label,file,children})=><div style={{marginTop:9}}><div style={{display:"flex",alignItems:"center",gap:6,padding:"4px 2px 2px",fontSize:9,fontWeight:950,color:C.orange}}><GameIcon file={file} size={21}/><span>{label}</span></div>{children}</div>;
     const routeButton=(id,label,file)=>{const active=route===id,inactive=Boolean(route)&&!active;return <button onClick={()=>{if(route&&route!==id&&!window.confirm(`游戏里社区中心与 Joja 是二选一路线。确定把手帐当前路线切换成「${label}」吗？
 另一条路线已记录的数据会保留，但不会同时计入当前路线。`))return;update({communityRouteV28:id});setBundleRoom("");setBundleEditV28(null)}} style={{border:`2px solid ${active?C.green:C.line}`,background:active?"#EAF4D8":inactive?"#E5E1D8":C.paper,borderRadius:10,padding:"7px 5px",display:"flex",alignItems:"center",justifyContent:"center",gap:7,fontSize:9,fontWeight:950,color:active?C.green:inactive?C.muted:C.brown,filter:inactive?"grayscale(.9)":"none",opacity:inactive?.65:1}}><GameIcon file={file} size={27}/><span>{active?"✓ ":""}{label}{active?<small style={{display:"block",fontSize:6.2,color:C.green,marginTop:1}}>目前路线</small>:null}</span></button>};
     return <div>
       <SectionTitle icon="📦">城镇修复路线</SectionTitle>
-      <Card style={{padding:8,background:"#FFF4D8"}}><div style={{display:"flex",alignItems:"center",gap:5,fontSize:8.5,fontWeight:950,color:C.brown,marginBottom:6}}><span style={{background:"#FFE2A8",borderRadius:7,padding:"2px 6px"}}>第 3 层</span><span>先选这个存档走哪条路线｜游戏中二选一</span></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7}}>{routeButton("cc","社区中心","Golden Scroll")}{routeButton("joja","Joja","Joja Warehouse")}</div>{!route&&<div style={{fontSize:8,color:C.muted,lineHeight:1.35,marginTop:6,textAlign:"center"}}>尚未选择路线；选择后才展开下一层的路线内容。</div>}</Card>
+      <Card style={{padding:8,background:"#FFF4D8"}}><div style={{display:"flex",alignItems:"center",gap:5,fontSize:8.8,fontWeight:950,color:C.brown,marginBottom:6}}><GameIcon file="Golden Scroll" size={20}/><span>选择这个存档的城镇修复路线｜游戏中二选一</span></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7}}>{routeButton("cc","社区中心","Golden Scroll")}{routeButton("joja","Joja","Joja Warehouse")}</div>{!route&&<div style={{fontSize:8,color:C.muted,lineHeight:1.35,marginTop:6,textAlign:"center"}}>尚未选择路线；选择后才展开下一层的路线内容。</div>}</Card>
 
       {route==="joja"&&<RouteLevelV55 label="Joja 仓库路线内容" file="Joja Warehouse">
         <Card style={{marginTop:9,padding:9,background:data.jojaMemberV28?"#EEF7DD":"#E5E1D8",filter:data.jojaMemberV28?"none":"grayscale(.9)",opacity:data.jojaMemberV28?1:.72}}><div style={{display:"flex",alignItems:"center",gap:8}}><GameIcon file="Joja Cola" size={36}/><div style={{flex:1}}><b style={{fontSize:12,color:C.darkBrown}}>Joja 會員</b><div style={{fontSize:9,color:C.muted,marginTop:2}}>5,000g；購買後社區中心變為 Joja 倉庫。</div></div><button onClick={()=>update({jojaMemberV28:!data.jojaMemberV28})} style={{border:`1.5px solid ${data.jojaMemberV28?C.green:C.line}`,background:data.jojaMemberV28?C.lightGreen:"#EEE9DE",borderRadius:8,padding:"5px 7px",fontWeight:950,color:data.jojaMemberV28?C.green:C.muted,fontSize:9}}>{data.jojaMemberV28?"✓ 已加入":"未加入"}</button></div></Card>
@@ -2046,7 +2066,7 @@ function StardewTracker() {
     const MachineTile=({id,name,file,products})=>{const n=Number(data.machines?.[id]||0),meta=machineMetaV51[file]||{};const lookup=window.SDVLookupV46?.items||[];const ingredientName=x=>{const r=lookup.find(v=>v?.name===x||v?.file===x);return switchNameV47(r?.zh||x,r?.file||x)};const footer=meta.ingredients?.length?<div><div style={{fontSize:6.7,color:C.muted,fontWeight:950,marginBottom:3}}>製作材料</div><div style={{display:"flex",gap:3,justifyContent:"center",flexWrap:"wrap"}}>{meta.ingredients.map((it,i)=><span key={`${file}-${it.name}-${i}`} title={`${ingredientName(it.name)} ×${it.quantity}`} style={{display:"inline-flex",alignItems:"center",gap:1,fontSize:6.4,color:C.brown,fontWeight:900}}><GameIcon file={it.name} size={14}/><span>×{it.quantity}</span></span>)}</div>{meta.sourceZh&&<div style={{fontSize:5.9,color:C.muted,lineHeight:1.2,marginTop:3}}>{meta.sourceZh}</div>}</div>:<div style={{fontSize:6.2,color:C.muted,lineHeight:1.25}}>{meta.sourceZh||meta.obtainZh||"目前不可直接制作／特殊取得"}</div>;return <CountTile name={name} file={file} products={products} footer={footer} count={n} onMinus={()=>setMachineCount(id,n-1)} onPlus={()=>setMachineCount(id,n+1)}/>};
     return <div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:6,marginTop:8}}>
-        <FarmTab id="animals" label="動物" file="Animals Tab"/>
+        <FarmTab id="animals" label="動物" file="Hay"/>
         <FarmTab id="ponds" label="魚塘" file="Fish Pond"/>
         <FarmTab id="buildings" label="建築" file={houseFiles[Number(data.house||0)]||"House (tier 1)"}/>
         <FarmTab id="tools" label="工具" file={toolFiles.pickaxe?.[data.tools?.pickaxe||"初始"]||"Pickaxe"}/>
@@ -2118,8 +2138,8 @@ function StardewTracker() {
   };
 
   const renderData = () => {
-    const DataTab=({id,label,file})=>{const active=dataSection===id;return <button onClick={()=>setDataSection(id)} style={{border:`2px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.paper,borderRadius:11,padding:"7px 4px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",minWidth:0}}><GameIcon file={file} size={39}/><span style={{fontSize:10,fontWeight:950,color:active?C.darkBrown:C.muted}}>{label}</span></button>};
-    return <div><SectionTitle icon="📊">資料</SectionTitle><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:6,marginTop:7}}><DataTab id="skills" label="角色" file="Skills Tab Icon"/><DataTab id="farm" label="農場" file="Animals Tab"/><DataTab id="bundles" label="社區" file="Golden Scroll"/><DataTab id="collection" label="收藏" file="Collections Tab"/></div>{dataSection==="skills"&&renderSkills()}{dataSection==="farm"&&renderFarm()}{dataSection==="bundles"&&renderBundles()}{dataSection==="collection"&&renderCollection()}</div>;
+    const DataTab=({id,label,file})=>{const active=dataSection===id;return <button onClick={()=>setDataSection(id)} style={{border:`1.5px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.paper,borderRadius:9,padding:"5px 3px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",minWidth:0}}><GameIcon file={file} size={30}/><span style={{fontSize:8.8,fontWeight:950,color:active?C.darkBrown:C.muted}}>{label}</span></button>};
+    return <div><SectionTitle icon="game:Book Of Stars">資料</SectionTitle><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:6,marginTop:7}}><DataTab id="skills" label="角色" file="Stardrop"/><DataTab id="farm" label="農場" file="Farm Computer"/><DataTab id="bundles" label="社區" file="Golden Scroll"/><DataTab id="collection" label="收藏" file="Treasure Chest"/></div>{dataSection==="skills"&&renderSkills()}{dataSection==="farm"&&renderFarm()}{dataSection==="bundles"&&renderBundles()}{dataSection==="collection"&&renderCollection()}</div>;
   };
 
   const renderPeople = () => {
@@ -2157,7 +2177,7 @@ function StardewTracker() {
       <SectionTitle icon="💛">社交速查</SectionTitle>
       <Card style={{padding:7,background:"#FFF4D8",fontSize:8.5,color:C.muted,lineHeight:1.4}}>這頁以遊玩時「查人」為主：生日、角色簡介、完整個人偏好、物品來源、特殊訂單與商店資訊；好感度只保留成小型記錄。</Card>
       <div style={{display:"flex",gap:5,margin:"7px 0"}}>{NPC_GROUPS.map(x=><Pill key={x.id} small active={x.id===socialGroup} onClick={()=>{setSocialGroup(x.id);setExpandedNPC(null)}}>{x.name}</Pill>)}</div>
-      <div style={{display:"grid",gap:6}}>{g.list.map(n=>{const cap=g.id==="single"?14:10;const hearts=Math.min(cap,Number(data.friendship[n]||0));const open=expandedNPC===n;const profile=socialV50[n]||{};const fallback=NPC_GIFTS[n]||{};const loves=socialRowsV55(n,profile,fallback,"loves");const likes=socialRowsV55(n,profile,fallback,"likes");const hates=socialRowsV55(n,profile,fallback,"hates");return <Card key={n} style={{padding:7,background:open?"#FFF8E9":C.paper,minWidth:0,maxWidth:"100%",overflow:"hidden"}}>
+      <div style={{display:"grid",gap:6}}>{g.list.map(n=>{const cap=g.id==="single"?14:10;const hearts=Math.min(cap,Number(data.friendship[n]||0));const open=expandedNPC===n;const profile=socialV50[n]||{};const fallback=NPC_GIFTS[n]||{};const loves=socialRowsV55(n,profile,fallback,"loves");const likes=socialRowsV55(n,profile,fallback,"likes");const hates=socialRowsV55(n,profile,fallback,"hates");return <Card key={n} id={`npc-card-${n}`} style={{padding:7,background:open?"#FFF8E9":C.paper,minWidth:0,maxWidth:"100%",overflow:"hidden",scrollMarginTop:"calc(104px + env(safe-area-inset-top))"}}>
         <button onClick={()=>setExpandedNPC(open?null:n)} style={{width:"100%",border:0,background:"transparent",padding:0,display:"grid",gridTemplateColumns:"40px minmax(0,1fr) auto",gap:7,alignItems:"center",textAlign:"left"}}><GameIcon file={NPC_ICON_FILES[n]} size={38}/><span style={{minWidth:0}}><span style={{display:"flex",alignItems:"center",gap:5}}><b style={{fontSize:11.5,color:C.ink}}>{n}</b>{profile.birthday?.day&&<span style={{fontSize:7,color:C.orange,fontWeight:900}}>🎂 {profile.birthday.season}{profile.birthday.day}</span>}</span><span style={{display:"grid",gridTemplateColumns:"24px 1fr",gap:2,alignItems:"center",marginTop:2}}><span style={{fontSize:6.5,color:C.muted,fontWeight:900}}>最愛</span><CompactLovesV50 items={loves}/></span></span><span style={{display:"flex",alignItems:"center",gap:4}}><b style={{fontSize:8.5,color:hearts?C.red:C.muted}}>♥ {hearts}/{cap}</b><span style={{fontSize:10,color:C.brown}}>{open?"▲":"▼"}</span></span></button>
         <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:3,marginTop:4}}><button onClick={()=>updateNested("friendship",{[n]:Math.max(0,hearts-1)})} style={{border:0,background:C.cream,borderRadius:5,width:20,height:19,padding:0,color:C.brown,fontWeight:950}}>−</button><span style={{fontSize:6.8,color:C.muted}}>好感</span><button onClick={()=>updateNested("friendship",{[n]:Math.min(cap,hearts+1)})} style={{border:0,background:C.cream,borderRadius:5,width:20,height:19,padding:0,color:C.brown,fontWeight:950}}>＋</button></div>
         {open&&<div style={{borderTop:`1px dashed ${C.line}`,marginTop:6,paddingTop:7}}>{profile.intro&&<div style={{display:"flex",gap:7,alignItems:"start",padding:"6px 7px",background:"#F7E9C6",borderRadius:8}}><GameIcon file={NPC_ICON_FILES[n]} size={32}/><div style={{fontSize:8.5,color:C.ink,lineHeight:1.4}}>{profile.intro}{profile.birthday?.day&&<div style={{marginTop:3,color:C.brown,fontWeight:900}}>生日：{profile.birthday.season}季 {profile.birthday.day} 日</div>}</div></div>}<GiftGridV50 title="💖 最愛" items={loves} tone="#FFF0F2"/><GiftGridV50 title="👍 喜歡" items={likes} tone="#EEF7DD"/><GiftGridV50 title="👎 討厭" items={hates} tone="#F4E8E3"/><div style={{fontSize:7,color:C.muted,marginTop:5}}>點具體物品會直接切到「查找 → 物品用途」，顯示更完整的用途與取得方式；「全部××」這類通用分類則不跳轉。</div><ServicesV55 npc={n}/><OrdersV50 orders={profile.orders}/><ShopV50 shop={profile.shop}/></div>}
@@ -2190,12 +2210,14 @@ function StardewTracker() {
   const renderDexCollection = () => {
     const c=COLLECTIONS[selectedCollection];
     const got=data.collections[selectedCollection]||[];
+    const selectedName=selectedItem!=null?c.items[selectedItem]:"";
     return <div style={{marginTop:8}}>
       <Card style={{padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:900,color:C.muted,marginBottom:5}}><span>{selectedCollection==="artifact"?"古物圖鑑":"礦物圖鑑"}</span><span>{got.length}/{c.items.length}</span></div><ProgressBar value={got.length} max={c.items.length}/></Card>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:8}}>{c.items.map((it,i)=>{const checked=got.includes(i),file=ICON_URLS[selectedCollection]?.[i];return <button key={i} onClick={()=>setSelectedItem(i)} onDoubleClick={()=>updateNested("collections",{[selectedCollection]:checked?got.filter(x=>x!==i):[...got,i]})} style={{position:"relative",border:`2px solid ${selectedItem===i?C.orange:checked?C.green:C.line}`,background:checked?"#E5F3CF":C.paper,borderRadius:9,padding:"6px 3px",minHeight:78,cursor:"pointer"}}>{file?<img src={file} alt="" style={{width:36,height:36,imageRendering:"pixelated",objectFit:"contain"}}/>:<GameIcon file={itemFileZhV26(it)||it} size={36}/>}<div style={{fontSize:9,fontWeight:900,color:C.ink,lineHeight:1.1,marginTop:2}}>{switchNameV47(it,itemFileZhV26(it))}</div><button onClick={e=>{e.stopPropagation();updateNested("collections",{[selectedCollection]:checked?got.filter(x=>x!==i):[...got,i]})}} style={{position:"absolute",right:2,top:2,border:0,background:"transparent",fontSize:13,color:checked?C.green:"#C9B99A",fontWeight:950}}>{checked?"✓":"○"}</button></button>})}</div>
-      {selectedItem!=null&&c.items[selectedItem]&&<Card style={{marginTop:8,background:"#FFF8E2"}}><div style={{display:"flex",gap:9,alignItems:"center"}}>{ICON_URLS[selectedCollection]?.[selectedItem]?<img src={ICON_URLS[selectedCollection][selectedItem]} alt="" style={{width:48,height:48,imageRendering:"pixelated"}}/>:<GameIcon file={itemFileZhV26(c.items[selectedItem])||c.items[selectedItem]} size={48}/>}<div style={{flex:1,minWidth:0}}><b style={{fontSize:15,color:C.darkBrown}}>{switchNameV47(c.items[selectedItem],itemFileZhV26(c.items[selectedItem]))}</b><div style={{fontSize:10.5,color:C.muted,marginTop:3}}>{c.info?.[selectedItem]||""}</div></div></div></Card>}
+      {selectedName&&<SimpleItemInfoV62 name={selectedName} file={itemFileZhV26(selectedName)||selectedName} info={c.info?.[selectedItem]||""}/>} 
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:8}}>{c.items.map((it,i)=>{const checked=got.includes(i),file=ICON_URLS[selectedCollection]?.[i];return <button key={i} onClick={()=>setSelectedItem(i)} onDoubleClick={()=>updateNested("collections",{[selectedCollection]:checked?got.filter(x=>x!==i):[...got,i]})} style={{position:"relative",border:`2px solid ${selectedItem===i?C.orange:checked?C.green:C.line}`,background:checked?"#E5F3CF":C.paper,borderRadius:9,padding:"6px 3px",minHeight:78,cursor:"pointer"}}>{file?<img src={file} alt="" style={{width:36,height:36,imageRendering:"pixelated",objectFit:"contain"}}/>:<GameIcon file={itemFileZhV26(it)||it} size={36}/>}<div style={{fontSize:9,fontWeight:900,color:C.ink,lineHeight:1.1,marginTop:2}}>{switchNameV47(it,itemFileZhV26(it))}</div><span onClick={e=>{e.stopPropagation();updateNested("collections",{[selectedCollection]:checked?got.filter(x=>x!==i):[...got,i]})}} style={{position:"absolute",right:2,top:2,fontSize:13,color:checked?C.green:"#C9B99A",fontWeight:950,padding:2}}>{checked?"✓":"○"}</span></button>})}</div>
     </div>;
   };
+
 
 
   const prepSetV3 = data.cookingPrepV3 || [];
@@ -2210,15 +2232,14 @@ function StardewTracker() {
     const progressMax=prepMode?allPrepItemsV3.length:COOKING_DISHES_V3.length;
     return <div>
       <Card style={{marginTop:8,padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:900,color:C.muted,marginBottom:5}}><span>{prepMode?"料理备料图鉴":"料理收集"}</span><span>{progressValue}/{progressMax}</span></div><ProgressBar value={progressValue} max={progressMax}/></Card>
-      <div style={{display:"flex",gap:5,marginTop:7}}><Pill small active={prepMode} onClick={()=>setCookingModeV3("prep")}>备料图鉴</Pill><Pill small active={!prepMode} onClick={()=>setCookingModeV3("dishes")}>料理收集</Pill></div>
+      {selectedCookingV62&&<SimpleItemInfoV62 name={selectedCookingV62.name} file={selectedCookingV62.file} info={selectedCookingV62.info||""}/>} 
+      <div style={{display:"flex",gap:5,marginTop:7}}><Pill small active={prepMode} onClick={()=>{setCookingModeV3("prep");setSelectedCookingV62(null)}}>备料图鉴</Pill><Pill small active={!prepMode} onClick={()=>{setCookingModeV3("dishes");setSelectedCookingV62(null)}}>料理收集</Pill></div>
       {prepMode&&<Card style={{marginTop:7,padding:8,background:"#FFF4D8"}}><div style={{fontSize:9.5,fontWeight:950,color:C.darkBrown}}>全料理一次性备料</div><div style={{fontSize:8.5,color:C.muted,lineHeight:1.4,marginTop:2}}>点亮＝已按攻略准备最低需求量；这里只记准备进度，不当库存管理。</div></Card>}
-      {prepMode && <>
-        <label style={{display:"flex",alignItems:"center",gap:6,margin:"8px 2px 0",fontSize:11,fontWeight:900,color:C.brown}}><input type="checkbox" checked={prepMissingOnlyV3} onChange={e=>setPrepMissingOnlyV3(e.target.checked)}/>只看还没准备的材料</label>
-        {COOKING_PREP_GROUPS_V3.map(g=>{const rows=g.items.filter(it=>!prepMissingOnlyV3||!prepSetV3.includes(it[0]));return rows.length?<Card key={g.id} style={{marginTop:8,padding:9,background:g.id==="g5"?"#FFF0D2":C.paper}}><div style={{fontSize:12.5,fontWeight:950,color:C.darkBrown}}>{g.name}</div><div style={{fontSize:9.5,color:C.muted,marginTop:2,lineHeight:1.35}}>{g.desc}</div><div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:7}}>{rows.map(it=>{const [id,name,file,need]=it,on=prepSetV3.includes(id);return <button key={id} onClick={()=>togglePrepV3(id)} style={{position:"relative",border:`2px solid ${on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:9,minHeight:82,padding:"5px 2px",cursor:"pointer"}}><div style={{height:35,display:"flex",alignItems:"center",justifyContent:"center"}}><GameIcon file={file} size={34}/></div><div style={{fontSize:9,fontWeight:950,color:C.ink,lineHeight:1.1,marginTop:2}}>{name}</div><span style={{position:"absolute",left:3,top:2,fontSize:8.5,fontWeight:950,color:C.brown,background:"#FFF1C9",borderRadius:6,padding:"1px 3px"}}>×{need}</span><span style={{position:"absolute",right:2,top:1,fontSize:12,color:on?C.green:"#C9B99A",fontWeight:950}}>{on?"✓":"○"}</span></button>})}</div></Card>:null})}
-      </>}
-      {!prepMode&&<div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:8}}>{COOKING_DISHES_V3.map(it=>{const [id,name,file]=it,on=cookedSetV3.includes(id);return <button key={id} onClick={()=>toggleCookedV3(id)} style={{position:"relative",border:`2px solid ${on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:8,minHeight:75,padding:"5px 2px",cursor:"pointer"}}><GameIcon file={file} size={34}/><div style={{fontSize:8.8,fontWeight:900,color:C.ink,lineHeight:1.1,marginTop:2}}>{switchNameV47(name,file)}</div><span style={{position:"absolute",right:2,top:1,fontSize:11,color:on?C.green:"#C9B99A"}}>{on?"✓":"○"}</span></button>})}</div>}
+      {prepMode&&<><label style={{display:"flex",alignItems:"center",gap:6,margin:"8px 2px 0",fontSize:11,fontWeight:900,color:C.brown}}><input type="checkbox" checked={prepMissingOnlyV3} onChange={e=>setPrepMissingOnlyV3(e.target.checked)}/>只看还没准备的材料</label>{COOKING_PREP_GROUPS_V3.map(g=>{const rows=g.items.filter(it=>!prepMissingOnlyV3||!prepSetV3.includes(it[0]));return rows.length?<Card key={g.id} style={{marginTop:8,padding:9,background:g.id==="g5"?"#FFF0D2":C.paper}}><div style={{fontSize:12.5,fontWeight:950,color:C.darkBrown}}>{g.name}</div><div style={{fontSize:9.5,color:C.muted,marginTop:2,lineHeight:1.35}}>{g.desc}</div><div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:7}}>{rows.map(it=>{const [id,name,file,need]=it,on=prepSetV3.includes(id);return <button key={id} onClick={()=>setSelectedCookingV62({name,file,info:`全料理一次性备料最低需求 ×${need}`})} style={{position:"relative",border:`2px solid ${selectedCookingV62?.file===file?C.orange:on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:9,minHeight:82,padding:"5px 2px",cursor:"pointer"}}><div style={{height:35,display:"flex",alignItems:"center",justifyContent:"center"}}><GameIcon file={file} size={34}/></div><div style={{fontSize:9,fontWeight:950,color:C.ink,lineHeight:1.1,marginTop:2}}>{name}</div><span style={{position:"absolute",left:3,top:2,fontSize:8.5,fontWeight:950,color:C.brown,background:"#FFF1C9",borderRadius:6,padding:"1px 3px"}}>×{need}</span><span onClick={e=>{e.stopPropagation();togglePrepV3(id)}} style={{position:"absolute",right:2,top:1,fontSize:12,color:on?C.green:"#C9B99A",fontWeight:950,padding:2}}>{on?"✓":"○"}</span></button>})}</div></Card>:null})}</>}
+      {!prepMode&&<div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:8}}>{COOKING_DISHES_V3.map(it=>{const [id,name,file]=it,on=cookedSetV3.includes(id);return <button key={id} onClick={()=>setSelectedCookingV62({name,file,info:"料理图鉴；右上角圆点记录是否已经制作过。"})} style={{position:"relative",border:`2px solid ${selectedCookingV62?.file===file?C.orange:on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:8,minHeight:75,padding:"5px 2px",cursor:"pointer"}}><GameIcon file={file} size={34}/><div style={{fontSize:8.8,fontWeight:900,color:C.ink,lineHeight:1.1,marginTop:2}}>{switchNameV47(name,file)}</div><span onClick={e=>{e.stopPropagation();toggleCookedV3(id)}} style={{position:"absolute",right:2,top:1,fontSize:11,color:on?C.green:"#C9B99A",fontWeight:950,padding:2}}>{on?"✓":"○"}</span></button>})}</div>}
     </div>;
   };
+
 
   const renderPaperCollectionV3 = (kind,total,title) => {
     const list=extrasState[kind]||[];
@@ -2253,216 +2274,14 @@ function StardewTracker() {
 
   const renderFishDexV4 = () => {
     const got=data.collections.fish||[];
+    const selectedName=selectedItem!=null?COLLECTIONS.fish.items[selectedItem]:"";
     return <div style={{marginTop:8}}>
       <Card style={{padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:900,color:C.muted,marginBottom:5}}><span>魚類圖鑑</span><span>{got.length}/{COLLECTIONS.fish.items.length}</span></div><ProgressBar value={got.length} max={COLLECTIONS.fish.items.length}/></Card>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:8}}>{COLLECTIONS.fish.items.map((name,i)=>{const on=got.includes(i);return <button key={i} onClick={()=>setSelectedItem(i)} style={{position:"relative",border:`2px solid ${!on?C.orange:C.line}`,background:on?"#E8F1D5":C.paper,borderRadius:9,minHeight:76,padding:"5px 2px",cursor:"pointer"}}><img src={ICON_URLS.fish[i]} alt="" style={{width:36,height:36,imageRendering:"pixelated",objectFit:"contain"}}/><div style={{fontSize:9,fontWeight:900,color:C.ink,lineHeight:1.05}}>{switchNameV47(name,FISH_ICON_FILES[i])}</div><button onClick={e=>{e.stopPropagation();updateNested("collections",{fish:on?got.filter(x=>x!==i):[...got,i]})}} style={{position:"absolute",right:2,top:2,border:0,background:"transparent",fontSize:12,color:on?C.green:"#C9A86A",fontWeight:950}}>{on?"✓":"○"}</button></button>})}</div>
-      {selectedItem!=null&&<Card style={{marginTop:8,background:"#FFF8E2"}}><div style={{display:"flex",gap:9,alignItems:"center"}}><img src={ICON_URLS.fish[selectedItem]} alt="" style={{width:48,height:48,imageRendering:"pixelated"}}/><div style={{flex:1,minWidth:0}}><b style={{fontSize:15,color:C.darkBrown}}>{switchNameV47(COLLECTIONS.fish.items[selectedItem],FISH_ICON_FILES[selectedItem])}</b><div style={{fontSize:10.5,color:C.muted,marginTop:3}}>{FISH_INFO[selectedItem]||""}</div></div></div></Card>}
+      {selectedItem!=null&&selectedName&&<SimpleItemInfoV62 name={selectedName} file={FISH_ICON_FILES[selectedItem]} info={FISH_INFO[selectedItem]||""}/>} 
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:8}}>{COLLECTIONS.fish.items.map((name,i)=>{const on=got.includes(i);return <button key={i} onClick={()=>setSelectedItem(i)} style={{position:"relative",border:`2px solid ${selectedItem===i?C.orange:!on?C.orange:C.line}`,background:on?"#E8F1D5":C.paper,borderRadius:9,minHeight:76,padding:"5px 2px",cursor:"pointer"}}><img src={ICON_URLS.fish[i]} alt="" style={{width:36,height:36,imageRendering:"pixelated",objectFit:"contain"}}/><div style={{fontSize:9,fontWeight:900,color:C.ink,lineHeight:1.05}}>{switchNameV47(name,FISH_ICON_FILES[i])}</div><span onClick={e=>{e.stopPropagation();updateNested("collections",{fish:on?got.filter(x=>x!==i):[...got,i]})}} style={{position:"absolute",right:2,top:1,fontSize:12,color:on?C.green:"#C9A86A",fontWeight:950,padding:2}}>{on?"✓":"○"}</span></button>})}</div>
     </div>;
   };
 
-  const renderFishFindV4 = () => {
-    const group=FISH_AREA_GROUPS_V4[fishFindGroupV4]||FISH_AREA_GROUPS_V4.main;
-    const groupAreas=group.ids.map(id=>FISH_AREAS_V4.find(a=>a.id===id)).filter(Boolean);
-    const area=groupAreas.find(a=>a.id===fishAreaV4)||groupAreas[0];
-    const mapMeta=FISH_MAP_META_V42[fishFindGroupV4]||FISH_MAP_META_V42.main;
-    const activeCluster=mapMeta.clusters.find(c=>c.ids.includes(area?.id));
-    const toggleValue=(value,list,setter)=>setter(list.includes(value)?list.filter(x=>x!==value):[...list,value]);
-    const matchesTime=(windows,segId)=>{const seg=FISH_TIME_SEGMENTS_V42.find(x=>x.id===segId);if(!seg)return true;const [sa,sb]=seg.range;return windows.some(([a,b])=>a<sb&&b>sa);};
-    const rows=(area?.fish||[]).filter(i=>{
-      const rule=fishRuleV4(i);
-      const seasons=area.forceSeasons||area.seasonOverride?.[i]||rule.s||SEASONS;
-      if(fishSeasonsV42.length&&!fishSeasonsV42.some(x=>seasons.includes(x)))return false;
-      if(fishWeathersV42.length&&rule.w!=="任意"&&!fishWeathersV42.includes(rule.w))return false;
-      if(fishTimesV42.length){const windows=area.timeOverride||rule.t||[[6,26]];if(!fishTimesV42.some(id=>matchesTime(windows,id)))return false;}
-      return true;
-    });
-    const selectGroup=k=>{setFishFindGroupV4(k);const first=FISH_AREA_GROUPS_V4[k]?.ids?.[0];if(first)setFishAreaV4(first);};
-    const filterButton=(label,on,onClick,tint="#FFF4D8")=><button onClick={onClick} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?tint:C.paper,borderRadius:14,padding:"4px 8px",fontSize:8.4,fontWeight:900,color:on?C.darkBrown:C.muted,whiteSpace:"nowrap"}}>{on?"✓ ":""}{label}</button>;
-    const clearFilters=()=>{setFishSeasonsV42([]);setFishWeathersV42([]);setFishTimesV42([])};
-    return <div style={{marginTop:8}}>
-      <Card style={{padding:9,background:"#FFF4D8"}}>
-        <div style={{fontSize:11,fontWeight:950,color:C.darkBrown}}>先選大區，再直接從地圖選地點</div>
-        <div style={{display:"flex",gap:5,marginTop:6}}>{Object.entries(FISH_AREA_GROUPS_V4).map(([k,g])=><Pill key={k} small active={fishFindGroupV4===k} onClick={()=>selectGroup(k)}>{g.name}</Pill>)}</div>
-      </Card>
-
-      {mapMeta.file?<Card style={{marginTop:7,padding:7}}>
-        <div style={{position:"relative",overflow:"hidden",borderRadius:8,border:`1px solid ${C.line}`,background:"#DCE9C2"}}>
-          <img src={GAME_FILE(mapMeta.file)} alt={`${group.name}地圖`} style={{display:"block",width:"100%",height:"auto",imageRendering:"pixelated"}}/>
-          {mapMeta.clusters.map(c=>{const on=c.ids.includes(area?.id);return <button key={c.id} onClick={()=>setFishAreaV4(c.ids[0])} style={{position:"absolute",left:`${c.x}%`,top:`${c.y}%`,transform:"translate(-50%,-50%)",border:`1.5px solid ${on?C.orange:"#8B683C"}`,background:on?"#FFE1A0":"rgba(255,248,226,.94)",boxShadow:"0 1px 3px rgba(0,0,0,.25)",borderRadius:10,padding:"2px 5px",fontSize:7.3,fontWeight:950,color:C.darkBrown,whiteSpace:"nowrap"}}>{c.label}</button>})}
-        </div>
-        {activeCluster?.ids?.length>1&&<div style={{marginTop:6}}><div style={{fontSize:7.8,fontWeight:900,color:C.muted,marginBottom:4}}>選具體水域／位置</div><div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(4,activeCluster.ids.length)},minmax(0,1fr))`,gap:4}}>{activeCluster.ids.map(id=>{const a=FISH_AREAS_V4.find(x=>x.id===id);if(!a)return null;const thumb=FISH_AREA_THUMB_V46[id]||activeCluster;const on=area.id===id;return <button key={id} onClick={()=>setFishAreaV4(id)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFF0D2":C.paper,borderRadius:8,padding:3,minWidth:0,textAlign:"center"}}><div style={{position:"relative",height:47,borderRadius:6,overflow:"hidden",background:"#DCE9C2"}}>
-                          <WikiImg src={GAME_FILE(mapMeta.file)} alt="" style={{position:"absolute",width:"290%",height:"auto",maxWidth:"none",left:"50%",top:"50%",transform:`translate(-${thumb.x}%,-${thumb.y}%)`,imageRendering:"pixelated"}}/>
-                          <span style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",width:9,height:9,borderRadius:"50%",background:"#F7E6A4",border:"2px solid #9C3D2B",boxShadow:"0 1px 2px rgba(0,0,0,.35)"}}/></div><div style={{fontSize:7.2,fontWeight:950,color:on?C.orange:C.ink,lineHeight:1.08,marginTop:3}}>{a.sub}</div></button>})}</div></div>}
-      </Card>:<Card style={{marginTop:7,padding:8}}>
-        <div style={{fontSize:9,color:C.muted,marginBottom:5}}>特殊水域不在同一張世界地圖上，直接用入口／樓層圖示選。</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:5}}>{groupAreas.map(a=>{const on=a.id===area.id;return <button key={a.id} onClick={()=>setFishAreaV4(a.id)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFF0D2":C.paper,borderRadius:8,padding:"5px 2px",minWidth:0}}><GameIcon file={a.icon} size={27}/><div style={{fontSize:7.4,fontWeight:950,color:C.ink,lineHeight:1.08,marginTop:2}}>{a.name}</div><div style={{fontSize:6.7,color:C.muted,lineHeight:1.05}}>{a.sub}</div></button>})}</div>
-      </Card>}
-
-      <Card style={{marginTop:7,padding:8,background:"#FFF8E2"}}><div style={{display:"flex",alignItems:"center",gap:8}}><GameIcon file={area.icon} size={34}/><div style={{flex:1,minWidth:0}}><b style={{fontSize:13,color:C.darkBrown}}>{area.name} · {area.sub}</b>{area.island&&<div style={{fontSize:8.5,color:C.green,fontWeight:900,marginTop:2}}>薑島魚類不受季節限制</div>}</div><span style={{fontSize:9.5,color:C.muted,fontWeight:900}}>{rows.length} 項</span></div>{area.tip&&<div style={{fontSize:9,color:C.brown,lineHeight:1.4,marginTop:5}}>{area.tip}</div>}</Card>
-
-      <Card style={{marginTop:7,padding:7}}>
-        <div style={{fontSize:9.2,fontWeight:950,color:C.brown,marginBottom:5}}>條件</div>
-        <div style={{display:"grid",gap:5}}>
-          <div style={{display:"grid",gridTemplateColumns:"34px 1fr",gap:4,alignItems:"start"}}><span style={{fontSize:7.5,fontWeight:900,color:C.muted,paddingTop:5}}>季節</span><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{SEASONS.map(x=>filterButton(x,fishSeasonsV42.includes(x),()=>toggleValue(x,fishSeasonsV42,setFishSeasonsV42),`${SEASON_COLORS[x]}30`))}</div></div>
-          <div style={{display:"grid",gridTemplateColumns:"34px 1fr",gap:4,alignItems:"start"}}><span style={{fontSize:7.5,fontWeight:900,color:C.muted,paddingTop:5}}>天氣</span><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{["晴","雨"].map(x=>filterButton(x,fishWeathersV42.includes(x),()=>toggleValue(x,fishWeathersV42,setFishWeathersV42),x==="雨"?"#DCEBFA":"#FFF0B8"))}</div></div>
-          <div style={{display:"grid",gridTemplateColumns:"34px 1fr",gap:4,alignItems:"start"}}><span style={{fontSize:7.5,fontWeight:900,color:C.muted,paddingTop:5}}>時間</span><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{FISH_TIME_SEGMENTS_V42.map(x=>filterButton(x.name,fishTimesV42.includes(x.id),()=>toggleValue(x.id,fishTimesV42,setFishTimesV42),"#E5EDF2"))}</div></div>
-        </div>
-        {(fishSeasonsV42.length||fishWeathersV42.length||fishTimesV42.length)?<button onClick={clearFilters} style={{border:0,background:"transparent",fontSize:7.8,color:C.blue,fontWeight:900,marginTop:6,padding:0}}>清除全部條件</button>:null}
-      </Card>
-
-      <div style={{display:"grid",gap:5,marginTop:7}}>{rows.map(i=>renderFishCardV4(i,area,true,false))}</div>
-      {!rows.length&&<Card style={{marginTop:8,textAlign:"center",fontSize:10.5,color:C.muted}}>這個地點沒有符合目前季節／天氣／時間條件的魚。</Card>}
-    </div>;
-  };
-
-  const renderItemUsageV42 = () => {
-    const cleanName=name=>String(name||"").replace(/(?:金星|銀星|银星|銥星|铱星)/g,"").replace(/\s*[×x]\s*\d+.*/,"").trim();
-    const index=new Map();
-    const ensure=(rawName,file,kind="item")=>{
-      const name=cleanName(rawName); if(!name||/^\d[\d,]*g$/i.test(name))return null;
-      const resolved=file||itemFileZhV26(name)||name;
-      const key=String(resolved||name);
-      if(!index.has(key))index.set(key,{key,name,file:resolved,aliases:new Set(),kinds:new Set(),sources:new Set(),uses:new Set(),recommend:"",bundles:[],remix:[],cookNeed:0,cookGroups:new Set(),shippable:false,seasons:[],energy:null,health:null,poison:false,buffs:[],buffDuration:null,farmingKind:""});
-      const it=index.get(key);it.aliases.add(name);it.kinds.add(kind);
-      if(kind!=="shipping"&&it.kinds.size<=2)it.name=name;
-      return it;
-    };
-    (window.SDVLookupV46?.items||[]).forEach(row=>{const it=ensure(row.zh||row.name,row.file||row.name,row.kind||"game");if(!it)return;it.aliases.add(row.name);(row.aliases||[]).forEach(x=>it.aliases.add(x));(row.sources||[]).forEach(x=>it.sources.add(x));(row.uses||[]).forEach(x=>it.uses.add(x));if(row.recommend)it.recommend=row.recommend;});
-    SHIPPING_ITEMS_V30.forEach(([file,name])=>{const it=ensure(name,file,"shipping");if(it)it.shippable=true});
-    COLLECTIONS.fish.items.forEach((name,i)=>{const it=ensure(name,FISH_ICON_FILES[i],"fish");if(it){it.fishIndex=i;if(FISH_INFO[i])it.sources.add(FISH_INFO[i])}});
-    COLLECTIONS.artifact.items.forEach((name,i)=>{const it=ensure(name,ARTIFACT_ICON_FILES[i],"artifact");if(it&&ARTIFACT_INFO[i])it.sources.add(ARTIFACT_INFO[i])});
-    COLLECTIONS.mineral.items.forEach((name,i)=>{const it=ensure(name,MINERAL_ICON_FILES[i],"mineral");if(it&&MINERAL_INFO[i])it.sources.add(MINERAL_INFO[i])});
-    COOKING_DISHES_V3.forEach(([,name,file])=>{const it=ensure(name,file,"cooking");if(it)it.sources.add("烹飪製作")});
-    BUNDLE_ROOMS.forEach(room=>room.bundles.forEach(bundle=>bundle.items.forEach(raw=>{const it=ensure(raw,null,"bundle");if(it)it.bundles.push(`${room.name} · ${bundle.name}：${raw}`)})));
-    Object.entries(REMIX_EXTRA_ITEMS_V28||{}).forEach(([roomId,items])=>{const room=BUNDLE_ROOMS.find(r=>r.id===roomId);(items||[]).forEach(raw=>{const it=ensure(raw,null,"remix");if(it)it.remix.push(`${room?.name||roomId}的混合收集包可能需要：${raw}`)})});
-    COOKING_PREP_GROUPS_V3.forEach(group=>group.items.forEach(([,name,file,need])=>{const it=ensure(name,file,"ingredient");if(it){it.cookNeed+=Number(need||0);it.cookGroups.add(group.name)}}));
-    (MINE_BANDS_V28||[]).forEach(group=>(group.items||[]).forEach(([file,name])=>{const it=ensure(name,file,"mine");if(it)it.sources.add(`礦井 ${group.range} 層${group.note?` · ${group.note}`:""}`)}));
-    const extraLookupV49=window.SDVLookupExtraV49?.byName||{};
-    const applyExtraV49=(it,meta)=>{if(!it||!meta)return;if(Array.isArray(meta.seasons)&&meta.seasons.length)it.seasons=[...new Set(meta.seasons)];if(meta.energy!==null&&meta.energy!==undefined)it.energy=Number(meta.energy);if(meta.health!==null&&meta.health!==undefined)it.health=Number(meta.health);it.poison=Boolean(meta.poison);if(Array.isArray(meta.buffs))it.buffs=meta.buffs;if(meta.buffDuration!==null&&meta.buffDuration!==undefined)it.buffDuration=Number(meta.buffDuration);if(meta.kind)it.farmingKind=meta.kind;if(meta.growDays!==null&&meta.growDays!==undefined)it.growDays=Number(meta.growDays);if(meta.regrowDays!==null&&meta.regrowDays!==undefined)it.regrowDays=Number(meta.regrowDays);};
-    Object.entries(extraLookupV49).forEach(([english,meta])=>{let it=[...index.values()].find(x=>x.name===english||x.file===english||x.aliases.has(english));if(!it)it=ensure(english,english,meta.kind||"game");if(it){it.aliases.add(english);applyExtraV49(it,meta);}});
-
-    // v43：物品搜尋統一支援繁中／簡中／英文。
-    // 同一個英文素材名在既有中英對照表中的所有繁簡名稱，都自動加入 alias。
-    const aliasesByFileV43=new Map();
-    Object.entries(ITEM_FILE_ZH_V26||{}).forEach(([alias,file])=>{
-      const key=String(file||""); if(!key)return;
-      if(!aliasesByFileV43.has(key))aliasesByFileV43.set(key,new Set());
-      aliasesByFileV43.get(key).add(cleanName(alias));
-    });
-    index.forEach(it=>{const localAliases=aliasesByFileV43.get(String(it.file||""))||[];localAliases.forEach(alias=>it.aliases.add(alias));if(/^[\x00-\x7F]+$/.test(String(it.name||""))){const z=[...localAliases].find(alias=>/[\u3400-\u9fff]/.test(alias));if(z)it.name=z;}});
-
-    // 常見攻略／口語別名：不改顯示名稱，只增加搜尋命中。
-    const ITEM_SEARCH_EXTRA_ALIASES_V43={
-      "Topaz":["黃寶石","黄宝石"],
-      "Prismatic Shard":["彩虹碎片"],
-      "Ancient Seed":["古代種子","古代种子"],
-      "Battery Pack":["電池","电池"],
-      "Cherry Bomb":["櫻桃炸彈","樱桃炸弹"],
-      "Bomb":["炸彈","炸弹"],
-      "Mega Bomb":["超級炸彈","超级炸弹"],
-      "Sonar Bobber":["聲納浮標","声纳浮标","聲納魚標","声纳鱼标"],
-      "Treasure Hunter":["尋寶者","寻宝者","尋寶魚標","寻宝鱼标"]
-    };
-    Object.entries(ITEM_SEARCH_EXTRA_ALIASES_V43).forEach(([file,aliases])=>{const it=index.get(file);if(it)aliases.forEach(x=>it.aliases.add(x))});
-
-    // 將常見繁體字正規化成簡體後再比對；英文統一小寫並忽略空白／分隔符。
-    const SEARCH_T2S_PAIRS_V43=[
-      "黃黄","藍蓝","彈弹","聲声","尋寻","綠绿","紅红","銀银","銅铜","鐵铁","銥铱","礦矿","寶宝","鑽钻","遠远","種种","樹树","葉叶","電电","爐炉","鍋锅","製制","煉炼","絲丝","繩绳","體体","馬马","雞鸡","鴨鸭","龍龙","豬猪","貓猫","魚鱼","蝦虾","蝸蜗","蠣蛎","鸚鹦","鵡鹉","鮭鲑","鱸鲈","鯉鲤","鯰鲶","鯛鲷","鱒鳟","鯡鲱","鰻鳗","魷鱿","鱘鲟","槍枪","蔥葱","蘿萝","蔔卜","蘋苹","櫻樱","醬酱","麥麦","乾干","薑姜","蘚藓","蕪芜","纖纤","維维","濃浓","鬆松","餅饼","麵面","湯汤","飯饭","餃饺","燴烩","燻熏","鹽盐","鋼钢","鎬镐","鋤锄","劍剑","環环","鏡镜","褲裤","飾饰","項项","鏈链","鈴铃","鑰钥","滾滚","輪轮","機机","殘残","頁页","筆笔","記记","書书","圖图","鑑鉴","場场","鎮镇","島岛","灣湾","澤泽","層层","區区","傳传","說说","獎奖","勵励","殺杀","敵敌","萬万","數数","據据","應应","該该","夠够","賣卖","買买","獲获","釣钓","採采","網网","燈灯","漿浆","鳳凤","鬱郁","蘭兰","楓枫","膠胶","鴕鸵","鳥鸟","殼壳","貝贝","塊块","錠锭","髮发","顏颜","齒齿","頭头","盔盔","樂乐","鐘钟","劉刘","亞亚","麗丽","羅罗","喬乔","爾尔","薩萨","蘇苏","魯鲁"
-    ];
-    const SEARCH_T2S_V43=Object.fromEntries(SEARCH_T2S_PAIRS_V43.map(x=>[x[0],x[1]]));
-    const normalizeItemSearchV43=value=>String(value||"").normalize("NFKC").toLowerCase().replace(/[\s·・_'’\-]+/g,"").split("").map(ch=>SEARCH_T2S_V43[ch]||ch).join("");
-
-    const all=[...index.values()].sort((a,b)=>a.name.localeCompare(b.name,"zh-Hant"));
-    const itemFarmKindV49=it=>["crop","seed","fruit","sapling"].includes(it?.farmingKind);
-    const itemCurrentSeasonV49=it=>{if(!it)return false;if(itemFarmKindV49(it)&&Array.isArray(it.seasons)&&it.seasons.includes(data.base.season))return true;if(it.fishIndex!==undefined){const r=fishRuleV4(it.fishIndex);return (r?.s||[]).includes(data.base.season);}return false;};
-    const seasonLabelV49=s=>s==="ginger island"?"薑島全年":s;
-    const itemSeasonTextV49=it=>(it?.seasons||[]).length===4?"四季":((it?.seasons||[]).map(seasonLabelV49).join("／"));
-    const itemSeasonTitleV49=it=>it?.fishIndex!==undefined?"出現季節":itemFarmKindV49(it)?"耕種季節":"出現季節";
-    const itemSeasonIconV49=it=>it?.fishIndex!==undefined?"🐟":itemFarmKindV49(it)?"🌱":"🍃";
-    const buffStatZhV49={Farming:"耕種",Fishing:"釣魚",Foraging:"採集",Mining:"採礦",Luck:"運氣",Speed:"速度",Defense:"防禦",Attack:"攻擊",Magnetism:"磁力",MaxStamina:"最大體力","Max Energy":"最大體力",Combat:"戰鬥",Immunity:"免疫",CritChance:"暴擊率"};
-    const buffTextV49=it=>(it?.buffs||[]).map(b=>`${buffStatZhV49[b.stat]||b.stat} ${Number(b.value)>0?"+":""}${b.value}`).join("、");
-    const durationTextV49=sec=>{const n=Number(sec);if(!Number.isFinite(n)||n<=0)return "";const m=Math.floor(n/60),s=n%60;return `${m}分${String(s).padStart(2,"0")}秒`;};
-    const q=normalizeItemSearchV43(itemUsageQueryV42);
-    const quickNames=["五彩碎片","恐龍蛋","遠古種子","兔子的腳","電池組","硬木","鑽石","茶葉"];
-    const results=(q?all.filter(it=>[it.name,it.file,...it.aliases].some(alias=>normalizeItemSearchV43(alias).includes(q))):quickNames.map(name=>all.find(it=>it.aliases.has(name)||it.name===name)).filter(Boolean)).slice(0,30);
-    const selected=all.find(it=>it.key===itemUsageSelectedV42)||null;
-    const usageSpecial=selected?Object.entries(ITEM_USAGE_SPECIAL_V42).find(([name])=>selected.aliases.has(name)||selected.name===name)?.[1]:null;
-    const wardrobeData=window.SDVWardrobeV34||{};
-    const tailoring=selected?[...(wardrobeData.shirts||[]),...(wardrobeData.pants||[])].filter(x=>{const hay=`${x.recipe||""} ${x.sourceZh||""} ${x.source||""}`.toLowerCase();return [selected.name,selected.file,...selected.aliases].some(v=>v&&hay.includes(String(v).toLowerCase()))}).slice(0,6):[];
-    const museum=Boolean(selected&&(selected.kinds.has("artifact")||selected.kinds.has("mineral")));
-    const shipped=Boolean(selected?.shippable&&(data.shippingV30||[]).includes(selected.file));
-    const sourceFallbackV45=()=>{
-      if(!selected)return "";
-      const known=[...selected.sources].filter(Boolean);
-      if(known.length)return known.slice(0,3).join("；");
-      const hay=`${selected.name} ${selected.file}`;
-      if(/Egg|Milk|Wool|Duck Feather|Rabbit's Foot|Truffle|雞蛋|牛奶|羊奶|羊毛|鴨毛|兔子的腳|松露/i.test(hay))return "飼養動物取得";
-      if(/Mayonnaise|Cheese|Oil|Jelly|Wine|Juice|Beer|Pale Ale|Mead|Pickles|Cloth|Caviar|Aged Roe|Smoked Fish|Dried|Green Tea|蛋黃醬|奶酪|油|果醬|果酒|果汁|啤酒|蜂蜜酒|醃菜|布料|魚子醬|陳年魚籽|燻魚|果乾|蘑菇乾|綠茶/i.test(hay))return "加工設備製作";
-      if(/Ore|Bar|Coal|Quartz|Stone|Geode|Crystal|礦|錠|煤|石英|晶球|水晶/i.test(hay))return "採礦／晶球／冶煉等";
-      if(/Wood|Hardwood|Sap|Fiber|Moss|木材|硬木|樹液|纖維|苔蘚/i.test(hay))return "砍樹／野外採集";
-      if(/Seed|種子/i.test(hay))return "商店、採集或相關解鎖取得";
-      if(selected.shippable)return "農作、採集、養殖或加工取得";
-      return "農作、採集、養殖、加工、商店、掉落或任務取得";
-    };
-    const sourceTextV45=sourceFallbackV45();
-    const usageRowsV44=[];
-    if(selected){
-      (usageSpecial?.uses||[]).forEach(u=>usageRowsV44.push(["⭐",u]));
-      [...selected.uses].forEach(u=>usageRowsV44.push(["🔧",u]));
-      if(museum)usageRowsV44.push(["🏺","博物館：可捐贈 1 個。"]);
-      selected.bundles.forEach(u=>usageRowsV44.push(["📦",u]));
-      selected.remix.forEach(u=>usageRowsV44.push(["📦",u]));
-      if(selected.cookNeed)usageRowsV44.push(["🍳",`料理備料：目前手帳整理的全料理最低備料共需要 ${selected.cookNeed} 個。`]);
-      tailoring.forEach(x=>usageRowsV44.push(["🧵",`裁縫：${x.name||"服飾"}${x.recipe?`（${x.recipe}）`:""}`]));
-      if(selected.shippable)usageRowsV44.push(["🚚",`出貨圖鑑：${shipped?"已點亮":"賣出 1 個即可點亮"}。`]);
-      if(!usageRowsV44.length)usageRowsV44.push(["・","目前手帳沒有偵測到固定用途。"]);
-    }
-    const tag=(text,bg)=> <span style={{fontSize:7.2,fontWeight:900,padding:"2px 5px",borderRadius:8,background:bg,color:C.brown,whiteSpace:"nowrap"}}>{text}</span>;
-    const resultTags=it=>{const tags=[];if(itemCurrentSeasonV49(it))tags.push(["當季","#DFF0CD"]);if(it.farmingKind==="crop"||it.farmingKind==="seed"||it.farmingKind==="fruit"||it.farmingKind==="sapling")tags.push(["耕種","#EAF4D8"]);if(it.farmingKind==="food")tags.push(["料理","#FBE5D6"]);if(it.shippable)tags.push(["出貨","#EAF4D8"]);if(it.kinds.has("artifact")||it.kinds.has("mineral"))tags.push(["博物館","#EEE6F7"]);if(it.bundles.length||it.remix.length)tags.push(["收集包","#FFF0C8"]);if(it.cookNeed)tags.push(["料理","#FBE5D6"]);if(it.kinds.has("fish"))tags.push(["魚","#DDECF7"]);if(it.kinds.has("craft"))tags.push(["製作","#F4E4C7"]);if(it.kinds.has("big"))tags.push(["設備","#E8E1D4"]);return tags.slice(0,4)};
-    return <div style={{marginTop:8}}>
-      <Card style={{padding:8,background:"#FFF4D8"}}><div style={{fontSize:10.5,fontWeight:950,color:C.darkBrown}}>拿到東西不知道要不要留，就先查這裡</div><div style={{fontSize:8.5,color:C.muted,lineHeight:1.4,marginTop:2}}>會整理用途、取得方式、收集包、料理、裁縫、製作與重要特殊用途。</div></Card>
-      <div style={{position:"relative",marginTop:7}}><input value={itemUsageQueryV42} onChange={e=>{setItemUsageQueryV42(e.target.value);setItemUsageSelectedV42("")}} placeholder="可輸入繁中／簡中／English，例如：黃玉、黄玉、Topaz…" style={{width:"100%",border:`1.5px solid ${C.line}`,background:C.paper,borderRadius:9,padding:"9px 34px 9px 10px",fontSize:10.5,color:C.ink,outline:"none"}}/>{itemUsageQueryV42&&<button onClick={()=>{setItemUsageQueryV42("");setItemUsageSelectedV42("")}} style={{position:"absolute",right:6,top:5,border:0,background:"transparent",fontSize:14,color:C.muted}}>×</button>}</div>
-      {selected&&<Card style={{marginTop:7,padding:9,background:"#FFF8E9"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}><GameIcon file={selected.file} size={44}/><div style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:14,color:C.darkBrown}}>{switchNameV47(selected.name,selected.file)}</b><div style={{display:"flex",gap:3,flexWrap:"wrap",marginTop:4}}>{resultTags(selected).map(([t,b])=><span key={t}>{tag(t,b)}</span>)}</div></div></div>
-        {(selected.seasons?.length>0||selected.energy!==null||selected.health!==null||(selected.buffs||[]).length>0)&&<div style={{marginTop:8,padding:"7px 8px",background:"#FFF4D8",borderRadius:8,border:`1px solid ${C.line}`,display:"grid",gap:4}}>
-          {selected.seasons?.length>0&&<div style={{fontSize:9.5,color:C.ink,lineHeight:1.35}}>{itemSeasonIconV49(selected)} <b>{itemSeasonTitleV49(selected)}：</b>{itemSeasonTextV49(selected)}{itemCurrentSeasonV49(selected)&&<span style={{marginLeft:5,color:C.green,fontWeight:950}}>● 當季</span>}{itemFarmKindV49(selected)&&selected.growDays?` · 成熟 ${selected.growDays} 天`:""}{itemFarmKindV49(selected)&&selected.regrowDays?` · 再生 ${selected.regrowDays} 天`:""}</div>}
-          {(selected.energy!==null||selected.health!==null)&&<div style={{fontSize:9.5,color:C.ink,lineHeight:1.35}}>⚡ <b>食用：</b>體力 {selected.energy!==null?(selected.energy>0?`+${selected.energy}`:selected.energy):"—"}　❤️ 生命 {selected.health!==null?(selected.health>0?`+${selected.health}`:selected.health):"—"}{selected.poison?<span style={{color:C.red,fontWeight:950}}> · 有負面食用效果</span>:null}</div>}
-          {(selected.buffs||[]).length>0&&<div style={{fontSize:9.5,color:C.ink,lineHeight:1.35}}>✨ <b>技能／狀態加成：</b>{buffTextV49(selected)}{selected.buffDuration?` · ${durationTextV49(selected.buffDuration)}`:""}</div>}
-        </div>}
-        <div style={{fontSize:12,fontWeight:950,color:C.darkBrown,marginTop:9}}>用途</div>
-        <div style={{display:"grid",gap:5,marginTop:5}}>{usageRowsV44.map(([icon,text],i)=><div key={i} style={{display:"grid",gridTemplateColumns:"18px 1fr",gap:4,alignItems:"start",fontSize:9.4,color:C.ink,lineHeight:1.45}}><span>{icon}</span><span>{text}</span></div>)}</div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8,alignItems:"center",marginTop:9,paddingTop:7,borderTop:`1px dashed ${C.line}`}}>
-          <div style={{minWidth:0}}><span style={{fontSize:8,color:C.muted,fontWeight:950}}>來源／取得方式</span><div style={{fontSize:9.4,color:C.ink,lineHeight:1.4,marginTop:2,fontWeight:750}}>{sourceTextV45}</div></div>
-        </div>
-      </Card>}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:5,marginTop:6}}>{results.map(it=>{const on=selected?.key===it.key,current=itemCurrentSeasonV49(it);return <button key={it.key} onClick={()=>setItemUsageSelectedV42(it.key)} style={{border:`1.5px solid ${on?C.orange:current?C.green:C.line}`,background:on?"#FFF0D2":current?"#EEF7DD":C.paper,borderRadius:9,padding:"6px 5px",display:"grid",gridTemplateColumns:"34px 1fr",gap:5,alignItems:"center",textAlign:"left",minWidth:0}}><GameIcon file={it.file} size={32}/><span style={{minWidth:0}}><b style={{display:"block",fontSize:8.8,color:current?C.green:C.ink,lineHeight:1.12,overflow:"hidden",textOverflow:"ellipsis"}}>{switchNameV47(it.name,it.file)}</b><span style={{display:"flex",gap:2,flexWrap:"wrap",marginTop:3}}>{resultTags(it).map(([t,b])=><span key={t}>{tag(t,b)}</span>)}</span></span></button>})}</div>
-      {!q&&<div style={{fontSize:7.8,color:C.muted,marginTop:4}}>上面先放常查的例子；輸入名稱後會搜尋手帳目前整理到的物品。</div>}
-      {q&&!results.length&&<Card style={{marginTop:7,textAlign:"center",fontSize:9.5,color:C.muted}}>目前沒有找到；可改用繁中／簡中／英文名稱或常見別名。</Card>}
-
-    </div>;
-  };
-
-  const renderFishTodayV4 = () => {
-    const got=data.collections.fish||[];
-    const season=fishSeasonV4==="當季"?data.base.season:fishSeasonV4;
-    const autoHour=parseGameHourV4(data.base.gameTime);
-    const hour=fishHourV4==="auto"?autoHour:fishHourV4==="all"?null:Number(fishHourV4);
-    const areaRows=FISH_AREAS_V4.map(area=>({area,fish:area.fish.filter(i=>fishAvailableV4(area,i,season,fishWeatherV4,hour,data.base.day)&&(!fishMissingV4||!got.includes(i)))})).filter(x=>x.fish.length);
-    const total=areaRows.reduce((n,x)=>n+x.fish.length,0);
-    return <div style={{marginTop:8}}>
-      <Card style={{padding:9,background:"#FFF4D8"}}><div style={{fontSize:12,fontWeight:950,color:C.darkBrown}}>第 {data.base.year} 年 · {season}季 · {data.base.day} 日</div><div style={{fontSize:10.5,color:C.muted,marginTop:3}}>預設跟隨手帳目前季節；也可以臨時切季節查魚，不會改動你的存檔日期。</div></Card>
-      <div style={{fontSize:9.5,fontWeight:950,color:C.muted,marginTop:7}}>季節</div>
-      <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:4}}>{["當季","春","夏","秋","冬"].map(x=><Pill key={x} small active={fishSeasonV4===x} onClick={()=>{setFishSeasonV4(x);setFishTodayOpenV4(null)}}>{x==="當季"?`當季（${data.base.season}）`:x}</Pill>)}</div>
-      <div style={{fontSize:9.5,fontWeight:950,color:C.muted,marginTop:7}}>天氣</div>
-      <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:4}}>{["全部","晴","雨"].map(w=><Pill key={w} small active={fishWeatherV4===w} onClick={()=>{setFishWeatherV4(w);setFishTodayOpenV4(null)}}>{w==="全部"?"全部天氣":w}</Pill>)}</div>
-      <div style={{fontSize:9.5,fontWeight:950,color:C.muted,marginTop:7}}>時間</div>
-      <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:4}}>{[["auto",autoHour!=null?`目前 ${data.base.gameTime}`:"目前時間未記錄"],["all","不限時間"],[6,"06:00"],[9,"09:00"],[12,"12:00"],[15,"15:00"],[18,"18:00"],[22,"22:00"],[24,"00:00"]].map(([v,n])=><Pill key={String(v)} small active={String(fishHourV4)===String(v)} onClick={()=>{setFishHourV4(v);setFishTodayOpenV4(null)}}>{n}</Pill>)}</div>
-      <label style={{display:"flex",alignItems:"center",gap:6,marginTop:8,fontSize:10.5,fontWeight:900,color:C.brown}}><input type="checkbox" checked={fishMissingV4} onChange={e=>{setFishMissingV4(e.target.checked);setFishTodayOpenV4(null)}}/>只看未收集</label>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",margin:"7px 0 5px"}}><span style={{fontSize:10,color:C.muted}}>共 {total} 個「地點 × 魚」；地點預設收起。</span>{fishTodayOpenV4&&<button onClick={()=>setFishTodayOpenV4(null)} style={{border:0,background:"transparent",fontSize:10,color:C.blue,fontWeight:900}}>全部收起</button>}</div>
-      <div style={{display:"grid",gap:6}}>{areaRows.map(({area,fish})=>{const open=fishTodayOpenV4===area.id;return <Card key={area.id} style={{padding:0,overflow:"hidden"}}><button onClick={()=>setFishTodayOpenV4(open?null:area.id)} style={{width:"100%",border:0,background:"transparent",padding:"8px 9px",display:"flex",alignItems:"center",gap:7,textAlign:"left",cursor:"pointer"}}><GameIcon file={area.icon} size={30}/><span style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:12.5,color:C.darkBrown}}>{area.name} · {area.sub}</b><span style={{display:"flex",gap:2,marginTop:3,overflow:"hidden"}}>{fish.slice(0,5).map(i=><img key={i} src={ICON_URLS.fish[i]} alt="" style={{width:20,height:20,imageRendering:"pixelated",objectFit:"contain"}}/>)}{fish.length>5&&<span style={{fontSize:9,color:C.muted,fontWeight:900,alignSelf:"center"}}>+{fish.length-5}</span>}</span></span><span style={{fontSize:10,color:C.muted,fontWeight:900}}>{fish.length} 項</span><span style={{fontSize:12,color:C.brown,fontWeight:950}}>{open?"▲":"▼"}</span></button>{open&&<div style={{padding:"0 9px 9px",borderTop:`1px dashed ${C.line}`}}><div style={{display:"grid",gap:5,marginTop:7}}>{fish.map(i=>renderFishCardV4(i,area,true))}</div>{area.tip&&<div style={{fontSize:9.5,color:C.muted,lineHeight:1.4,marginTop:6}}>{area.tip}</div>}</div>}</Card>})}</div>
-      {!areaRows.length&&<Card style={{marginTop:8,textAlign:"center",color:C.muted,fontSize:11}}>目前條件下沒有符合的魚；可切換季節、天氣、時間或關閉「只看未收集」。</Card>}
-    </div>;
-  };
 
   const renderFishHubV4 = () => <div>
     <Card style={{marginTop:8,padding:9,background:"#EAF4D8"}}><div style={{fontSize:11.5,fontWeight:950,color:C.darkBrown}}>魚類：收藏＋找魚＋今日決策</div><div style={{fontSize:10.5,color:C.muted,lineHeight:1.45,marginTop:3}}>圖鑑看收集；找魚按地點反查；今日可釣直接依你的存檔日期／時間篩選。</div></Card>
@@ -2480,7 +2299,7 @@ function StardewTracker() {
   };
 
   const renderCollection = () => {
-    const tabClick = k => { setCollectionSection(k); if(["fish","artifact","mineral"].includes(k)){setSelectedCollection(k);setSelectedItem(null);} };
+    const tabClick = k => { setCollectionSection(k); setSelectedCookingV62(null); if(["fish","artifact","mineral"].includes(k)){setSelectedCollection(k);setSelectedItem(null);} };
     return <div>
       <div style={{display:"flex",gap:5,overflowX:"auto",padding:"8px 0 4px",WebkitOverflowScrolling:"touch"}}>{COLLECTION_TABS_V3.map(([k,n,file])=><button key={k} onClick={()=>tabClick(k)} style={{flex:"0 0 auto",minWidth:58,border:`2px solid ${collectionSection===k?C.orange:C.line}`,background:collectionSection===k?"#FFE0A8":C.paper,borderRadius:9,padding:"5px 5px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,color:C.ink,fontWeight:900,fontSize:9.5}}><GameIcon file={file} size={29}/><span>{n}</span></button>)}</div>
       {collectionSection==="fish"&&renderFishDexV4()}
@@ -2695,12 +2514,12 @@ function StardewTracker() {
   const content={overview:renderOverview,data:renderData,people:renderPeople,powers:renderPowers,collection:renderCollection,fishing:renderFishingV30,wardrobe:renderWardrobeV30,notes:renderNotes}[tab];
   return <div style={{minHeight:"100vh",background:C.bg,fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC',sans-serif",color:C.ink,paddingBottom:72}}>
     {renderHeader()}
-    <main style={{width:"100%",maxWidth:680,minWidth:0,margin:"0 auto",padding:"8px 12px 24px",overflowX:"hidden"}}>{content()}</main>
+    <main style={{width:"100%",maxWidth:680,minWidth:0,margin:"0 auto",padding:"8px 12px 24px",overflowX:"hidden"}}>{navStackV62.length>0&&<div style={{position:"sticky",top:"calc(54px + env(safe-area-inset-top))",zIndex:28,display:"flex",justifyContent:"flex-start",pointerEvents:"none",margin:"0 0 6px"}}><button onClick={goBackV62} style={{pointerEvents:"auto",border:`1.5px solid ${C.orange}`,background:"#FFF8E2",color:C.brown,borderRadius:9,padding:"6px 10px",fontSize:10,fontWeight:950,boxShadow:`0 2px 7px ${C.shadow}`}}>← 返回上一步</button></div>}{content()}</main>
     <span aria-label="smoke-title-compat" style={{display:"none"}}>星露谷進度手帳</span>
     <button aria-label="smoke-farm-compat" onClick={()=>{setTab("data");setDataSection("farm")}} style={{display:"none"}}>農場</button>
     <button aria-label="smoke-powers-compat" onClick={()=>{setTab("data");setDataSection("skills");setSkillSection("special")}} style={{display:"none"}}>能力</button>
     <div style={{position:"fixed",left:0,right:0,bottom:0,zIndex:50,background:"rgba(61,34,15,.985)",borderTop:`2px solid ${C.gold}`,display:"flex",flexWrap:"nowrap",alignItems:"stretch",padding:"3px 3px calc(4px + env(safe-area-inset-bottom))",boxShadow:"0 -3px 10px rgba(0,0,0,.18)",overflow:"hidden"}}>
-      {TABS.map(t=>{const active=tab===t.id;return <button key={t.id} onClick={()=>{setTab(t.id);window.scrollTo(0,0)}} style={{flex:"1 1 0",minWidth:0,background:"transparent",border:"none",padding:"1px 0 0",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:1,cursor:"pointer",position:"relative"}}><span style={{width:26,height:3,borderRadius:3,background:active?C.gold:"transparent",marginBottom:1}}/><span style={{height:28,display:"flex",alignItems:"center",justifyContent:"center",opacity:active?1:.82}}><GameIcon file={t.file} size={25}/></span><span style={{fontSize:8.2,fontWeight:950,color:active?"#FFE39A":"#D8BC88",lineHeight:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"100%"}}>{t.name}</span></button>})}
+      {TABS.map(t=>{const active=tab===t.id;return <button key={t.id} onClick={()=>{setNavStackV62([]);setTab(t.id);window.scrollTo(0,0)}} style={{flex:"1 1 0",minWidth:0,background:"transparent",border:"none",padding:"1px 0 0",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:1,cursor:"pointer",position:"relative"}}><span style={{width:26,height:3,borderRadius:3,background:active?C.gold:"transparent",marginBottom:1}}/><span style={{height:28,display:"flex",alignItems:"center",justifyContent:"center",opacity:active?1:.82}}><GameIcon file={t.file} size={25}/></span><span style={{fontSize:8.2,fontWeight:950,color:active?"#FFE39A":"#D8BC88",lineHeight:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"100%"}}>{t.name}</span></button>})}
     </div>
   </div>;
 }
