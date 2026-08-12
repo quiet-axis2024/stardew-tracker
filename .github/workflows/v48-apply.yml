@@ -18,8 +18,18 @@ jobs:
         with:
           ref: v48-clean-ocr-ui-map
           fetch-depth: 0
+      - name: Make patch tolerant to compact collection array
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('v48_patch.py')
+          lines=p.read_text().splitlines()
+          lines=[('s=re.sub(r\'\\s*\\["letters","信件","Mail"\\],?\', \'\', s, count=1)' if 'remove letters collection tab' in line else line) for line in lines]
+          p.write_text('\n'.join(lines)+'\n')
+          PY
       - name: Apply v48 patch
         run: |
+          rm -f v48_patch.log
           if ! python3 v48_patch.py > v48_patch.log 2>&1; then
             cat v48_patch.log
             git config user.name 'github-actions[bot]'
