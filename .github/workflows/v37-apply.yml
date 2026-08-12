@@ -1,0 +1,69 @@
+name: Apply v37 wardrobe browser
+
+on:
+  push:
+    branches: [v37-wardrobe-appearance-browser]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v37-wardrobe-appearance-browser
+          fetch-depth: 0
+      - name: Apply v37 patch
+        run: |
+          set -euo pipefail
+          python3 v37_patch.py
+      - name: Validate v37
+        run: |
+          set -euo pipefail
+          node --check farmer-preview-v33.js
+          node --check animal-preview-v33.js
+          node --check wardrobe-data-v34.js
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8
+          mkdir -p .verify
+          cat > .verify/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> .verify/entry.jsx
+          ./node_modules/.bin/esbuild .verify/entry.jsx --bundle --format=iife --target=safari15 --outfile=.verify/app.js
+          grep -q 'backgroundSize:"125% auto"' app.jsx
+          grep -q '髮色 RGB' app.jsx
+          grep -q '眼睛 RGB' app.jsx
+          grep -q '配飾' app.jsx
+          grep -q 'WARDROBE_PAGE_SIZE_V37=18' app.jsx
+          grep -q 'pageList.map' app.jsx
+          grep -q 'getAppearanceMeta' farmer-preview-v33.js
+          grep -q 'skinColors.png' farmer-preview-v33.js
+          grep -q 'accessories.png' farmer-preview-v33.js
+          grep -q 'app.js?v=37' index.html
+          grep -q 'stardew-tracker-v37' sw.js
+          python3 - <<'PY'
+          a=open('app.jsx',encoding='utf-8').read()
+          assert a.count('backgroundSize:"125% auto"') == 2
+          assert 'max={hairCountV37}' in a
+          assert 'wardrobeFilterV37==="tailoring"' in a
+          assert 'wardrobePageCountV37>1' in a
+          f=open('farmer-preview-v33.js',encoding='utf-8').read()
+          assert "accessoryIndex" in f and "eyeColor" in f and "skinIndex" in f
+          assert "hair:GAME+'hairstyles.png'" in f
+          print('v37 checks ok')
+          PY
+      - name: Commit v37 code
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx farmer-preview-v33.js index.html sw.js
+          git rm -f v37_patch.py
+          git commit -m 'v37: appearance controls and paged wardrobe browser'
+          git push origin HEAD:v37-wardrobe-appearance-browser
