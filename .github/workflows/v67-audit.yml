@@ -1,0 +1,51 @@
+name: Audit v67 foundation
+
+on:
+  push:
+    branches: [v67-foundation-polish]
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v67-foundation-polish
+          fetch-depth: 0
+      - name: Inspect runtime and language boundaries
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('app.jsx').read_text()
+          lines=text.splitlines()
+          def show(pattern, label, ctx=3):
+              print('\n###',label)
+              rx=re.compile(pattern)
+              for i,l in enumerate(lines):
+                  if rx.search(l):
+                      for j in range(max(0,i-ctx),min(len(lines),i+ctx+1)):
+                          print(f'{j+1}: {lines[j]}')
+                      print('---')
+          show(r'GAME_FILE|GameIcon', 'GAME_FILE / GameIcon', 5)
+          for kw in ['城镇','社区','仓库','游戏','选择','确定','当前','路线','资料','显示','没有','购买','处理','地图','页面']:
+              show(re.escape(kw), 'keyword '+kw, 1)
+          print('\n### external image roots')
+          for i,l in enumerate(lines):
+              if 'http' in l and ('wiki' in l.lower() or 'raw.githubusercontent' in l.lower()):
+                  print(f'{i+1}: {l}')
+          print('\n### duplicate keys rough scan ITEM_FILE_ZH_V26')
+          m=re.search(r'const ITEM_FILE_ZH_V26 = \{(.*?)\n\};',text,re.S)
+          if m:
+              keys=re.findall(r'"([^"]+)"\s*:',m.group(1))
+              from collections import Counter
+              print([x for x,c in Counter(keys).items() if c>1])
+          print('\n### wardrobe defaults')
+          for i,l in enumerate(lines):
+              if 'WARDROBE_V38_PLAYER_DEFAULT' in l or 'const defaults=' in l:
+                  print(f'{i+1}: {l}')
+          PY
