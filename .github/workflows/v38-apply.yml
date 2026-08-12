@@ -1,0 +1,66 @@
+name: Apply v38 wardrobe compatibility fix
+
+on:
+  push:
+    branches: [v38-wardrobe-legacy-data-fix]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v38-wardrobe-legacy-data-fix
+          fetch-depth: 0
+      - name: Apply v38 patch
+        run: |
+          set -euo pipefail
+          python3 v38_patch.py
+      - name: Validate v38
+        run: |
+          set -euo pipefail
+          node --check farmer-preview-v33.js
+          node --check animal-preview-v33.js
+          node --check wardrobe-data-v34.js
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8
+          mkdir -p .verify
+          cat > .verify/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> .verify/entry.jsx
+          ./node_modules/.bin/esbuild .verify/entry.jsx --bundle --format=iife --target=safari15 --outfile=.verify/app.js
+          grep -q 'normalizeWardrobeProgressV38' app.jsx
+          grep -q 'wardrobeSchemaVersion:38' app.jsx
+          grep -q 'retrying safe base' app.jsx
+          grep -q 'wardrobe layer skipped' farmer-preview-v33.js
+          grep -q 'farmer recolor fallback' farmer-preview-v33.js
+          grep -q 'app.js?v=38' index.html
+          grep -q 'farmer-preview-v33.js?v=38' index.html
+          grep -q 'stardew-tracker-v38' sw.js
+          python3 - <<'PY'
+          from pathlib import Path
+          a=Path('app.jsx').read_text(encoding='utf-8')
+          f=Path('farmer-preview-v33.js').read_text(encoding='utf-8')
+          assert 'setData(normalizeWardrobeProgressV38({ ...PREFILL, ...JSON.parse(raw) }))' in a
+          assert 'player.accessoryIndex=Math.max(-1' in a
+          assert 'player.eyeColor=normalizeWardrobeHexV38' in a
+          assert 'sw=Math.min(sw,Math.max(0,img.width-sx))' in f
+          assert 'try{dressedBody=recolorBody' in f
+          print('v38 legacy wardrobe checks ok')
+          PY
+      - name: Commit v38 code
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx farmer-preview-v33.js index.html sw.js
+          git rm -f v38_patch.py
+          git commit -m 'v38: preserve legacy wardrobe previews'
+          git push origin HEAD:v38-wardrobe-legacy-data-fix
