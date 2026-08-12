@@ -1,0 +1,78 @@
+name: Apply v36 wardrobe polish
+
+on:
+  push:
+    branches: [v36-wardrobe-ui-pets-horse]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v36-wardrobe-ui-pets-horse
+          fetch-depth: 0
+      - name: Apply v36 patch
+        run: |
+          set -euo pipefail
+          python3 v36_patch.py
+      - name: Validate v36
+        run: |
+          set -euo pipefail
+          node --check wardrobe-data-v34.js
+          node --check farmer-preview-v33.js
+          node --check animal-preview-v33.js
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8
+          mkdir -p .verify
+          cat > .verify/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> .verify/entry.jsx
+          ./node_modules/.bin/esbuild .verify/entry.jsx --bundle --format=iife --target=safari15 --outfile=.verify/app.js
+          grep -q 'daybg.png' app.jsx
+          grep -q 'nightbg.png' app.jsx
+          grep -q 'PetVariantPreviewV36' app.jsx
+          grep -q '款式 6' app.jsx
+          ! grep -q 'type="range" min="0" max="55"' app.jsx
+          grep -q 'sourceZh||x.source' app.jsx
+          grep -q 'cat5.png' <(python3 - <<'PY'
+          s=open('animal-preview-v33.js',encoding='utf-8').read(); print(s.replace("${kind}${v===0?'':v}", 'cat5.png'))
+          PY
+          ) || true
+          grep -q 'HORSE_HAT_POS={front:\[7,9\],right:\[16,1\],back:\[6.5,-7\],left:\[-4,1\]}' animal-preview-v33.js
+          grep -q 'hats_animals.png' animal-preview-v33.js
+          grep -q 'sourceZh=zhHatSourceV36' wardrobe-data-v34.js
+          grep -q '正常遊戲中無法取得' wardrobe-data-v34.js
+          grep -q 'app.js?v=36' index.html
+          grep -q 'stardew-tracker-v36' sw.js
+          python3 - <<'PY'
+          import re,json
+          s=open('wardrobe-data-v34.js',encoding='utf-8').read()
+          m=re.search(r'const data=(\{.*?\});\n  const ACH_ZH_V36=',s,re.S)
+          d=json.loads(m.group(1))
+          assert len(d['hats'])==94
+          assert len(d['shirts'])>=296
+          assert len(d['pants'])>=17
+          a=open('app.jsx',encoding='utf-8').read()
+          assert 'type="number" min="1" max="56"' in a
+          assert 'variant={Number(target.variant||0)}' in a
+          animal=open('animal-preview-v33.js',encoding='utf-8').read()
+          assert "Animals/${kind}${v===0?'':v}.png" in animal
+          print('v36 validation ok')
+          PY
+      - name: Commit v36 code
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx animal-preview-v33.js wardrobe-data-v34.js index.html sw.js
+          git rm -f v36_patch.py
+          git commit -m 'v36: game backgrounds, Chinese hat sources, pet variants, horse fix'
+          git push origin HEAD:v36-wardrobe-ui-pets-horse
