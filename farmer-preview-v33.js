@@ -64,16 +64,30 @@
   function parseShirtIndex(file){const m=String(file||'').match(/^Shirt(\d+)$/i);return m?Number(m[1]):null;}
 
   function drawCrop(ctx,img,sx,sy,sw,sh,dx,dy,flip,tint){
-    if(!img)return;
-    const temp=document.createElement('canvas');temp.width=sw;temp.height=sh;
-    const t=temp.getContext('2d');t.imageSmoothingEnabled=false;t.clearRect(0,0,sw,sh);t.drawImage(img,sx,sy,sw,sh,0,0,sw,sh);
-    if(tint){
-      t.globalCompositeOperation='multiply';t.fillStyle=tint;t.fillRect(0,0,sw,sh);
-      t.globalCompositeOperation='destination-in';t.drawImage(img,sx,sy,sw,sh,0,0,sw,sh);t.globalCompositeOperation='source-over';
+    if(!img)return false;
+    sx=Math.floor(Number(sx));sy=Math.floor(Number(sy));sw=Math.floor(Number(sw));sh=Math.floor(Number(sh));
+    dx=Number(dx);dy=Number(dy);
+    if(![sx,sy,sw,sh,dx,dy].every(Number.isFinite)||sw<=0||sh<=0)return false;
+    if(sx<0){const cut=-sx;sx=0;sw-=cut;dx+=cut;}
+    if(sy<0){const cut=-sy;sy=0;sh-=cut;dy+=cut;}
+    sw=Math.min(sw,Math.max(0,img.width-sx));
+    sh=Math.min(sh,Math.max(0,img.height-sy));
+    if(sw<=0||sh<=0||sx>=img.width||sy>=img.height)return false;
+    try{
+      const temp=document.createElement('canvas');temp.width=sw;temp.height=sh;
+      const t=temp.getContext('2d');if(!t)return false;
+      t.imageSmoothingEnabled=false;t.clearRect(0,0,sw,sh);t.drawImage(img,sx,sy,sw,sh,0,0,sw,sh);
+      if(tint){
+        t.globalCompositeOperation='multiply';t.fillStyle=tint;t.fillRect(0,0,sw,sh);
+        t.globalCompositeOperation='destination-in';t.drawImage(img,sx,sy,sw,sh,0,0,sw,sh);t.globalCompositeOperation='source-over';
+      }
+      ctx.save();ctx.imageSmoothingEnabled=false;
+      if(flip){ctx.translate(dx+sw,dy);ctx.scale(-1,1);ctx.drawImage(temp,0,0);}else ctx.drawImage(temp,dx,dy);
+      ctx.restore();return true;
+    }catch(error){
+      console.warn('wardrobe layer skipped',error,{sx,sy,sw,sh});
+      return false;
     }
-    ctx.save();ctx.imageSmoothingEnabled=false;
-    if(flip){ctx.translate(dx+sw,dy);ctx.scale(-1,1);ctx.drawImage(temp,0,0);}else ctx.drawImage(temp,dx,dy);
-    ctx.restore();
   }
 
   function paletteRows(img){
@@ -165,7 +179,8 @@
     const hairIdx=clamp(Number(opts?.hairIndex)||0,0,hairMax);
     const female=gender==='female';
     const hairTint=hexColor(opts?.hairColor,'#6a402c');
-    const dressedBody=recolorBody(body,skinColors,shoeColors,gender,Number(opts?.skinIndex)||0,opts?.eyeColor,selected.boots);
+    let dressedBody=body;
+    try{dressedBody=recolorBody(body,skinColors,shoeColors,gender,Number(opts?.skinIndex)||0,opts?.eyeColor,selected.boots);}catch(error){console.warn("farmer recolor fallback",error);}
 
     if(directionName==='back')drawCrop(ctx,dressedBody,96,direction.bodyY,16,32,ox,oy,direction.flip,null);
     drawCrop(ctx,dressedBody,0,direction.bodyY,16,32,ox,oy,direction.flip,null);
