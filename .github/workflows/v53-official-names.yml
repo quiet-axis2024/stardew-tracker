@@ -1,0 +1,170 @@
+name: Apply v53 official Switch names
+on:
+  push:
+    branches: [v53-switch-official-names]
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v53-switch-official-names
+          fetch-depth: 0
+
+      - name: Build complete official Chinese item-name map
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, re, urllib.parse, urllib.request
+
+          BASE='https://zh.stardewvalleywiki.com/mediawiki/index.php'
+          UA={'User-Agent':'stardew-tracker-build/1.0 (personal hand journal; localization sync)'}
+
+          def fetch_module(title):
+              url=BASE+'?'+urllib.parse.urlencode({'title':title,'action':'raw'})
+              req=urllib.request.Request(url,headers=UA)
+              with urllib.request.urlopen(req,timeout=40) as r:
+                  text=r.read().decode('utf-8')
+              if 'return {' not in text:
+                  raise RuntimeError(f'unexpected module response for {title}: {text[:160]!r}')
+              return text
+
+          def lua_unescape(s):
+              # Module data uses ordinary quoted Lua strings; JSON handles the escapes we need.
+              try:
+                  return json.loads('"'+s.replace('\\/','/')+'"')
+              except Exception:
+                  return s.replace('\\"','"').replace('\\\\','\\')
+
+          row_re=re.compile(r'^\s*\["((?:\\.|[^"\\])*)"\]\s*=\s*"((?:\\.|[^"\\])*)"\s*,?\s*$',re.M)
+          bare_re=re.compile(r'^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*"((?:\\.|[^"\\])*)"\s*,?\s*$',re.M)
+
+          def parse_table(text):
+              out={}
+              for k,v in row_re.findall(text): out[lua_unescape(k)]=lua_unescape(v)
+              for k,v in bare_re.findall(text): out[k]=lua_unescape(v)
+              return out
+
+          en_by_id=parse_table(fetch_module('模块:Items/en/ids/name'))
+          zh_by_id=parse_table(fetch_module('模块:Items/zh/ids/name'))
+          overrides=parse_table(fetch_module('模块:Items/overrides/name'))
+          if len(en_by_id)<500 or len(zh_by_id)<500:
+              raise RuntimeError(f'localized item tables unexpectedly small: en={len(en_by_id)} zh={len(zh_by_id)}')
+
+          p=Path('switch-names-v47.js')
+          old_text=p.read_text(encoding='utf-8')
+          marker='window.SDVSwitchNamesV47='
+          old=json.loads(old_text.split(marker,1)[1].rsplit(';',1)[0])
+          names=dict(old)  # keep bundle/UI aliases that are not inventory items
+
+          paired=0
+          for item_id,en in en_by_id.items():
+              zh=zh_by_id.get(item_id)
+              if not en or not zh: continue
+              # Wiki link overrides may use target|display; the last segment is the visible game term.
+              zh=zh.split('|')[-1].strip()
+              if zh:
+                  names[en]=zh
+                  names.setdefault(en.lower(),zh)
+                  paired+=1
+
+          # The same module used by the Chinese wiki applies a small override table after game-data export.
+          for en_lower,zh in overrides.items():
+              if not isinstance(zh,str) or not zh.strip(): continue
+              visible=zh.split('|')[-1].strip()
+              names[en_lower]=visible
+              # If an exact-cased exported English key exists, overwrite it too.
+              for en in list(names.keys()):
+                  if isinstance(en,str) and en.lower()==en_lower:
+                      names[en]=visible
+
+          header='/* Switch zh-CN display-name map. Inventory/equipment names are paired by item ID from Chinese Stardew Valley Wiki modules exported from the game interface; legacy non-item aliases are retained. */\n'
+          p.write_text(header+'window.SDVSwitchNamesV47='+json.dumps(names,ensure_ascii=False,separators=(',',':'))+';\n',encoding='utf-8')
+          print('official id pairs',paired,'total display aliases',len(names))
+
+          # Force iPhone/PWA to stop using the previous partial name table.
+          ip=Path('index.html'); h=ip.read_text(encoding='utf-8')
+          if '?v=52' not in h: raise RuntimeError('expected v52 asset query marker missing')
+          h=h.replace('?v=52','?v=53').replace('<!-- deploy-v52 -->','<!-- deploy-v53 -->')
+          ip.write_text(h,encoding='utf-8')
+
+          sw=Path('sw.js'); w=sw.read_text(encoding='utf-8')
+          if 'stardew-tracker-v52' not in w: raise RuntimeError('expected v52 service-worker cache marker missing')
+          sw.write_text(w.replace('stardew-tracker-v52','stardew-tracker-v53',1),encoding='utf-8')
+          PY
+
+      - name: Validate official names and coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check switch-names-v47.js
+          node --check sw.js
+          node <<'NODE'
+          global.window={};
+          require('./switch-names-v47.js');
+          require('./lookup-data-v46.js');
+          require('./social-data-v50.js');
+          const map=window.SDVSwitchNamesV47;
+          const expected={
+            'Ancient Sword':'古剑',
+            'Basilisk Paw':'蜥怪的爪子',
+            'Combat Quarterly':'战斗季刊',
+            'Monster Compendium':'怪物图鉴',
+            'Holly':'冬青',
+            'Clay':'粘土'
+          };
+          for(const [en,zh] of Object.entries(expected)){
+            if(map[en]!==zh) throw new Error(`${en}: expected ${zh}, got ${map[en]}`);
+          }
+          const rows=window.SDVLookupV46.items||[];
+          const englishRows=rows.filter(r=>/[A-Za-z]/.test(String(r.name||'')));
+          const covered=englishRows.filter(r=>map[r.name]||map[r.file]||map[String(r.name||'').toLowerCase()]||map[String(r.file||'').toLowerCase()]);
+          const ratio=covered.length/Math.max(1,englishRows.length);
+          console.log(`lookup official-name coverage ${covered.length}/${englishRows.length} = ${(ratio*100).toFixed(1)}%`);
+          if(ratio<0.90) throw new Error('official-name coverage below 90%');
+          const generic=/^(All |Any |Most |Every |Universal )|\(except|except |items$|category$/i;
+          const missingSocial=[];
+          for(const profile of Object.values(window.SDVSocialV50.byZh||{})){
+            for(const raw of [...(profile.loves||[]),...(profile.likes||[]),...(profile.hates||[])]){
+              if(generic.test(raw)) continue;
+              if(/[A-Za-z]/.test(raw) && !(map[raw]||map[raw.toLowerCase()])) missingSocial.push(raw);
+            }
+          }
+          const uniq=[...new Set(missingSocial)];
+          console.log('untranslated concrete social item names',uniq.length,uniq.slice(0,30));
+          if(uniq.length>8) throw new Error('too many concrete social names still untranslated');
+          NODE
+
+      - name: Build Safari bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8 >/dev/null 2>&1
+          mkdir -p build /tmp/v53dist
+          cat > build/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> build/entry.jsx
+          ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=/tmp/v53dist/app.js
+          cp index.html manifest.webmanifest icon.svg sw.js cloud.js wardrobe-data-v34.js farmer-preview-v33.js animal-preview-v33.js lookup-data-v46.js lookup-extra-v49.js social-data-v50.js machine-data-v51.js switch-names-v47.js /tmp/v53dist/
+          test -s /tmp/v53dist/app.js
+          test -s /tmp/v53dist/switch-names-v47.js
+          grep -q 'switch-names-v47.js?v=53' /tmp/v53dist/index.html
+
+      - name: Commit product changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add switch-names-v47.js index.html sw.js
+          git commit -m 'v53: use complete official Chinese item names'
+          git push origin HEAD:v53-switch-official-names
