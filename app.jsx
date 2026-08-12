@@ -958,20 +958,59 @@ const WARDROBE_SCENE_V35 = {
   day:{label:"☀️ 白天",bg:"linear-gradient(#8FD0F3 0 62%,#78AD57 62% 70%,#C9A66A 70%)",image:WARDROBE_BG_ROOT_V36+"daybg.png",labelBg:"rgba(255,248,227,.9)",labelColor:"#604329"},
   night:{label:"🌙 夜晚",bg:"linear-gradient(#17264B 0 62%,#35513A 62% 70%,#665342 70%)",image:WARDROBE_BG_ROOT_V36+"nightbg.png",labelBg:"rgba(27,28,49,.82)",labelColor:"#F7EBC8"}
 };
+
+const WARDROBE_V38_PLAYER_DEFAULT = {
+  hat:"",shirt:"",pants:"",boots:"",shirtColor:"#5f8fb8",pantsColor:"#3f5f99",
+  gender:"female",hairIndex:0,hairColor:"#6a402c",skinIndex:0,eyeColor:"#5B4636",accessoryIndex:-1
+};
+function normalizeWardrobeHexV38(value,fallback){
+  const v=String(value||"");
+  return /^#[0-9a-f]{6}$/i.test(v)?v:fallback;
+}
+function normalizeWardrobeProgressV38(input){
+  const base=input&&typeof input==="object"?input:{};
+  const old=base.wardrobeV30&&typeof base.wardrobeV30==="object"?base.wardrobeV30:{};
+  const oldPlayer=old.player&&typeof old.player==="object"?old.player:{};
+  const finite=(value,fallback)=>Number.isFinite(Number(value))?Number(value):fallback;
+  const player={...WARDROBE_V38_PLAYER_DEFAULT,...oldPlayer};
+  player.gender=player.gender==="male"?"male":"female";
+  player.hairIndex=Math.max(0,Math.floor(finite(player.hairIndex,0)));
+  player.skinIndex=Math.max(0,Math.floor(finite(player.skinIndex,0)));
+  player.accessoryIndex=Math.max(-1,Math.floor(finite(player.accessoryIndex,-1)));
+  player.hairColor=normalizeWardrobeHexV38(player.hairColor,WARDROBE_V38_PLAYER_DEFAULT.hairColor);
+  player.eyeColor=normalizeWardrobeHexV38(player.eyeColor,WARDROBE_V38_PLAYER_DEFAULT.eyeColor);
+  player.shirtColor=normalizeWardrobeHexV38(player.shirtColor,WARDROBE_V38_PLAYER_DEFAULT.shirtColor);
+  player.pantsColor=normalizeWardrobeHexV38(player.pantsColor,WARDROBE_V38_PLAYER_DEFAULT.pantsColor);
+  for(const key of ["hat","shirt","pants","boots"]) player[key]=typeof player[key]==="string"?player[key]:"";
+  const animal=(value,pet=false)=>{
+    const v=value&&typeof value==="object"?value:{};
+    const out={...v,hat:typeof v.hat==="string"?v.hat:""};
+    if(pet) out.variant=Math.max(0,Math.min(5,Math.floor(finite(v.variant,0))));
+    return out;
+  };
+  return {...base,wardrobeSchemaVersion:38,wardrobeV30:{...old,player,horse:animal(old.horse),cat:animal(old.cat,true),dog:animal(old.dog,true)}};
+}
+
 function FarmerSpritePreviewV33({player,direction="front",large=false,scene="day",shirtDyeable=false,pantsDyeable=false}) {
   const ref=useRef(null);
   useEffect(()=>{
     const api=window.SDVFarmerSpriteV33;
     if(!api?.draw||!ref.current)return;
-    api.draw(ref.current,{
-      gender:player.gender||"female",direction,
-      selected:{hat:player.hat||"",shirt:player.shirt||"",pants:player.pants||"",boots:player.boots||""},
-      shirtColor:player.shirtColor,pantsColor:player.pantsColor,
-      hairColor:player.hairColor,hairIndex:player.hairIndex,
-      skinIndex:player.skinIndex,eyeColor:player.eyeColor,accessoryIndex:player.accessoryIndex,
+    const safe={...WARDROBE_V38_PLAYER_DEFAULT,...(player||{})};
+    const opts={
+      gender:safe.gender==="male"?"male":"female",direction,
+      selected:{hat:typeof safe.hat==="string"?safe.hat:"",shirt:typeof safe.shirt==="string"?safe.shirt:"",pants:typeof safe.pants==="string"?safe.pants:"",boots:typeof safe.boots==="string"?safe.boots:""},
+      shirtColor:normalizeWardrobeHexV38(safe.shirtColor,WARDROBE_V38_PLAYER_DEFAULT.shirtColor),pantsColor:normalizeWardrobeHexV38(safe.pantsColor,WARDROBE_V38_PLAYER_DEFAULT.pantsColor),
+      hairColor:normalizeWardrobeHexV38(safe.hairColor,WARDROBE_V38_PLAYER_DEFAULT.hairColor),hairIndex:Number.isFinite(Number(safe.hairIndex))?Number(safe.hairIndex):0,
+      skinIndex:Number.isFinite(Number(safe.skinIndex))?Number(safe.skinIndex):0,eyeColor:normalizeWardrobeHexV38(safe.eyeColor,WARDROBE_V38_PLAYER_DEFAULT.eyeColor),accessoryIndex:Number.isFinite(Number(safe.accessoryIndex))?Number(safe.accessoryIndex):-1,
       shirtDyeable,pantsDyeable
-    }).catch(e=>console.warn("farmer sprite preview failed",e));
-  },[player.gender,player.hat,player.shirt,player.pants,player.boots,player.shirtColor,player.pantsColor,player.hairColor,player.hairIndex,player.skinIndex,player.eyeColor,player.accessoryIndex,direction,shirtDyeable,pantsDyeable]);
+    };
+    api.draw(ref.current,opts).catch(e=>{
+      console.warn("farmer sprite preview failed; retrying safe base",e);
+      if(!ref.current)return;
+      api.draw(ref.current,{...opts,selected:{hat:"",shirt:"",pants:"",boots:""},accessoryIndex:-1}).catch(err=>console.warn("farmer safe fallback failed",err));
+    });
+  },[player?.gender,player?.hat,player?.shirt,player?.pants,player?.boots,player?.shirtColor,player?.pantsColor,player?.hairColor,player?.hairIndex,player?.skinIndex,player?.eyeColor,player?.accessoryIndex,direction,shirtDyeable,pantsDyeable]);
   const sc=WARDROBE_SCENE_V35[scene]||WARDROBE_SCENE_V35.day;
   // Helper backing is 48x84. 48x84 (small) and 96x168 (large) are exact integer scales.
   const w=large?96:48,h=large?168:84;
@@ -1077,7 +1116,7 @@ function StardewTracker() {
       const local = await storageGet(STORAGE_KEY, false);
       let raw = pub?.value || local?.value;
       if (raw) {
-        try { setData({ ...PREFILL, ...JSON.parse(raw) }); }
+        try { setData(normalizeWardrobeProgressV38({ ...PREFILL, ...JSON.parse(raw) })); }
         catch (e) { console.warn("progress parse failed", e); }
       }
       setLoaded(true);
@@ -2052,7 +2091,7 @@ function StardewTracker() {
 
     return <div>
       <SectionTitle icon="🎩">衣櫥搭配</SectionTitle>
-      <Card style={{padding:8,background:"#FFF4D8"}}><div style={{fontSize:9.5,color:C.muted,lineHeight:1.45}}>v37：白天／夜晚仍使用遊戲 daybg／nightbg，但只顯示畫面內部、不露素材木框；角色外觀補上法師地下室可調的膚色、眼色、髮色 RGB 與配飾；衣物改成篩選＋分頁瀏覽。</div></Card>
+      <Card style={{padding:8,background:"#FFF4D8"}}><div style={{fontSize:9.5,color:C.muted,lineHeight:1.45}}>v38：修正舊版衣櫥紀錄升級後人物消失；舊資料會自動補齊外觀欄位，服飾圖層異常時也不再讓整個人物預覽空白。</div></Card>
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:5,marginTop:7}}>{targets.map(([id,name,file])=>{const on=wardrobeTargetV30===id;return <button key={id} onClick={()=>{setWardrobeTargetV30(id);setWardrobeQueryV34("");setWardrobeFilterV37("all");setWardrobePageV37(0);if(id!=="player")setWardrobeCategoryV30("hat")}} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFE2A8":C.paper,borderRadius:9,padding:"5px 2px",fontSize:8.5,fontWeight:950,color:C.brown,minWidth:0}}>{id==="player"?(data.profilePortrait?<img src={data.profilePortrait} alt="" style={{width:27,height:34,objectFit:"cover",borderRadius:4,imageRendering:"pixelated"}}/>:<GameIcon file="Inventory Tab" size={27}/>):<GameIcon file={file} size={27}/>}<div>{name}</div></button>})}</div>
 
