@@ -1,0 +1,74 @@
+name: Apply v42 search hub
+
+on:
+  push:
+    branches: [v42-search-hub]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v42-search-hub
+          fetch-depth: 0
+      - name: Apply v42 patch
+        run: |
+          set -euo pipefail
+          python3 v42_patch.py
+      - name: Validate v42
+        run: |
+          set -euo pipefail
+          node --check farmer-preview-v33.js
+          node --check animal-preview-v33.js
+          node --check wardrobe-data-v34.js
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8
+          mkdir -p .verify
+          cat > .verify/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> .verify/entry.jsx
+          ./node_modules/.bin/esbuild .verify/entry.jsx --bundle --format=iife --target=safari15 --outfile=.verify/app.js
+          grep -q 'name: "查找"' app.jsx
+          grep -q 'FISH_MAP_META_V42' app.jsx
+          grep -q 'Ginger Island Map' app.jsx
+          grep -q 'fishSeasonsV42' app.jsx
+          grep -q '時間段' app.jsx
+          grep -q 'renderItemUsageV42' app.jsx
+          grep -q '物品用途' app.jsx
+          grep -q '能不能賣' app.jsx
+          grep -q 'renderFishCardV4(i,area,true,false)' app.jsx
+          grep -q 'app.js?v=42' index.html
+          grep -q 'stardew-tracker-v42' sw.js
+          python3 - <<'PY'
+          from pathlib import Path
+          a=Path('app.jsx').read_text(encoding='utf-8')
+          visible=a[a.index('const renderFishingV30'):a.index('const renderWardrobeV30')]
+          assert '今日可釣' not in visible
+          assert '物品用途' in visible and '找魚' in visible
+          finder=a[a.index('const renderFishFindV4'):a.index('const renderItemUsageV42')]
+          assert '只看未收集' not in finder
+          assert 'FISH_TIME_SEGMENTS_V42' in finder
+          assert 'GAME_FILE(mapMeta.file)' in finder
+          assert '特殊水域不在同一張世界地圖上' in finder
+          usage=a[a.index('const renderItemUsageV42'):a.index('const renderFishTodayV4')]
+          for token in ['SHIPPING_ITEMS_V30','BUNDLE_ROOMS','COOKING_PREP_GROUPS_V3','ITEM_USAGE_SPECIAL_V42','要不要留','能不能賣']:
+              assert token in usage, token
+          print('v42 search hub checks ok')
+          PY
+      - name: Commit v42 code
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx index.html sw.js
+          git rm -f v42_patch.py
+          git commit -m 'v42: turn fishing into search hub'
+          git push origin HEAD:v42-search-hub
