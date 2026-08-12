@@ -1442,10 +1442,7 @@ function StardewTracker() {
       const seasonMatch = String(seasonRaw||"").match(/[春夏秋冬]/u);
       let season = seasonMatch ? seasonMatch[0] : null;
       if (!(year && year >= 1 && year <= 99)) year = null;
-      if (!(day && day >= 1 && day <= 28)) day = null; else {
-        const nums = compactDate.match(/\d+/g) || [];
-        if (nums.length >= 2) { year = Number(nums[0]); day = Number(nums[nums.length-1]); }
-      }
+      if (!(day && day >= 1 && day <= 28)) day = null;
 
       let gameTime = clockRaw.replace(/\s+/g, "").replace("：", ":");
       const tm = gameTime.match(/([0-2]?\d):?([0-5]\d)/);
