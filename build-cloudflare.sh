@@ -2,6 +2,7 @@
 set -euo pipefail
 python3 scripts/audit-foundation-v67.py
 python3 scripts/audit-progress-link-v68.py
+python3 scripts/audit-today-v69.py
 
 npm install --no-save react@18 react-dom@18 esbuild@0.25.8
 mkdir -p build dist

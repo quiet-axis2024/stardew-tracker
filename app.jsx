@@ -1047,6 +1047,7 @@ const PREFILL = {
   house: 0,
   buildings: { coop: 0, barn: 0, silos: 0, fishPonds: 0, sheds: 0, other: [] },
   animals: {}, ponds: [], milestones: [], wallet: [], abilities: [], bundleDone: [], bundleItems: {}, friendship: {}, factClaimsV68: {},
+  todayV69:{weatherByDate:{},hiddenByDate:{},pinnedIds:[]},
   collections: { fish: [], artifact: [], mineral: [] }, mastery: [], notes: "", raccoonV50:{stump:false,requests:0}, extras: { starfruit: 0, buildingNote: "" },
 };
 
@@ -1728,6 +1729,115 @@ function StardewTracker() {
     return out;
   };
 
+  const todayDateKeyV69 = () => `Y${Number(data.base?.year||1)}-${data.base?.season||"春"}-${Number(data.base?.day||1)}`;
+  const todayStateV69 = data.todayV69&&typeof data.todayV69==="object"?data.todayV69:{weatherByDate:{},hiddenByDate:{},pinnedIds:[]};
+  const todayKeyV69 = todayDateKeyV69();
+  const todayWeatherV69 = todayStateV69.weatherByDate?.[todayKeyV69]||"";
+  const todayHiddenIdsV69 = Array.isArray(todayStateV69.hiddenByDate?.[todayKeyV69])?todayStateV69.hiddenByDate[todayKeyV69]:[];
+  const todayPinnedIdsV69 = Array.isArray(todayStateV69.pinnedIds)?todayStateV69.pinnedIds:[];
+  const updateTodayStateV69 = updater => setData(d=>{
+    const prev=d.todayV69&&typeof d.todayV69==="object"?d.todayV69:{};
+    const base={weatherByDate:{...(prev.weatherByDate||{})},hiddenByDate:{...(prev.hiddenByDate||{})},pinnedIds:Array.isArray(prev.pinnedIds)?[...prev.pinnedIds]:[]};
+    return {...d,todayV69:updater(base)};
+  });
+  const setTodayWeatherV69 = value => updateTodayStateV69(v=>{
+    if(value)v.weatherByDate[todayKeyV69]=value;else delete v.weatherByDate[todayKeyV69];
+    return v;
+  });
+  const hideTodayHintV69 = id => updateTodayStateV69(v=>{v.hiddenByDate[todayKeyV69]=[...new Set([...(v.hiddenByDate[todayKeyV69]||[]),id])];return v});
+  const restoreTodayHintsV69 = () => updateTodayStateV69(v=>{delete v.hiddenByDate[todayKeyV69];return v});
+  const toggleTodayPinV69 = id => updateTodayStateV69(v=>{v.pinnedIds=v.pinnedIds.includes(id)?v.pinnedIds.filter(x=>x!==id):[...v.pinnedIds,id];return v});
+  const openCalendarV69 = () => requestAnimationFrame(()=>document.getElementById("game-calendar-v69")?.scrollIntoView({block:"start",behavior:"smooth"}));
+  const openTownRepairV69 = roomId => {
+    pushNavV62();setTab("data");setDataSection("bundles");setBundleRoom(roomId||"");setBundleEditV28(null);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:"auto"})));
+  };
+  const openFishHintV69 = (weather,areaId="town") => {
+    const groupId=Object.entries(FISH_AREA_GROUPS_V4).find(([,g])=>g.ids.includes(areaId))?.[0]||"main";
+    pushNavV62();setFishViewV4("find");setFishFindGroupV4(groupId);setFishAreaV4(areaId);setFishSeasonsV42([data.base.season]);setFishWeathersV42(weather?[weather]:[]);setFishTimesV42([]);setTab("fishing");
+    requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:"auto"})));
+  };
+  const todayFishRowsV69 = weather => {
+    const caught=new Set(data.collections?.fish||[]);
+    const skip=new Set([21,22,26,68,69,70]);
+    const rows=new Map();
+    const areas=FISH_AREA_GROUPS_V4.main.ids.map(id=>FISH_AREAS_V4.find(a=>a.id===id)).filter(Boolean);
+    areas.forEach(area=>(area.fish||[]).forEach(i=>{
+      if(skip.has(i))return;
+      const name=COLLECTIONS.fish.items[i];
+      if(!name||caught.has(name)||!fishAvailableV4(area,i,data.base.season,weather,null,data.base.day))return;
+      if(!rows.has(i))rows.set(i,{i,name,file:FISH_ICON_FILES[i],areaId:area.id,areaName:`${area.name} · ${area.sub}`,rule:fishRuleV4(i)});
+    }));
+    return [...rows.values()];
+  };
+  const todayFishNamesV69 = rows => rows.slice(0,4).map(x=>switchNameV47(x.name,x.file)).join("、")+(rows.length>4?"…":"");
+  const buildTodayHintsV69 = () => {
+    const hints=[];let order=0;
+    const add=h=>hints.push({...h,order:order++});
+    dayCalendarItems(data.base.day).forEach(it=>{
+      if(it.type==="birthday")add({id:`birthday:${it.npc}`,priority:0,file:NPC_ICON_FILES[it.npc],reason:"今天限定",title:`今天是 ${it.npc} 的生日`,body:"生日當天送禮有額外好感加成；可直接打開社交速查看喜好。",action:"查看人物",run:()=>openSocialNpcV55(it.npc)});
+      else if(it.type==="festival"){const g=FESTIVAL_GUIDE_V26[it.key];add({id:`festival:${it.key}`,priority:0,file:"Calendar",reason:"今天限定",title:`今日：${it.text}`,body:g?.desc||"今天有節日活動，可到日曆查看當日資訊。",action:"看日曆",run:openCalendarV69});}
+      else add({id:`calendar:${it.text}`,priority:0,file:"Calendar",reason:"今天限定",title:it.text,body:"這是今天才需要注意的季節／城鎮事件。",action:"看日曆",run:openCalendarV69});
+    });
+    if(Number(data.base.day||1)<28){
+      const tomorrow=dayCalendarItems(Number(data.base.day||1)+1).find(x=>x.type==="festival");
+      if(tomorrow){const g=FESTIVAL_GUIDE_V26[tomorrow.key];add({id:`tomorrow-festival:${tomorrow.key}`,priority:1,file:"Calendar",reason:"明天",title:`明天是 ${tomorrow.text}`,body:g?.items?.length?"今天可以先確認節日需要的物品或安排。":"明天有節日，今天可先留意行程安排。",action:"看日曆",run:openCalendarV69});}
+    }
+    const weatherBranches=todayWeatherV69?[todayWeatherV69]:["晴","雨"];
+    weatherBranches.forEach(weather=>{
+      const rows=todayFishRowsV69(weather);
+      if(!rows.length)return;
+      const icon=weather==="雨"?"🌧️":"☀️";
+      add({id:`fish-weather:${weather}`,priority:1,file:"Sonar Bobber",reason:todayWeatherV69?`今日${weather}天`:`天氣未記錄 · 如果${weather}天`,title:`${icon} ${weather}天可補 ${rows.length} 種未收集魚`,body:`例：${todayFishNamesV69(rows)}。可先從 ${rows[0].areaName} 查看。`,action:"打開找魚",run:()=>openFishHintV69(weather,rows[0].areaId)});
+    });
+    if(Number(data.base.day||1)>=25){
+      const current=data.base.season;const next=SEASONS[(SEASONS.indexOf(current)+1)%SEASONS.length];
+      const union=new Map([...todayFishRowsV69("晴"),...todayFishRowsV69("雨")].map(x=>[x.i,x]));
+      const rows=[...union.values()].filter(x=>(x.rule?.s||[]).includes(current)&&!(x.rule?.s||[]).includes(next));
+      if(rows.length)add({id:`season-fish:${current}`,priority:2,file:"Calendar",reason:"本季快結束",title:`本季剩 ${29-Number(data.base.day||1)} 天，還有 ${rows.length} 種魚快換季`,body:`尚未收集：${todayFishNamesV69(rows)}`,action:"看當季魚",run:()=>openFishHintV69("",rows[0].areaId)});
+    }
+    const route=currentRouteFromStateV68(data);
+    if(route==="cc"){
+      const seasonPrefix={spring:"春",summer:"夏",fall:"秋",winter:"冬"};
+      const gaps=[];
+      BUNDLE_ROOMS.forEach(room=>{
+        if(roomDoneFromStateV68(data,room.id))return;
+        room.bundles.forEach(bundle=>{
+          const items=bundleItemsFromStateV68(data,bundle);const got=(data.bundleItems?.[bundle.id]||[]).filter(x=>items.includes(x));const need=bundleNeedFromStateV68(data,bundle);
+          if(need-got.length!==1)return;
+          const prefix=Object.keys(seasonPrefix).find(k=>bundle.id.startsWith(k+"_"));
+          const seasonMatch=!prefix||seasonPrefix[prefix]===data.base.season;
+          gaps.push({room,bundle,items,got,seasonMatch});
+        });
+      });
+      gaps.sort((a,b)=>Number(b.seasonMatch)-Number(a.seasonMatch));
+      gaps.slice(0,2).forEach(g=>{const options=g.items.filter(x=>!g.got.includes(x));const name=data.bundleNameV28?.[g.bundle.id]||g.bundle.name;add({id:`bundle-gap:${g.bundle.id}`,priority:g.seasonMatch?2:3,file:"Golden Scroll",reason:"現在可推進 · 只差 1 格",title:`${g.room.name} · ${name}`,body:`還差 1 格${options.length?`；候選：${options.slice(0,3).map(x=>switchNameV47(x,itemFileZhV26(x))).join("、")}${options.length>3?"…":""}`:""}。`,action:"打開收集包",run:()=>openTownRepairV69(g.room.id)});});
+    }else if(route==="joja"&&data.jojaMemberV28){
+      const done=new Set(data.jojaProjectsV28||[]);
+      const project=JOJA_PROJECTS_V28.find(j=>!done.has(j.id)&&Number(data.base?.money||0)>=j.cost);
+      if(project)add({id:`joja-ready:${project.id}`,priority:3,file:"Joja Cola",reason:"現在可推進",title:`Joja：${project.name}工程`,body:`目前記錄的金錢足夠支付 ${project.cost.toLocaleString()}g；這是明確可完成的城鎮進度。`,action:"查看 Joja",run:()=>openTownRepairV69("")});
+    }
+    const hidden=new Set(todayHiddenIdsV69),pinned=new Set(todayPinnedIdsV69);
+    return hints.filter(h=>!hidden.has(h.id)).sort((a,b)=>a.priority-b.priority||Number(pinned.has(b.id))-Number(pinned.has(a.id))||a.order-b.order).slice(0,6);
+  };
+  const renderTodayV69 = () => {
+    const hints=buildTodayHintsV69();const pinned=new Set(todayPinnedIdsV69);
+    return <>
+      <SectionTitle icon="game:Calendar">今天可以做什麼</SectionTitle>
+      <Card style={{padding:8,background:"#FFF4D8"}}>
+        <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><b style={{fontSize:10.5,color:C.darkBrown}}>第 {data.base.year} 年 · {data.base.season} {data.base.day} 日</b><span style={{fontSize:7.5,color:C.muted}}>只提醒會錯過或有明確理由現在可推進的事</span></div>
+        <div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap",marginTop:6}}><span style={{fontSize:8,color:C.muted,fontWeight:950}}>天氣</span>{[["","未記錄"],["晴","☀️ 晴"],["雨","🌧️ 雨"]].map(([v,label])=>{const on=todayWeatherV69===v;return <button key={v||"unknown"} onClick={()=>setTodayWeatherV69(v)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFE2A8":C.paper,borderRadius:13,padding:"3px 7px",fontSize:8,fontWeight:900,color:on?C.darkBrown:C.muted}}>{label}</button>})}</div>
+        {!todayWeatherV69&&<div style={{fontSize:7.7,color:C.muted,lineHeight:1.35,marginTop:4}}>未記錄天氣時，會同時列出晴天／雨天兩套天氣限定提示，不會把內容藏掉。</div>}
+      </Card>
+      <div style={{display:"grid",gap:6,marginTop:7}}>{hints.map(h=>{const isPinned=pinned.has(h.id);return <Card key={h.id} style={{padding:8,borderColor:isPinned?C.gold:C.line,background:isPinned?"#FFF8DA":C.paper}}>
+        <div style={{display:"grid",gridTemplateColumns:"36px minmax(0,1fr)",gap:7,alignItems:"start"}}><GameIcon file={h.file} size={34}/><div style={{minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}><span style={{fontSize:6.8,fontWeight:950,color:C.orange,background:"#FFF0C8",borderRadius:7,padding:"2px 5px"}}>{h.reason}</span>{isPinned&&<span style={{fontSize:6.8,fontWeight:950,color:C.gold}}>★ 已固定</span>}</div><b style={{display:"block",fontSize:10.8,color:C.darkBrown,lineHeight:1.25,marginTop:3}}>{h.title}</b><div style={{fontSize:8.2,color:C.muted,lineHeight:1.4,marginTop:2}}>{h.body}</div></div></div>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center",marginTop:6,paddingTop:5,borderTop:`1px dashed ${C.line}`}}><button onClick={h.run} style={{border:`1.5px solid ${C.orange}`,background:"#FFE4C5",borderRadius:8,padding:"4px 7px",fontSize:8,fontWeight:950,color:C.brown}}>{h.action} ›</button><button onClick={()=>toggleTodayPinV69(h.id)} aria-label={isPinned?"取消固定":"固定追蹤"} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"4px 7px",fontSize:8,fontWeight:950,color:isPinned?C.gold:C.muted}}>{isPinned?"★ 固定":"☆ 固定"}</button><button onClick={()=>hideTodayHintV69(h.id)} style={{marginLeft:"auto",border:0,background:"transparent",padding:"4px 2px",fontSize:7.7,fontWeight:900,color:C.muted}}>今天先不管</button></div>
+      </Card>})}</div>
+      {!hints.length&&<Card style={{marginTop:7,padding:9,textAlign:"center",fontSize:9.5,color:C.muted}}>目前沒有需要特別提醒的當日事項。</Card>}
+      {todayHiddenIdsV69.length>0&&<button onClick={restoreTodayHintsV69} style={{marginTop:5,border:0,background:"transparent",padding:"3px 0",fontSize:7.8,fontWeight:900,color:C.blue}}>恢復今天隱藏的 {todayHiddenIdsV69.length} 項</button>}
+    </>;
+  };
+
   const loadTesseract = async () => {
     if (window.Tesseract) return window.Tesseract;
     setProfileOcrStatus("載入文字辨識元件…");
@@ -2106,7 +2216,7 @@ function StardewTracker() {
       .slice(0,4);
     return <>
       <SectionTitle icon="📅" right={`第 ${data.base.year} 年・${data.base.season}季`}>遊戲日曆</SectionTitle>
-      <Card style={{padding:7,overflow:"hidden"}}>
+      <Card id="game-calendar-v69" style={{padding:7,overflow:"hidden",scrollMarginTop:"calc(70px + env(safe-area-inset-top))"}}>
         <div style={{position:"relative",width:"100%",borderRadius:8,overflow:"hidden",background:"#E7C58A"}}>
           <img src={GAME_FILE(seasonFile)} alt={`${data.base.season}季遊戲日曆`} onError={e=>{e.currentTarget.style.display="none"}}
             style={{display:"block",width:"100%",height:"auto",imageRendering:"pixelated"}}/>
@@ -2141,6 +2251,7 @@ function StardewTracker() {
   </>;
 
   const renderOverview = () => <div>
+    {renderTodayV69()}
     {renderProfileCard()}
     {renderCalendar()}
   </div>;
