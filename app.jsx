@@ -1229,6 +1229,92 @@ function StardewTracker() {
   const updateBase = (patch) => update({ base: { ...data.base, ...patch } });
   const updateNested = (key, patch) => update({ [key]: { ...data[key], ...patch } });
 
+  /* v54: shared runtime helpers. Keep every tab on the same persisted data model. */
+  const extrasState = data.extras || {};
+  const updateExtras = patch => update({ extras: { ...extrasState, ...patch } });
+
+  const powerBucketV54 = kind => kind === "special" ? "wallet" : kind === "books" ? "abilities" : "mastery";
+  const powerValuesV54 = kind => data[powerBucketV54(kind)] || [];
+  const powerAliasesV54 = it => [it?.id, it?.name, ...(it?.legacy || [])].filter(Boolean);
+  const isPowerChecked = (kind, it) => {
+    const values = powerValuesV54(kind);
+    return powerAliasesV54(it).some(v => values.includes(v));
+  };
+  const togglePower = (kind, it) => {
+    const key = powerBucketV54(kind);
+    const values = powerValuesV54(kind);
+    const aliases = powerAliasesV54(it);
+    const on = aliases.some(v => values.includes(v));
+    const cleaned = values.filter(v => !aliases.includes(v));
+    update({ [key]: on ? cleaned : [...cleaned, it.id] });
+  };
+
+  const derivedAchievement = id => {
+    const income = Number(data.base?.totalIncome || 0);
+    const hearts = Object.values(data.friendship || {}).map(v => Number(v) || 0);
+    const cooked = (data.cookingCollectionV3 || []).length;
+    const fishKinds = (data.collections?.fish || []).length;
+    const museumCount = (data.collections?.artifact || []).length + (data.collections?.mineral || []).length;
+    const museumTarget = (COLLECTIONS.artifact?.items?.length || 0) + (COLLECTIONS.mineral?.items?.length || 0);
+    const shippingCount = (data.shippingV30 || []).length;
+    const skills = SKILLS.map(sk => Number(data.skills?.[sk.id] || 0));
+    switch(id){
+      case "greenhorn": return income >= 15000;
+      case "cowpoke": return income >= 50000;
+      case "homesteader": return income >= 250000;
+      case "millionaire": return income >= 1000000;
+      case "legend": return income >= 10000000;
+      case "museum_all": return museumTarget > 0 && museumCount >= museumTarget;
+      case "treasure40": return museumCount >= 40;
+      case "friend5": return hearts.some(v => v >= 5);
+      case "friend10": return hearts.some(v => v >= 10);
+      case "beloved": return hearts.filter(v => v >= 10).length >= 8;
+      case "cliques": return hearts.filter(v => v >= 5).length >= 4;
+      case "networking": return hearts.filter(v => v >= 5).length >= 10;
+      case "popular": return hearts.filter(v => v >= 5).length >= 20;
+      case "cook10": return cooked >= 10;
+      case "cook25": return cooked >= 25;
+      case "cookall": return COOKING_DISHES_V3.length > 0 && cooked >= COOKING_DISHES_V3.length;
+      case "house1": return Number(data.house || 0) >= 1;
+      case "house2": return Number(data.house || 0) >= 2;
+      case "fish10": return fishKinds >= 10;
+      case "fish24": return fishKinds >= 24;
+      case "fishall": return COLLECTIONS.fish?.items?.length > 0 && fishKinds >= COLLECTIONS.fish.items.length;
+      case "fullshipment": return SHIPPING_ITEMS_V30.length > 0 && shippingCount >= SHIPPING_ITEMS_V30.length;
+      case "bottom": return Number(data.mine?.normal || 0) >= 120;
+      case "locallegend": return BUNDLE_ROOMS.every(r => (data.bundleDone || []).includes(r.id));
+      case "joja": return Boolean(data.jojaMemberV28) && (data.jojaProjectsV28 || []).length >= JOJA_PROJECTS_V28.length;
+      case "stardrops": return (data.stardropsV2 || []).length >= STARDROP_SOURCES_V26.length;
+      case "talent": return skills.some(v => v >= 10);
+      case "five": return skills.every(v => v >= 10);
+      case "wellread": return BOOK_POWERS_V2.every(it => isPowerChecked("books", it));
+      case "neighbors": return Number(data.raccoonV50?.requests || 0) >= 9;
+      default: return false;
+    }
+  };
+  const achievementChecked = id => derivedAchievement(id) || (data.achievementsV2 || []).includes(id);
+  const toggleAchievement = id => {
+    if(derivedAchievement(id)) return;
+    const values = data.achievementsV2 || [];
+    update({ achievementsV2: values.includes(id) ? values.filter(v => v !== id) : [...values, id] });
+  };
+
+  const normalizeLookupV54 = value => String(value||"").normalize("NFKC").toLowerCase().replace(/[\s·・_'’\-]+/g,"");
+  const lookupRowV54 = raw => {
+    const needle = normalizeLookupV54(raw);
+    if(!needle) return null;
+    return (window.SDVLookupV46?.items || []).find(row => [row?.name,row?.zh,row?.file,switchNameV47(row?.name,row?.file),...(row?.aliases || [])].filter(Boolean).some(v => normalizeLookupV54(v) === needle)) || null;
+  };
+  const openItemLookupV54 = (raw, preferredKey="") => {
+    const row = lookupRowV54(raw);
+    const key = preferredKey || row?.file || itemFileZhV26(raw) || row?.name || raw;
+    setItemUsageQueryV42(row?.name || raw);
+    setItemUsageSelectedV42(key);
+    setFishViewV4("items");
+    setTab("fishing");
+    requestAnimationFrame(() => window.scrollTo({top:0,left:0,behavior:"auto"}));
+  };
+
   const roomDone = (room) => data.bundleDone.includes(room.id);
   const toggleRoom = (id, done) => update({ bundleDone: done ? [...new Set([...data.bundleDone, id])] : data.bundleDone.filter(x => x !== id) });
   const roomProgress = () => {
@@ -1519,19 +1605,21 @@ function StardewTracker() {
     </Card>
   </>;
 
-  const renderMiniItemV26 = (name, tone=C.cream) => {
-    const file=itemFileZhV26(name);
-    return <div key={name} style={{width:54,minWidth:54,border:`1px solid ${C.line}`,background:tone,borderRadius:8,padding:"4px 2px",textAlign:"center"}}>{file?<GameIcon file={file} size={26} alt={name}/>:<div style={{height:26,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}}>•</div>}<div style={{fontSize:7.2,fontWeight:900,color:C.ink,lineHeight:1.05,marginTop:2,overflow:"hidden",textOverflow:"ellipsis"}}>{switchNameV47(name,file)}</div></div>;
+  const renderMiniItemV26 = (name, tone=C.cream, fileHint="") => {
+    const row=lookupRowV54(name);
+    const file=row?.file||fileHint||itemFileZhV26(name)||"";
+    const canLookup=Boolean(row);
+    return <button type="button" key={`${name}-${file}`} disabled={!canLookup} onClick={()=>openItemLookupV54(name,row?.file||file)} style={{width:"100%",minWidth:0,border:`1px solid ${C.line}`,background:tone,borderRadius:8,padding:"4px 2px",textAlign:"center",font:"inherit",cursor:canLookup?"pointer":"default",opacity:canLookup?1:.78}}>{file?<GameIcon file={file} size={26} alt={name}/>:<div style={{height:26,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}}>•</div>}<div style={{fontSize:7.2,fontWeight:900,color:C.ink,lineHeight:1.05,marginTop:2,overflow:"hidden",textOverflow:"ellipsis"}}>{switchNameV47(name,file)}</div></button>;
   };
 
   const renderTodayCalendarItemV26 = (it) => {
     if(it.type==="birthday"){
       const gift=NPC_GIFTS[it.npc];
-      return <div key={it.text} style={{marginTop:7,padding:"8px 9px",borderRadius:9,background:"#FFF1CF",border:`1.5px solid ${C.line}`}}><div style={{display:"flex",alignItems:"center",gap:7}}><GameIcon file={NPC_ICON_FILES[it.npc]} size={34}/><div><b style={{fontSize:12.5,color:C.brown}}>🎂 {it.npc}生日</b><div style={{fontSize:9,color:C.muted,marginTop:1}}>最愛禮物・直接照圖找</div></div></div>{gift?.love?.length>0&&<div style={{display:"flex",gap:4,overflowX:"auto",marginTop:6,paddingBottom:2}}>{gift.love.slice(0,8).map(x=>renderMiniItemV26(x,"#FFF8E3"))}</div>}</div>;
+      return <div key={it.text} style={{marginTop:7,padding:"8px 9px",borderRadius:9,background:"#FFF1CF",border:`1.5px solid ${C.line}`}}><div style={{display:"flex",alignItems:"center",gap:7}}><GameIcon file={NPC_ICON_FILES[it.npc]} size={34}/><div><b style={{fontSize:12.5,color:C.brown}}>🎂 {it.npc}生日</b><div style={{fontSize:9,color:C.muted,marginTop:1}}>最愛禮物・直接照圖找</div></div></div>{gift?.love?.length>0&&<div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4,marginTop:6}}>{gift.love.map(x=>renderMiniItemV26(x,"#FFF8E3"))}</div>}</div>;
     }
     if(it.type==="festival"){
       const g=FESTIVAL_GUIDE_V26[it.key];
-      return <div key={it.text} style={{marginTop:7,padding:"8px 9px",borderRadius:9,background:"#FFF1CF",border:`1.5px solid ${C.line}`}}><b style={{fontSize:12.5,color:C.brown}}>🎪 今日：{it.text}</b>{g?<><div style={{fontSize:10,color:C.ink,lineHeight:1.45,marginTop:3}}>{g.desc}</div>{g.items?.length>0&&<div style={{display:"flex",gap:4,overflowX:"auto",marginTop:6,paddingBottom:2}}>{g.items.map(([file,name])=><div key={name} style={{width:58,minWidth:58,border:`1px solid ${C.line}`,background:"#FFF8E3",borderRadius:8,padding:"4px 2px",textAlign:"center"}}><GameIcon file={file} size={27} alt={name}/><div style={{fontSize:7.2,fontWeight:900,color:C.ink,lineHeight:1.05,marginTop:2}}>{name}</div></div>)}</div>}</>:null}</div>;
+      return <div key={it.text} style={{marginTop:7,padding:"8px 9px",borderRadius:9,background:"#FFF1CF",border:`1.5px solid ${C.line}`}}><b style={{fontSize:12.5,color:C.brown}}>🎪 今日：{it.text}</b>{g?<><div style={{fontSize:10,color:C.ink,lineHeight:1.45,marginTop:3}}>{g.desc}</div>{g.items?.length>0&&<div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4,marginTop:6}}>{g.items.map(([file,name])=>renderMiniItemV26(name,"#FFF8E3",file))}</div>}</>:null}</div>;
     }
     return <div key={it.text} style={{marginTop:7,padding:"7px 9px",borderRadius:8,background:"#FFF1CF",fontSize:11,fontWeight:900,color:C.brown}}>{it.text}</div>;
   };
@@ -1843,19 +1931,19 @@ function StardewTracker() {
     };
     const openLookupV50=item=>{
       const m=giftMetaV50(item); if(!m.canLookup)return;
-      setItemUsageQueryV42(m.raw); setItemUsageSelectedV42(m.key); setFishViewV4("items"); setTab("fishing"); window.scrollTo(0,0);
+      openItemLookupV54(m.raw,m.key);
     };
     const GiftGridV50=({title,items,tone})=>{const rows=(items||[]);if(!rows.length)return null;return <div style={{marginTop:8}}><div style={{fontSize:9.5,fontWeight:950,color:C.brown,marginBottom:4}}>{title}・{rows.length}</div><div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:5}}>{rows.map((item,i)=>{const m=giftMetaV50(item);return <button key={`${title}-${item}-${i}`} disabled={!m.canLookup} onClick={()=>openLookupV50(item)} style={{border:`1px solid ${C.line}`,background:tone,borderRadius:8,padding:"5px 3px",minHeight:72,textAlign:"center",opacity:m.generic?.72:1,cursor:m.generic?"default":"pointer",minWidth:0}}><div style={{height:29,display:"flex",alignItems:"center",justifyContent:"center"}}>{m.file?<GameIcon file={m.file} size={29}/>:<span style={{fontSize:15,color:C.muted}}>•</span>}</div><div style={{fontSize:7.8,fontWeight:950,color:C.ink,lineHeight:1.08,marginTop:2}}>{m.name}</div><div style={{fontSize:6.5,color:C.muted,lineHeight:1.12,marginTop:3,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{m.source}</div></button>})}</div></div>};
     const CompactLovesV50=({items})=><div style={{display:"flex",gap:2,flexWrap:"wrap",padding:"2px 0"}}>{(items||[]).map((item,i)=>{const m=giftMetaV50(item);return <span key={`${item}-${i}`} title={m.name} style={{width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",filter:m.generic?"grayscale(1)":"none",opacity:m.generic?.35:1}}>{m.file?<GameIcon file={m.file} size={21}/>:<span style={{fontSize:9,color:C.muted}}>•</span>}</span>})}</div>;
     const shopRowsV50=shop=>{if(!shop?.items)return[];return shop.items.filter(it=>!it.seasons?.length||it.seasons.includes(seasonEnV50));};
     const availabilityTextV50=value=>String(value||"").replace("Year 2+","第 2 年起").replace("Farming level 10+","耕種 10 級").replace("Unowned only","未持有時").replace("17+ ticket prizes claimed","領取 17 次以上獎品券獎勵");
-    const ShopV50=({shop})=>{if(!shop)return null;const rows=shopRowsV50(shop);return <div style={{marginTop:9,paddingTop:8,borderTop:`1px dashed ${C.line}`}}><div style={{display:"flex",alignItems:"start",gap:6}}><GameIcon file="Telephone" size={25}/><div style={{flex:1,minWidth:0}}><b style={{fontSize:10.5,color:C.darkBrown}}>商店・{shop.label}</b><div style={{fontSize:7.8,color:C.muted,lineHeight:1.3,marginTop:2}}>{shop.hours}</div></div></div><div style={{fontSize:7.5,color:C.brown,fontWeight:900,marginTop:6}}>目前 {data.base.season}季可見庫存・{rows.length} 項</div><div style={{display:"grid",gridAutoFlow:"column",gridTemplateRows:"repeat(2,68px)",gridAutoColumns:"82px",gap:4,overflowX:"auto",padding:"5px 0 2px",WebkitOverflowScrolling:"touch"}}>{rows.map((it,i)=>{const m=giftMetaV50(it.name);return <button key={`${it.name}-${i}`} disabled={!m.canLookup} onClick={()=>openLookupV50(it.name)} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:7,padding:"3px 2px",minWidth:0,textAlign:"center",opacity:m.canLookup?1:.78}}><GameIcon file={m.file||it.name} size={25}/><div style={{fontSize:6.9,fontWeight:900,color:C.ink,lineHeight:1.05,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.name}</div>{Number.isFinite(Number(it.price))&&<div style={{fontSize:6.7,color:C.orange,fontWeight:950,marginTop:2}}>{Number(it.price).toLocaleString()}g</div>}{it.availability&&<div style={{fontSize:5.6,color:C.muted,lineHeight:1.05,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{availabilityTextV50(it.availability)}</div>}</button>})}</div></div>};
+    const ShopV50=({shop})=>{if(!shop)return null;const rows=shopRowsV50(shop);return <div style={{marginTop:9,paddingTop:8,borderTop:`1px dashed ${C.line}`}}><div style={{display:"flex",alignItems:"start",gap:6}}><GameIcon file="Telephone" size={25}/><div style={{flex:1,minWidth:0}}><b style={{fontSize:10.5,color:C.darkBrown}}>商店・{shop.label}</b><div style={{fontSize:7.8,color:C.muted,lineHeight:1.3,marginTop:2}}>{shop.hours}</div></div></div><div style={{fontSize:7.5,color:C.brown,fontWeight:900,marginTop:6}}>目前 {data.base.season}季可見庫存・{rows.length} 項</div><div style={{display:"grid",width:"100%",maxWidth:"100%",minWidth:0,contain:"inline-size",gridAutoFlow:"column",gridTemplateRows:"repeat(2,68px)",gridAutoColumns:"82px",gap:4,overflowX:"auto",overflowY:"hidden",overscrollBehaviorX:"contain",padding:"5px 0 2px",WebkitOverflowScrolling:"touch"}}>{rows.map((it,i)=>{const m=giftMetaV50(it.name);return <button key={`${it.name}-${i}`} disabled={!m.canLookup} onClick={()=>openLookupV50(it.name)} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:7,padding:"3px 2px",minWidth:0,textAlign:"center",opacity:m.canLookup?1:.78}}><GameIcon file={m.file||it.name} size={25}/><div style={{fontSize:6.9,fontWeight:900,color:C.ink,lineHeight:1.05,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.name}</div>{Number.isFinite(Number(it.price))&&<div style={{fontSize:6.7,color:C.orange,fontWeight:950,marginTop:2}}>{Number(it.price).toLocaleString()}g</div>}{it.availability&&<div style={{fontSize:5.6,color:C.muted,lineHeight:1.05,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{availabilityTextV50(it.availability)}</div>}</button>})}</div></div>};
     const OrdersV50=({orders})=>{if(!orders?.length)return null;return <div style={{marginTop:9,paddingTop:8,borderTop:`1px dashed ${C.line}`}}><div style={{display:"flex",alignItems:"center",gap:6}}><GameIcon file="Special Orders Board" size={26}/><b style={{fontSize:10.5,color:C.darkBrown}}>特殊訂單看板</b></div><div style={{display:"grid",gap:5,marginTop:5}}>{orders.map(o=><div key={o.id} style={{border:`1px solid ${C.line}`,background:"#FFF4D8",borderRadius:8,padding:"6px 7px"}}><div style={{display:"flex",justifyContent:"space-between",gap:6}}><b style={{fontSize:8.8,color:C.brown}}>{o.name}</b><span style={{fontSize:6.8,color:C.muted,whiteSpace:"nowrap"}}>{o.days} 天{o.repeatable?"・可重複":""}</span></div><div style={{fontSize:7.6,color:C.ink,lineHeight:1.35,marginTop:3}}>📋 {o.need}</div><div style={{fontSize:7.4,color:C.green,lineHeight:1.35,marginTop:2}}>🎁 {o.reward}</div></div>)}</div></div>};
     return <div>
       <SectionTitle icon="💛">社交速查</SectionTitle>
       <Card style={{padding:7,background:"#FFF4D8",fontSize:8.5,color:C.muted,lineHeight:1.4}}>這頁以遊玩時「查人」為主：生日、角色簡介、完整個人偏好、物品來源、特殊訂單與商店資訊；好感度只保留成小型記錄。</Card>
       <div style={{display:"flex",gap:5,margin:"7px 0"}}>{NPC_GROUPS.map(x=><Pill key={x.id} small active={x.id===socialGroup} onClick={()=>{setSocialGroup(x.id);setExpandedNPC(null)}}>{x.name}</Pill>)}</div>
-      <div style={{display:"grid",gap:6}}>{g.list.map(n=>{const cap=g.id==="single"?14:10;const hearts=Math.min(cap,Number(data.friendship[n]||0));const open=expandedNPC===n;const profile=socialV50[n]||{};const fallback=NPC_GIFTS[n]||{};const loves=profile.loves?.length?profile.loves:fallback.love||[];const likes=profile.likes?.length?profile.likes:fallback.like||[];const hates=profile.hates?.length?profile.hates:fallback.hate||[];return <Card key={n} style={{padding:7,background:open?"#FFF8E9":C.paper}}>
+      <div style={{display:"grid",gap:6}}>{g.list.map(n=>{const cap=g.id==="single"?14:10;const hearts=Math.min(cap,Number(data.friendship[n]||0));const open=expandedNPC===n;const profile=socialV50[n]||{};const fallback=NPC_GIFTS[n]||{};const loves=profile.loves?.length?profile.loves:fallback.love||[];const likes=profile.likes?.length?profile.likes:fallback.like||[];const hates=profile.hates?.length?profile.hates:fallback.hate||[];return <Card key={n} style={{padding:7,background:open?"#FFF8E9":C.paper,minWidth:0,maxWidth:"100%",overflow:"hidden"}}>
         <button onClick={()=>setExpandedNPC(open?null:n)} style={{width:"100%",border:0,background:"transparent",padding:0,display:"grid",gridTemplateColumns:"40px minmax(0,1fr) auto",gap:7,alignItems:"center",textAlign:"left"}}><GameIcon file={NPC_ICON_FILES[n]} size={38}/><span style={{minWidth:0}}><span style={{display:"flex",alignItems:"center",gap:5}}><b style={{fontSize:11.5,color:C.ink}}>{n}</b>{profile.birthday?.day&&<span style={{fontSize:7,color:C.orange,fontWeight:900}}>🎂 {profile.birthday.season}{profile.birthday.day}</span>}</span><span style={{display:"grid",gridTemplateColumns:"24px 1fr",gap:2,alignItems:"center",marginTop:2}}><span style={{fontSize:6.5,color:C.muted,fontWeight:900}}>最愛</span><CompactLovesV50 items={loves}/></span></span><span style={{display:"flex",alignItems:"center",gap:4}}><b style={{fontSize:8.5,color:hearts?C.red:C.muted}}>♥ {hearts}/{cap}</b><span style={{fontSize:10,color:C.brown}}>{open?"▲":"▼"}</span></span></button>
         <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:3,marginTop:4}}><button onClick={()=>updateNested("friendship",{[n]:Math.max(0,hearts-1)})} style={{border:0,background:C.cream,borderRadius:5,width:20,height:19,padding:0,color:C.brown,fontWeight:950}}>−</button><span style={{fontSize:6.8,color:C.muted}}>好感</span><button onClick={()=>updateNested("friendship",{[n]:Math.min(cap,hearts+1)})} style={{border:0,background:C.cream,borderRadius:5,width:20,height:19,padding:0,color:C.brown,fontWeight:950}}>＋</button></div>
         {open&&<div style={{borderTop:`1px dashed ${C.line}`,marginTop:6,paddingTop:7}}>{profile.intro&&<div style={{display:"flex",gap:7,alignItems:"start",padding:"6px 7px",background:"#F7E9C6",borderRadius:8}}><GameIcon file={NPC_ICON_FILES[n]} size={32}/><div style={{fontSize:8.5,color:C.ink,lineHeight:1.4}}>{profile.intro}{profile.birthday?.day&&<div style={{marginTop:3,color:C.brown,fontWeight:900}}>生日：{profile.birthday.season}季 {profile.birthday.day} 日</div>}</div></div>}<GiftGridV50 title="💖 最愛" items={loves} tone="#FFF0F2"/><GiftGridV50 title="👍 喜歡" items={likes} tone="#EEF7DD"/><GiftGridV50 title="👎 討厭" items={hates} tone="#F4E8E3"/><div style={{fontSize:7,color:C.muted,marginTop:5}}>點具體物品會直接切到「查找 → 物品用途」，顯示更完整的用途與取得方式；「全部××」這類通用分類則不跳轉。</div><OrdersV50 orders={profile.orders}/><ShopV50 shop={profile.shop}/></div>}
@@ -2387,7 +2475,7 @@ function StardewTracker() {
   const content={overview:renderOverview,data:renderData,people:renderPeople,powers:renderPowers,collection:renderCollection,fishing:renderFishingV30,wardrobe:renderWardrobeV30,notes:renderNotes}[tab];
   return <div style={{minHeight:"100vh",background:C.bg,fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC',sans-serif",color:C.ink,paddingBottom:72}}>
     {renderHeader()}
-    <main style={{maxWidth:680,margin:"0 auto",padding:"8px 12px 24px"}}>{content()}</main>
+    <main style={{width:"100%",maxWidth:680,minWidth:0,margin:"0 auto",padding:"8px 12px 24px",overflowX:"hidden"}}>{content()}</main>
     <span aria-label="smoke-title-compat" style={{display:"none"}}>星露谷進度手帳</span>
     <button aria-label="smoke-farm-compat" onClick={()=>{setTab("data");setDataSection("farm")}} style={{display:"none"}}>農場</button>
     <button aria-label="smoke-powers-compat" onClick={()=>{setTab("data");setDataSection("skills");setSkillSection("special")}} style={{display:"none"}}>能力</button>
