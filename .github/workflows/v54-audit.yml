@@ -27,8 +27,8 @@ jobs:
             --no-eslintrc \
             --env browser,es2021 \
             --parser-options '{"ecmaVersion":2022,"sourceType":"script","ecmaFeatures":{"jsx":true}}' \
-            --global React:readonly \
-            --global ReactDOM:readonly \
+            --global React \
+            --global ReactDOM \
             --rule 'no-undef:error'
           grep -q 'const isPowerChecked' app.jsx
           grep -q 'const toggleAchievement' app.jsx
