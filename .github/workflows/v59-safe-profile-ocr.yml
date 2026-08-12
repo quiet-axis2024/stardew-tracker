@@ -1,0 +1,47 @@
+name: Apply v59 safe profile OCR
+on:
+  push:
+    branches: [v59-safe-profile-ocr]
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v59-safe-profile-ocr
+          fetch-depth: 0
+      - name: Apply OCR patch
+        run: python3 .github/scripts/v59_safe_profile_ocr.py
+      - name: Validate runtime and safe OCR rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save eslint@8 react@18 react-dom@18 esbuild@0.25.8 >/dev/null 2>&1
+          ./node_modules/.bin/eslint app.jsx --no-eslintrc --env browser,es2021 --parser-options '{"ecmaVersion":2022,"sourceType":"script","ecmaFeatures":{"jsx":true}}' --global React --global ReactDOM --rule 'no-undef:error'
+          grep -q 'hudMoneyColorV59 = makeCrop(img, 0.890, 0.205, 0.090, 0.050, 8, false)' app.jsx
+          grep -q 'panelMoneyV59 = makeCrop(img, 0.608, 0.638, 0.064, 0.060, 8, 110)' app.jsx
+          grep -q 'seasonColorV59 = makeCrop(img, 0.575, 0.758, 0.035, 0.060, 10, false)' app.jsx
+          grep -q 'numberConsensusV59' app.jsx
+          grep -q 'seasonConsensusV59' app.jsx
+          grep -q 'screenshot upload no longer overwrites player/farm names' app.jsx
+          ! grep -q 'patch.name = farmerName' app.jsx
+          ! grep -q 'patch.farm = farmName' app.jsx
+          grep -q 'app.js?v=59' index.html
+          grep -q 'stardew-tracker-v59' sw.js
+          mkdir -p build
+          printf '%s\n' "import React from 'react';" "import { createRoot } from 'react-dom/client';" "window.React = React;" "window.ReactDOM = { createRoot };" > build/entry.jsx
+          cat app.jsx >> build/entry.jsx
+          ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=/tmp/v59-app.js
+          test -s /tmp/v59-app.js
+      - name: Commit product changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx index.html sw.js
+          git commit -m 'v59: make Switch profile OCR conservative'
+          git push origin HEAD:v59-safe-profile-ocr
