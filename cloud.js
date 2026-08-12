@@ -3,6 +3,8 @@
   const OWNER_STORE = 'sdv-cloud-owner-token-v1';
   const SHARE_STORE = 'sdv-cloud-share-token-v1';
   const LOCAL_UPDATED_STORE = 'sdv-cloud-local-updated-v1';
+  const OWNER_COOKIE = 'sdv_cloud_owner_v1';
+  const SHARE_COOKIE = 'sdv_cloud_share_v1';
   const PROGRESS_KEYS = new Set(['sdv2-progress-pub', 'sdv2-progress-v3']);
 
   const proto = Storage.prototype;
@@ -29,6 +31,25 @@
   const lsSet = (key, value) => {
     try { rawSet.call(window.localStorage, key, String(value)); }
     catch {}
+  };
+
+
+  const cookiePath = (() => {
+    const path = window.location.pathname || '/';
+    return path.endsWith('/') ? path : path.replace(/[^/]*$/, '');
+  })();
+  const cookieGet = (name) => {
+    const prefix = `${encodeURIComponent(name)}=`;
+    const row = String(document.cookie || '').split('; ').find(v => v.startsWith(prefix));
+    return row ? decodeURIComponent(row.slice(prefix.length)) : '';
+  };
+  const cookieSet = (name, value) => {
+    if (!value) return;
+    document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=31536000; Path=${cookiePath || '/'}; SameSite=Strict; Secure`;
+  };
+  const persistCloudPair = (owner, share) => {
+    if (owner) { lsSet(OWNER_STORE, owner); cookieSet(OWNER_COOKIE, owner); }
+    if (share) { lsSet(SHARE_STORE, share); cookieSet(SHARE_COOKIE, share); }
   };
 
   function emitStatus(status) {
@@ -135,11 +156,11 @@
     const shareKey = url.searchParams.get('sharekey');
 
     if (manage) {
-      lsSet(OWNER_STORE, manage);
-      if (shareKey) lsSet(SHARE_STORE, shareKey);
+      const pairedShare = shareKey || lsGet(SHARE_STORE) || cookieGet(SHARE_COOKIE) || '';
+      persistCloudPair(manage, pairedShare);
       state.mode = 'owner';
       state.token = manage;
-      state.shareToken = shareKey || lsGet(SHARE_STORE) || '';
+      state.shareToken = pairedShare;
 
       // 管理密鑰只在第一次開啟時出現在網址；存入本機後立即清掉。
       url.searchParams.delete('manage');
@@ -149,11 +170,13 @@
       state.mode = 'share';
       state.token = view;
     } else {
-      const storedOwner = lsGet(OWNER_STORE);
+      const storedOwner = lsGet(OWNER_STORE) || cookieGet(OWNER_COOKIE);
+      const storedShare = lsGet(SHARE_STORE) || cookieGet(SHARE_COOKIE);
       if (storedOwner) {
+        persistCloudPair(storedOwner, storedShare);
         state.mode = 'owner';
         state.token = storedOwner;
-        state.shareToken = lsGet(SHARE_STORE) || '';
+        state.shareToken = storedShare || '';
       }
     }
 
@@ -247,5 +270,16 @@
     return url;
   }
 
-  window.SDVCloud = { init, state, shareUrl, copyShareLink };
+  function connectFromManagementUrl(raw) {
+    const url = new URL(String(raw || '').trim(), window.location.href);
+    if (url.origin !== window.location.origin) throw new Error('管理連結不是這個手帳 App 的網址');
+    const owner = url.searchParams.get('manage') || '';
+    const share = url.searchParams.get('sharekey') || '';
+    if (!owner || !share) throw new Error('管理連結需要同時包含 manage 與 sharekey');
+    persistCloudPair(owner, share);
+    state.mode='owner'; state.token=owner; state.shareToken=share;
+    return true;
+  }
+
+  window.SDVCloud = { init, state, shareUrl, copyShareLink, connectFromManagementUrl };
 })();
