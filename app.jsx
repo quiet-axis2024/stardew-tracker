@@ -2211,6 +2211,19 @@ function StardewTracker() {
     </div>;
   };
 
+  const renderDexCollection = () => {
+    const c=COLLECTIONS[selectedCollection];
+    const got=data.collections[selectedCollection]||[];
+    const selectedName=selectedItem!=null?c.items[selectedItem]:"";
+    return <div style={{marginTop:8}}>
+      <Card style={{padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:900,color:C.muted,marginBottom:5}}><span>{selectedCollection==="artifact"?"古物圖鑑":"礦物圖鑑"}</span><span>{got.length}/{c.items.length}</span></div><ProgressBar value={got.length} max={c.items.length}/></Card>
+      {selectedName&&<SimpleItemInfoV62 name={selectedName} file={itemFileZhV26(selectedName)||selectedName} info={c.info?.[selectedItem]||""}/>} 
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:8}}>{c.items.map((it,i)=>{const checked=got.includes(i),file=ICON_URLS[selectedCollection]?.[i];return <button key={i} onClick={()=>setSelectedItem(i)} onDoubleClick={()=>updateNested("collections",{[selectedCollection]:checked?got.filter(x=>x!==i):[...got,i]})} style={{position:"relative",border:`2px solid ${selectedItem===i?C.orange:checked?C.green:C.line}`,background:checked?"#E5F3CF":C.paper,borderRadius:9,padding:"6px 3px",minHeight:78,cursor:"pointer"}}>{file?<img src={file} alt="" style={{width:36,height:36,imageRendering:"pixelated",objectFit:"contain"}}/>:<GameIcon file={itemFileZhV26(it)||it} size={36}/>}<div style={{fontSize:9,fontWeight:900,color:C.ink,lineHeight:1.1,marginTop:2}}>{switchNameV47(it,itemFileZhV26(it))}</div><span onClick={e=>{e.stopPropagation();updateNested("collections",{[selectedCollection]:checked?got.filter(x=>x!==i):[...got,i]})}} style={{position:"absolute",right:2,top:2,fontSize:13,color:checked?C.green:"#C9B99A",fontWeight:950,padding:2}}>{checked?"✓":"○"}</span></button>})}</div>
+    </div>;
+  };
+
+
+
   const prepSetV3 = data.cookingPrepV3 || [];
   const cookedSetV3 = data.cookingCollectionV3 || [];
   const togglePrepV3 = id => update({cookingPrepV3:prepSetV3.includes(id)?prepSetV3.filter(x=>x!==id):[...prepSetV3,id]});
