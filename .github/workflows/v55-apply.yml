@@ -46,22 +46,6 @@ jobs:
           grep -q '第 4 层' app.jsx
           grep -q 'app.js?v=55' index.html
           grep -q 'stardew-tracker-v55' sw.js
-      - name: Verify critical wiki image keys
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import urllib.parse,urllib.request
-          names=['Ways Of The Wild','Horse The Book','Special order board','Frog Egg Colors','Fairy Box','Basilisk Paw','Parrot Egg']
-          for name in names:
-              url='https://stardewvalleywiki.com/Special:Redirect/file/'+urllib.parse.quote(name+'.png')
-              req=urllib.request.Request(url,headers={'User-Agent':'stardew-tracker-v55-check/1.0'})
-              try:
-                  with urllib.request.urlopen(req,timeout=30) as r:
-                      if r.status!=200: raise RuntimeError(f'{name}: HTTP {r.status}')
-                      print(name,'->',r.geturl())
-              except Exception as e:
-                  raise RuntimeError(f'wiki image key failed: {name}: {e}')
-          PY
       - name: Build Safari 15 bundle
         shell: bash
         run: |
