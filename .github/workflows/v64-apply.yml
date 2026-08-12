@@ -22,20 +22,21 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          import subprocess, re
+          import subprocess
 
           p=Path('app.jsx')
           s=p.read_text(encoding='utf-8')
 
           # v62 accidentally deleted the item-lookup renderer while keeping its callers.
+          # Restore the known-good v61 renderer immediately before the current lookup hub.
           if 'const renderItemUsageV42 = () => {' not in s:
               old=subprocess.check_output(['git','show','ab826db642b9af5daea64b05d02cb5d91f932dd2:app.jsx'], text=True)
               a=old.index('  const renderItemUsageV42 = () => {')
               b=old.index('  const renderFishTodayV4 = () => {', a)
               block=old[a:b]
-              marker='  const renderFishTodayV4 = () => {'
+              marker='  const renderFishingV30 = () => {'
               if s.count(marker)!=1:
-                  raise SystemExit('renderFishTodayV4 marker mismatch')
+                  raise SystemExit('renderFishingV30 marker mismatch')
               s=s.replace(marker, block+marker, 1)
           if s.count('const renderItemUsageV42 = () => {')!=1:
               raise SystemExit('renderItemUsageV42 restore failed')
@@ -49,7 +50,7 @@ jobs:
           if old not in s: raise SystemExit('achievement collection icon marker missing')
           s=s.replace(old,'["achievements","成就","Achievements Icon"]',1)
 
-          # The wiki image filename is "Warp Totem Farm.png" (no colon).
+          # The direct Wiki asset name for the Farm Warp Totem has no colon.
           old='{ id: "overview", name: "總覽", icon: "🏡", file: "Warp Totem: Farm" }'
           if old not in s: raise SystemExit('overview icon marker missing')
           s=s.replace(old,'{ id: "overview", name: "總覽", icon: "🏡", file: "Warp Totem Farm" }',1)
@@ -63,6 +64,7 @@ jobs:
           for old,new in reps:
               if old not in s: raise SystemExit(f'icon marker missing: {old}')
               s=s.replace(old,new,1)
+          # The section heading follows the parent concept; the actual Special Items button remains Galaxy Soul.
           s=s.replace('<SectionTitle icon="game:Galaxy Soul">特殊物品與能力</SectionTitle>','<SectionTitle icon="game:Magic Rock Candy">特殊物品與能力</SectionTitle>')
 
           # Selection state for Shipping and Achievements simple-info cards.
@@ -70,7 +72,7 @@ jobs:
           if state_marker not in s: raise SystemExit('lookup state marker missing')
           s=s.replace(state_marker,state_marker+'  const [selectedShippingV64, setSelectedShippingV64] = useState("");\n  const [selectedAchievementV64, setSelectedAchievementV64] = useState("");\n',1)
 
-          # Preserve simple-card selections through cross-page Back navigation.
+          # Preserve those selections through cross-page Back navigation.
           old_snapshot='itemUsageQueryV42,itemUsageSelectedV42,scrollY:Number(window.scrollY||0)'
           new_snapshot='itemUsageQueryV42,itemUsageSelectedV42,selectedShippingV64,selectedAchievementV64,scrollY:Number(window.scrollY||0)'
           if old_snapshot not in s: raise SystemExit('nav snapshot marker missing')
@@ -87,10 +89,10 @@ jobs:
           s=s[:a]+shipping+s[b:]
 
           # Achievements: card tap selects description; dot/check only changes manual progress.
-          pattern=r'  const renderAchievements = \(\) => \{.*?\n  \};\n\n(?=  const prepSetV3)'
+          a=s.index('  const renderAchievements = () => {')
+          b=s.index('  const prepSetV3',a)
           achievement='''  const renderAchievements = () => {\n    const count=ACHIEVEMENTS_V2.filter(a=>achievementChecked(a.id)).length;\n    const selected=selectedAchievementV64?ACHIEVEMENTS_V2.find(a=>a.id===selectedAchievementV64):null;\n    return <div style={{marginTop:8}}>\n      <Card style={{padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:900,color:C.muted,marginBottom:5}}><span>成就</span><span>{count}/{ACHIEVEMENTS_V2.length}</span></div><ProgressBar value={count} max={ACHIEVEMENTS_V2.length}/></Card>\n      {selected&&<Card style={{marginTop:7,padding:9,background:"#FFF8E2",border:`1.5px solid ${C.orange}`}}><div style={{display:"grid",gridTemplateColumns:"46px minmax(0,1fr)",gap:8,alignItems:"center"}}><GameIcon file="Achievement Star 01" size={42}/><div style={{minWidth:0}}><b style={{display:"block",fontSize:13,color:C.darkBrown}}>{selected.name}</b><span style={{display:"block",fontSize:9.2,color:C.muted,lineHeight:1.4,marginTop:2}}>{selected.desc}</span>{derivedAchievement(selected.id)&&<span style={{display:"block",fontSize:7.5,color:C.green,fontWeight:950,marginTop:3}}>此項依手帳進度自動判定</span>}</div></div></Card>}\n      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:8}}>{ACHIEVEMENTS_V2.map(a=>{const auto=derivedAchievement(a.id),on=achievementChecked(a.id),selectedNow=selectedAchievementV64===a.id;return <button key={a.id} onClick={()=>setSelectedAchievementV64(a.id)} title={a.desc} style={{position:"relative",border:`2px solid ${selectedNow?C.orange:on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:9,padding:"6px 3px",minHeight:82,cursor:"pointer",opacity:auto?.9:1}}><GameIcon file="Achievement Star 01" size={35}/><div style={{fontSize:8.7,fontWeight:900,color:on?C.green:C.ink,lineHeight:1.08,marginTop:2}}>{a.name}</div><span onClick={e=>{e.stopPropagation();if(!auto)toggleAchievement(a.id)}} style={{position:"absolute",right:2,top:2,fontSize:12,color:on?C.green:"#C9B99A",fontWeight:950,padding:2,cursor:auto?"default":"pointer"}}>{on?"✓":"○"}</span>{auto&&<span style={{position:"absolute",left:2,top:2,fontSize:5.8,color:C.green,fontWeight:950}}>自動</span>}</button>})}</div>\n    </div>;\n  };\n\n'''
-          s,n=re.subn(pattern,achievement,s,count=1,flags=re.S)
-          if n!=1: raise SystemExit(f'achievement renderer replacement count={n}')
+          s=s[:a]+achievement+s[b:]
 
           p.write_text(s,encoding='utf-8')
 
