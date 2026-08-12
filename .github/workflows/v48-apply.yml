@@ -32,7 +32,9 @@ jobs:
             elif 'remove paper wiki link' in line:
               line='s=re.sub(r\'<a href=\\{isNotes\\?"https://stardewvalleywiki\\.com/Secret_Notes":"https://stardewvalleywiki\\.com/Journal_Scraps"\\} target="_blank" rel="noopener noreferrer" style=\\{\\{.*?\\}\\}>Wiki 完整頁面 ↗</a>\', \'\', s, count=1)'
             out.append(line)
-          p.write_text('\n'.join(out)+'\n')
+          text='\n'.join(out)+'\n'
+          text=text.replace('loading="lazy"\\n    onError=', 'loading="lazy" onError=')
+          p.write_text(text)
           PY
       - name: Apply v48 patch
         run: |
