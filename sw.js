@@ -1,5 +1,5 @@
-const CACHE='stardew-tracker-v45';
-const CORE=['./index.html','./app.js','./cloud.js','./wardrobe-data-v34.js','./farmer-preview-v33.js','./animal-preview-v33.js','./manifest.webmanifest','./icon.svg'];
+const CACHE='stardew-tracker-v46';
+const CORE=['./index.html','./app.js','./cloud.js','./wardrobe-data-v34.js','./farmer-preview-v33.js','./animal-preview-v33.js','./lookup-data-v46.js','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>Promise.allSettled(CORE.map(url=>cache.add(url)))));
