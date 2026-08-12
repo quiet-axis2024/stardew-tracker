@@ -1,0 +1,79 @@
+name: Verify v65 copy and runtime names
+
+on:
+  push:
+    branches: [v65-navigation-search-copy-fish]
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v65-navigation-search-copy-fish
+          fetch-depth: 0
+
+      - name: Final copy polish
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app.jsx'); s=p.read_text(encoding='utf-8')
+          fixes={
+            '全料理一次性备料':'全料理備料',
+            '農舍／雞舍／牲口棚／小屋：直接點建築圖循環升級；可蓋多座的建築保留數量 ±；溫室這類單一建築只記已建造／未建造。':'點建築圖可切換升級階段；可建造多座的建築用 ± 調整數量，溫室則直接記錄是否已建造。',
+            '勾選代表已準備到最低需求量；這裡只記備料進度，不追蹤庫存。':'勾選代表已準備到最低需求量；這裡用來記錄備料進度，不計算實際庫存。'
+          }
+          for a,b in fixes.items(): s=s.replace(a,b)
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Runtime and regression validation
+        run: |
+          set -euo pipefail
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8 eslint@8.57.1
+          mkdir -p verify-v65
+          cat > verify-v65/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          const ReactDOM = { createRoot };
+          window.React = React;
+          window.ReactDOM = ReactDOM;
+          EOF
+          cat app.jsx >> verify-v65/entry.jsx
+          ./node_modules/.bin/esbuild verify-v65/entry.jsx --bundle --format=iife --target=safari15 --outfile=verify-v65/app.js
+          ./node_modules/.bin/eslint verify-v65/entry.jsx --no-ignore --no-eslintrc --env browser,es2021 --parser-options '{"ecmaVersion":2022,"sourceType":"module","ecmaFeatures":{"jsx":true}}' --rule 'no-undef:error' --rule 'no-unused-vars:off'
+          node --check sw.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('app.jsx').read_text(encoding='utf-8')
+          required=['renderFishFindV4','renderFishTodayV4','renderItemUsageV42','renderDexCollection','renderFishingV30','renderPeople','renderSkills']
+          for name in required:
+              assert len(re.findall(rf'const\s+{re.escape(name)}\s*=',s))==1,name
+          refs=set(re.findall(r'\b(render[A-Z][A-Za-z0-9_]*)\s*\(',s))
+          defs={a or b for a,b in re.findall(r'\bconst\s+(render[A-Z][A-Za-z0-9_]*)\s*=|\bfunction\s+(render[A-Z][A-Za-z0-9_]*)\s*\(',s)}
+          assert not (refs-defs), sorted(refs-defs)
+          assert 'itemUsageFilterV65' in s and 'ITEM_TAG_ALIASES_V65' in s
+          assert 'aria-label="返回上一頁"' in s
+          assert '全料理一次性备料' not in s
+          assert '返回上一步' not in s
+          print('v65 final static audit passed')
+          PY
+          echo '--- UI copy audit leftovers ---'
+          grep -nE '這頁以|開發|測試用|暫時|目前手帳|返回上一步|自动|选择|搜索结果|可养|删除这座|备料|图鉴|只記|不當庫存' app.jsx || true
+
+      - name: Commit final audit
+        run: |
+          set -euo pipefail
+          rm -rf verify-v65 node_modules package-lock.json package.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx
+          git rm -f .github/workflows/v65b-verify.yml
+          git commit -m 'v65: finish copy audit and runtime validation'
+          git push origin HEAD:v65-navigation-search-copy-fish
