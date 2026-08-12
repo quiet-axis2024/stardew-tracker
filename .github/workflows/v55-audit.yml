@@ -1,0 +1,51 @@
+name: Audit v55 data coverage
+on:
+  push:
+    branches: [v55-data-ui-polish]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit social gift coverage and placeholders
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,re
+          from pathlib import Path
+          def jsobj(path, marker):
+              s=Path(path).read_text(encoding='utf-8').strip()
+              body=s.split(marker,1)[1]
+              if body.endswith(';'): body=body[:-1]
+              return json.loads(body)
+          social=jsobj('social-data-v50.js','window.SDVSocialV50=')
+          lookup=jsobj('lookup-data-v46.js','window.SDVLookupV46=')
+          rows=lookup.get('items',[])
+          keys=set()
+          for r in rows:
+              for v in [r.get('name'),r.get('file'),r.get('zh'),*(r.get('aliases') or [])]:
+                  if v: keys.add(str(v).casefold())
+          generic_re=re.compile(r'^(All |Any |Most |Every |Universal )|\(except|except |items$|category$',re.I)
+          generic=[]; missing=[]; empty=[]
+          for npc,p in social.get('byZh',{}).items():
+              for cat in ('loves','likes','hates'):
+                  vals=p.get(cat)
+                  if isinstance(vals,list) and not vals: empty.append((npc,cat))
+                  for raw in vals or []:
+                      if generic_re.search(str(raw)):
+                          generic.append(raw)
+                      elif str(raw).casefold() not in keys:
+                          missing.append((npc,cat,raw))
+          print('GENERIC STRINGS:')
+          for x in sorted(set(generic)): print('-',x)
+          print('\nMISSING CONCRETE LOOKUP ITEMS:')
+          for x in sorted(set(missing)): print('-',x)
+          print('\nEMPTY SOCIAL CATEGORIES:')
+          for x in empty: print('-',x)
+          print('\nPLACEHOLDER TEXT IN APP:')
+          for i,line in enumerate(Path('app.jsx').read_text(encoding='utf-8').splitlines(),1):
+              if '见百科' in line or '見百科' in line or '（见百科）' in line or '(见百科)' in line:
+                  print(i,line.strip())
+          PY
