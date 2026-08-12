@@ -897,7 +897,8 @@ function itemFileZhV26(name){
 const SWITCH_T2S_V47 = Object.fromEntries(Array.from("萬與專業東絲丟兩嚴喪個豐臨為麗舉麼義烏樂喬習鄉書買亂爭於亞產畝親複見觀規覺覽觸訂訥訓議訊記講許論證評識詐詞詔詛話誠誼誤說請諸諾謀謎謝謠謹譜貝負財貢貧貨販貪貫責貯貴貸貿費賀賄賊賓賜賞賠賢賣賦質賬購贈贊趕趨躍車軌軒轉輪輕載較輔輛輝輩轎輸轟辦邊遙鄧鄭鄰醫釋釣鈴鈣鈾鉤銀銅銘銷鋪鋒鋤鋼錄錘錠錢錦錯鍋鍵鍛鍬鎖鎮鏡鐵鑄鑑鑰長門閉開閒間閣闊隊陽陰陣階際陸險雜雙雞離難雲電靈靜頂頃項順須頑頓領頭顏類風飛飯飲飼餅館馬駕驢騎騙騷鬥鬆鬍魚魷鮭鯉鯊鯰鰻鱒鱘鳥鳳鴨鵝鷹麥黃點齊齒龍龜體髮鬚鬱鹽麵湯餃燴燻蘿蔔蘋薑蘚蕪纖維礦寶鑽遠種樹葉爐煉繩飾鏈環殘頁圖場鎮島灣澤層區傳獎勵殺敵數據應該夠賣買獲採網燈漿殼塊" ).map((ch,i)=>[ch,Array.from("万与专业东丝丢两严丧个丰临为丽举么义乌乐乔习乡书买乱争于亚产亩亲复见观规觉览触订讷训议讯记讲许论证评识诈词诏诅话诚谊误说请诸诺谋谜谢谣谨谱贝负财贡贫货贩贪贯责贮贵贷贸费贺贿贼宾赐赏赔贤卖赋质账购赠赞赶趋跃车轨轩转轮轻载较辅辆辉辈轿输轰办边遥邓郑邻医释钓铃钙铀钩银铜铭销铺锋锄钢录锤锭钱锦错锅键锻锹锁镇镜铁铸鉴钥长门闭开闲间阁阔队阳阴阵阶际陆险杂双鸡离难云电灵静顶顷项顺须顽顿领头颜类风飞饭饮饲饼馆马驾驴骑骗骚斗松胡鱼鱿鲑鲤鲨鲶鳗鳟鲟鸟凤鸭鹅鹰麦黄点齐齿龙龟体发须郁盐面汤饺烩熏萝卜苹姜藓芜纤维矿宝钻远种树叶炉炼绳饰链环残页图场镇岛湾泽层区传奖励杀敌数据应该够卖买获采网灯浆壳块")[i]]));
 function switchNameV47(name,file=""){
   const map=window.SDVSwitchNamesV47||{};
-  const direct=map[String(file||"")]||map[String(name||"")];
+  const fileKey=String(file||""),nameKey=String(name||"");
+  const direct=map[fileKey]||map[nameKey]||map[fileKey.toLowerCase()]||map[nameKey.toLowerCase()];
   if(direct)return direct;
   return String(name||"").split("").map(ch=>SWITCH_T2S_V47[ch]||ch).join("");
 }
