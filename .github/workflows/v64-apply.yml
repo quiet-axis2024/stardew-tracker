@@ -1,0 +1,143 @@
+name: Apply v64 lookup and collection fixes
+
+on:
+  push:
+    branches: [v64-lookup-ui-fixes]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v64-lookup-ui-fixes
+          fetch-depth: 0
+
+      - name: Apply v64 fixes
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess, re
+
+          p=Path('app.jsx')
+          s=p.read_text(encoding='utf-8')
+
+          # v62 accidentally deleted the item-lookup renderer while keeping its callers.
+          if 'const renderItemUsageV42 = () => {' not in s:
+              old=subprocess.check_output(['git','show','ab826db642b9af5daea64b05d02cb5d91f932dd2:app.jsx'], text=True)
+              a=old.index('  const renderItemUsageV42 = () => {')
+              b=old.index('  const renderFishTodayV4 = () => {', a)
+              block=old[a:b]
+              marker='  const renderFishTodayV4 = () => {'
+              if s.count(marker)!=1:
+                  raise SystemExit('renderFishTodayV4 marker mismatch')
+              s=s.replace(marker, block+marker, 1)
+          if s.count('const renderItemUsageV42 = () => {')!=1:
+              raise SystemExit('renderItemUsageV42 restore failed')
+          old_detail='{selected&&<Card style={{marginTop:7,padding:9,background:"#FFF8E9"}}>'
+          new_detail='{selected&&<Card id="lookup-detail-v62" style={{marginTop:7,padding:9,background:"#FFF8E9",scrollMarginTop:"calc(104px + env(safe-area-inset-top))"}}>'
+          if old_detail in s:
+              s=s.replace(old_detail,new_detail,1)
+
+          # Restore collection achievement tab to the game's original achievements star icon.
+          old='["achievements","成就","Stardrop"]'
+          if old not in s: raise SystemExit('achievement collection icon marker missing')
+          s=s.replace(old,'["achievements","成就","Achievements Icon"]',1)
+
+          # The wiki image filename is "Warp Totem Farm.png" (no colon).
+          old='{ id: "overview", name: "總覽", icon: "🏡", file: "Warp Totem: Farm" }'
+          if old not in s: raise SystemExit('overview icon marker missing')
+          s=s.replace(old,'{ id: "overview", name: "總覽", icon: "🏡", file: "Warp Totem Farm" }',1)
+
+          # Keep custom first/second-level Data buttons visually distinct on the same screen.
+          reps=[
+            ('<DataTab id="skills" label="角色" file="Stardrop"/>','<DataTab id="skills" label="角色" file="Stardew Hero Trophy"/>'),
+            ('<SkillTab id="special" label="特殊能力" file="Galaxy Soul"/>','<SkillTab id="special" label="特殊能力" file="Magic Rock Candy"/>'),
+            ('<GameIcon file="Book Of Stars" size={28}/>書籍能力','<GameIcon file="Book of Mysteries" size={28}/>書籍能力'),
+          ]
+          for old,new in reps:
+              if old not in s: raise SystemExit(f'icon marker missing: {old}')
+              s=s.replace(old,new,1)
+          s=s.replace('<SectionTitle icon="game:Galaxy Soul">特殊物品與能力</SectionTitle>','<SectionTitle icon="game:Magic Rock Candy">特殊物品與能力</SectionTitle>')
+
+          # Selection state for Shipping and Achievements simple-info cards.
+          state_marker='  const [itemUsageSelectedV42, setItemUsageSelectedV42] = useState("");\n'
+          if state_marker not in s: raise SystemExit('lookup state marker missing')
+          s=s.replace(state_marker,state_marker+'  const [selectedShippingV64, setSelectedShippingV64] = useState("");\n  const [selectedAchievementV64, setSelectedAchievementV64] = useState("");\n',1)
+
+          # Preserve simple-card selections through cross-page Back navigation.
+          old_snapshot='itemUsageQueryV42,itemUsageSelectedV42,scrollY:Number(window.scrollY||0)'
+          new_snapshot='itemUsageQueryV42,itemUsageSelectedV42,selectedShippingV64,selectedAchievementV64,scrollY:Number(window.scrollY||0)'
+          if old_snapshot not in s: raise SystemExit('nav snapshot marker missing')
+          s=s.replace(old_snapshot,new_snapshot,1)
+          old_restore='setItemUsageQueryV42(prev.itemUsageQueryV42||""); setItemUsageSelectedV42(prev.itemUsageSelectedV42||"");'
+          new_restore=old_restore+' setSelectedShippingV64(prev.selectedShippingV64||""); setSelectedAchievementV64(prev.selectedAchievementV64||"");'
+          if old_restore not in s: raise SystemExit('nav restore marker missing')
+          s=s.replace(old_restore,new_restore,1)
+
+          # Shipping: card tap selects info; the top-right dot/check records shipped state.
+          a=s.index('  const renderShippingV30 = () => {')
+          b=s.index('  const renderCollection = () => {',a)
+          shipping='''  const renderShippingV30 = () => {\n    const shipped=data.shippingV30||[];\n    const toggle=file=>update({shippingV30:shipped.includes(file)?shipped.filter(x=>x!==file):[...shipped,file]});\n    const selectedRow=selectedShippingV64?SHIPPING_ITEMS_V30.find(([file])=>file===selectedShippingV64):null;\n    return <div style={{marginTop:8}}>\n      <Card style={{padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:900,color:C.muted,marginBottom:5}}><span>出貨圖鑑</span><span>{shipped.length}/{SHIPPING_ITEMS_V30.length}</span></div><ProgressBar value={shipped.length} max={SHIPPING_ITEMS_V30.length}/>{!shipped.length&&Number(extrasState.shippedCount||0)>0&&<div style={{fontSize:8.5,color:C.muted,marginTop:5}}>舊版只記過「{extrasState.shippedCount} 項」總數，無法知道是哪幾項；請照遊戲圖鑑重新點亮一次。</div>}</Card>\n      {selectedRow&&<SimpleItemInfoV62 name={selectedRow[1]} file={selectedRow[0]} info="出貨圖鑑物品；右上角圓點記錄是否已出貨。"/>}\n      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:8}}>{SHIPPING_ITEMS_V30.map(([file,name])=>{const on=shipped.includes(file),selected=selectedShippingV64===file;return <button key={file} onClick={()=>setSelectedShippingV64(file)} style={{position:"relative",border:`1.5px solid ${selected?C.orange:on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:8,padding:"5px 2px",minHeight:70,cursor:"pointer"}}><GameIcon file={file} size={34} alt={name}/><div style={{fontSize:7.7,fontWeight:900,color:on?C.green:C.ink,lineHeight:1.05,marginTop:2}}>{name}</div><span onClick={e=>{e.stopPropagation();toggle(file)}} style={{position:"absolute",right:2,top:1,fontSize:11,color:on?C.green:"#C9B99A",fontWeight:950,padding:2}}>{on?"✓":"○"}</span></button>})}</div>\n    </div>;\n  };\n\n'''
+          s=s[:a]+shipping+s[b:]
+
+          # Achievements: card tap selects description; dot/check only changes manual progress.
+          pattern=r'  const renderAchievements = \(\) => \{.*?\n  \};\n\n(?=  const prepSetV3)'
+          achievement='''  const renderAchievements = () => {\n    const count=ACHIEVEMENTS_V2.filter(a=>achievementChecked(a.id)).length;\n    const selected=selectedAchievementV64?ACHIEVEMENTS_V2.find(a=>a.id===selectedAchievementV64):null;\n    return <div style={{marginTop:8}}>\n      <Card style={{padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:900,color:C.muted,marginBottom:5}}><span>成就</span><span>{count}/{ACHIEVEMENTS_V2.length}</span></div><ProgressBar value={count} max={ACHIEVEMENTS_V2.length}/></Card>\n      {selected&&<Card style={{marginTop:7,padding:9,background:"#FFF8E2",border:`1.5px solid ${C.orange}`}}><div style={{display:"grid",gridTemplateColumns:"46px minmax(0,1fr)",gap:8,alignItems:"center"}}><GameIcon file="Achievement Star 01" size={42}/><div style={{minWidth:0}}><b style={{display:"block",fontSize:13,color:C.darkBrown}}>{selected.name}</b><span style={{display:"block",fontSize:9.2,color:C.muted,lineHeight:1.4,marginTop:2}}>{selected.desc}</span>{derivedAchievement(selected.id)&&<span style={{display:"block",fontSize:7.5,color:C.green,fontWeight:950,marginTop:3}}>此項依手帳進度自動判定</span>}</div></div></Card>}\n      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:8}}>{ACHIEVEMENTS_V2.map(a=>{const auto=derivedAchievement(a.id),on=achievementChecked(a.id),selectedNow=selectedAchievementV64===a.id;return <button key={a.id} onClick={()=>setSelectedAchievementV64(a.id)} title={a.desc} style={{position:"relative",border:`2px solid ${selectedNow?C.orange:on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:9,padding:"6px 3px",minHeight:82,cursor:"pointer",opacity:auto?.9:1}}><GameIcon file="Achievement Star 01" size={35}/><div style={{fontSize:8.7,fontWeight:900,color:on?C.green:C.ink,lineHeight:1.08,marginTop:2}}>{a.name}</div><span onClick={e=>{e.stopPropagation();if(!auto)toggleAchievement(a.id)}} style={{position:"absolute",right:2,top:2,fontSize:12,color:on?C.green:"#C9B99A",fontWeight:950,padding:2,cursor:auto?"default":"pointer"}}>{on?"✓":"○"}</span>{auto&&<span style={{position:"absolute",left:2,top:2,fontSize:5.8,color:C.green,fontWeight:950}}>自動</span>}</button>})}</div>\n    </div>;\n  };\n\n'''
+          s,n=re.subn(pattern,achievement,s,count=1,flags=re.S)
+          if n!=1: raise SystemExit(f'achievement renderer replacement count={n}')
+
+          p.write_text(s,encoding='utf-8')
+
+          # Bump runtime/PWA cache so iOS home-screen app doesn't retain broken v63 assets.
+          p=Path('index.html'); h=p.read_text(encoding='utf-8')
+          if '?v=63' not in h: raise SystemExit('index v63 marker missing')
+          h=h.replace('?v=63','?v=64').replace('<!-- deploy-v63 -->','<!-- deploy-v64 -->')
+          p.write_text(h,encoding='utf-8')
+          p=Path('sw.js'); w=p.read_text(encoding='utf-8')
+          if 'stardew-tracker-v63' not in w: raise SystemExit('sw v63 marker missing')
+          p.write_text(w.replace('stardew-tracker-v63','stardew-tracker-v64'),encoding='utf-8')
+          PY
+
+      - name: Validate v64
+        run: |
+          set -euo pipefail
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8
+          mkdir -p .verify
+          cat > .verify/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> .verify/entry.jsx
+          ./node_modules/.bin/esbuild .verify/entry.jsx --bundle --format=iife --target=safari15 --outfile=.verify/app.js
+          node --check sw.js
+          test "$(grep -c 'const renderItemUsageV42 = () => {' app.jsx)" -eq 1
+          grep -q 'id="lookup-detail-v62"' app.jsx
+          grep -q '\["achievements","成就","Achievements Icon"\]' app.jsx
+          grep -q 'file: "Warp Totem Farm"' app.jsx
+          grep -q 'label="角色" file="Stardew Hero Trophy"' app.jsx
+          grep -q 'label="特殊能力" file="Magic Rock Candy"' app.jsx
+          grep -q 'file="Galaxy Soul" size={28}.*特殊物品' app.jsx
+          grep -q 'file="Book of Mysteries" size={28}.*書籍能力' app.jsx
+          grep -q 'selectedShippingV64' app.jsx
+          grep -q 'selectedAchievementV64' app.jsx
+          grep -q '?v=64' index.html
+          grep -q 'stardew-tracker-v64' sw.js
+
+      - name: Commit v64
+        run: |
+          set -euo pipefail
+          rm -rf .verify node_modules package-lock.json package.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx index.html sw.js
+          git rm -f .github/workflows/v64-apply.yml
+          git commit -m 'v64: fix lookup crash and collection info cards'
+          git push origin HEAD:v64-lookup-ui-fixes
