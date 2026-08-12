@@ -1,0 +1,46 @@
+name: Apply v61 repo nav OCR
+on:
+  push:
+    branches: [v61-repo-nav-ocr]
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v61-repo-nav-ocr
+          fetch-depth: 0
+      - name: Apply patch
+        run: python3 .github/scripts/v61_repo_nav_ocr.py
+      - name: Validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save eslint@8 react@18 react-dom@18 esbuild@0.25.8 >/dev/null 2>&1
+          ./node_modules/.bin/eslint app.jsx --no-eslintrc --env browser,es2021 --parser-options '{"ecmaVersion":2022,"sourceType":"script","ecmaFeatures":{"jsx":true}}' --global React --global ReactDOM --rule 'no-undef:error'
+          grep -q 'file: "Stardrop"' app.jsx
+          grep -q 'file: "Book Of Stars"' app.jsx
+          grep -q 'file: "Bouquet"' app.jsx
+          grep -q 'patch.name = farmerName' app.jsx
+          grep -q 'patch.farm = farmName' app.jsx
+          grep -q 'farmerEngResultV61' app.jsx
+          grep -q 'farmZhResultV61' app.jsx
+          grep -q 'app.js?v=61' index.html
+          grep -q 'stardew-tracker-v61' sw.js
+          mkdir -p build
+          printf '%s\n' "import React from 'react';" "import { createRoot } from 'react-dom/client';" "window.React = React;" "window.ReactDOM = { createRoot };" > build/entry.jsx
+          cat app.jsx >> build/entry.jsx
+          ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=/tmp/v61-app.js
+          test -s /tmp/v61-app.js
+      - name: Commit product changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx index.html sw.js
+          git commit -m 'v61: unify nav icons and restore editable name OCR'
+          git push origin HEAD:v61-repo-nav-ocr
