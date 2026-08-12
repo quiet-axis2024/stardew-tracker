@@ -1,0 +1,35 @@
+name: Audit v66 lookup data
+
+on:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect lookup rows
+        run: |
+          node <<'NODE'
+          global.window={};
+          require('./lookup-data-v46.js');
+          require('./switch-names-v47.js');
+          const rows=window.SDVLookupV46?.items||[];
+          const names=window.SDVSwitchNamesV47||{};
+          const numeric=x=>/^\d+$/.test(String(x||'').trim());
+          const suspicious=rows.filter(r=>numeric(r.name)||numeric(r.zh)||numeric(r.file)||!String(r.name||'').trim());
+          console.log('TOTAL',rows.length,'SUSPICIOUS',suspicious.length);
+          console.log('SUSPICIOUS ROWS');
+          suspicious.slice(0,200).forEach(r=>console.log(JSON.stringify(r)));
+          const kinds={}; for(const r of rows)(kinds[r.kind]??=[]).push(r);
+          console.log('KIND COUNTS',Object.fromEntries(Object.entries(kinds).map(([k,v])=>[k,v.length])));
+          console.log('BIG ROWS');
+          (kinds.big||[]).slice(0,300).forEach(r=>console.log(JSON.stringify({name:r.name,zh:r.zh,file:r.file,id:r.id,source:r.sources?.[0],mapped:names[r.name]||names[r.file]||''})));
+          console.log('CRAFT SOURCE SUMMARY');
+          const craft=kinds.craft||[];
+          const actual=craft.filter(r=>(r.sources||[]).some(x=>String(x).startsWith('製作：')));
+          const notActual=craft.filter(r=>!(r.sources||[]).some(x=>String(x).startsWith('製作：')));
+          console.log('craft',craft.length,'actualCraftSource',actual.length,'notActual',notActual.length);
+          console.log('CRAFT ACTUAL sample'); actual.slice(0,120).forEach(r=>console.log(JSON.stringify({name:r.name,zh:r.zh,file:r.file,id:r.id,sources:r.sources}))); 
+          console.log('CRAFT NOT ACTUAL sample'); notActual.slice(0,80).forEach(r=>console.log(JSON.stringify({name:r.name,zh:r.zh,file:r.file,id:r.id,sources:r.sources}))); 
+          NODE
