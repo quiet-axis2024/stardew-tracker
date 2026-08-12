@@ -2463,6 +2463,9 @@ function StardewTracker() {
     catch { window.prompt("複製 App 網址",url); }
   };
   const reconnectCloudV49 = async () => {
+    try {
+      if(window.SDVCloud?.migrateFromLegacy?.()) return;
+    } catch(e) { console.warn("舊網址自動搬移啟動失敗",e); }
     const raw=window.prompt("貼上原本的手帳管理連結（包含 manage 與 sharekey）");
     if(!raw)return;
     try { window.SDVCloud?.connectFromManagementUrl?.(raw); window.location.reload(); }
@@ -2580,7 +2583,7 @@ function StardewTracker() {
       <div style={{fontSize:12,color:C.ink,lineHeight:1.55,marginBottom:9}}><b>分享的是完整手帳，不是純文字。</b>朋友打開唯讀連結後，會直接看到你目前雲端保存的日期、農場、社區中心、動物、魚塘、社交、收藏、烹飪等記錄；你之後更新，他重新整理也會看到新版。</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><button onClick={copyTrackerView} style={{border:`2px solid ${C.green}`,background:C.lightGreen,color:C.green,borderRadius:9,padding:10,fontWeight:950}}>複製連結</button><button onClick={shareTrackerView} style={{border:`2px solid ${C.orange}`,background:"#FFE4C5",color:C.brown,borderRadius:9,padding:10,fontWeight:950}}>分享手帳…</button></div>
       <div style={{fontSize:10,color:C.muted,marginTop:7}}>此連結為唯讀，朋友無法改動你的雲端存檔。</div>
-      {!trackerShareUrl()&&<div style={{marginTop:8,padding:"8px 9px",border:`1px dashed ${C.orange}`,borderRadius:8,background:"#FFF4D8"}}><div style={{fontSize:9.5,color:C.brown,lineHeight:1.45}}>主畫面 App 尚未帶入雲端連線時，可貼上原本的管理連結重新連接一次。</div><button onClick={reconnectCloudV49} style={{width:"100%",marginTop:6,border:`1.5px solid ${C.orange}`,background:"#FFE4C5",color:C.brown,borderRadius:8,padding:7,fontWeight:950,fontSize:10}}>重新連接雲端</button></div>}
+      {!trackerShareUrl()&&<div style={{marginTop:8,padding:"8px 9px",border:`1px dashed ${C.orange}`,borderRadius:8,background:"#FFF4D8"}}><div style={{fontSize:9.5,color:C.brown,lineHeight:1.45}}>新網址第一次使用時，按一下就會從舊 GitHub 網址帶回這台裝置原本的雲端手帳；不需要自己找管理連結。</div><button onClick={reconnectCloudV49} style={{width:"100%",marginTop:6,border:`1.5px solid ${C.orange}`,background:"#FFE4C5",color:C.brown,borderRadius:8,padding:7,fontWeight:950,fontSize:10}}>搬移／重新連接原本手帳</button></div>}
     </Card>
     <SectionTitle icon="game:Journal Scrap">純文字進度</SectionTitle>
     <Card>
