@@ -13,7 +13,7 @@ keys=re.findall(r'"([^"]+)"\s*:',m.group(1)) if m else []
 dup=sorted({k for k in keys if keys.count(k)>1})
 if dup: fail(f'duplicate aliases: {dup}')
 
-for needle in ['const SAVE_SCHEMA_VERSION_V67 = 1;','schemaVersion: SAVE_SCHEMA_VERSION_V67','function normalizeSaveV67(input)','setData(normalizeSaveV67(parsed))','normalizeSaveV67(JSON.parse(raw))']:
+for needle in ['const SAVE_SCHEMA_VERSION_V68 = 2;','schemaVersion: SAVE_SCHEMA_VERSION_V68','function normalizeSaveV68(input)','setData(normalizeSaveV68(parsed))','normalizeSaveV68(JSON.parse(raw))']:
     if needle not in t: fail('save schema invariant missing: '+needle)
 if 'requestIdleCallback(run' in t or 'setTimeout(run,2800)' in t: fail('lookup data is still auto-prefetched from Overview')
 if 'window.SDVLocalGameFilesV67?.[name] || WIKI_FILE(name)' not in t: fail('local game asset fallback missing')
@@ -21,9 +21,9 @@ if 'shirt:"Shirt003",pants:"Farmer Pants"' not in t: fail('wardrobe neutral prev
 
 idx=Path('index.html').read_text()
 for src in ['wardrobe-data-v34.js','lookup-data-v46.js','lookup-extra-v49.js']:
-    if f'<script src="./{src}?v=67"' in idx: fail('heavy data still parser-blocking: '+src)
+    if f'<script src="./{src}?v=68"' in idx: fail('heavy data still parser-blocking: '+src)
 for src in ['cloud.js','social-data-v50.js','machine-data-v51.js','switch-names-v47.js']:
-    if f'<script src="./{src}?v=67"' not in idx: fail('required eager script missing: '+src)
+    if f'<script src="./{src}?v=68"' not in idx: fail('required eager script missing: '+src)
 
 for p in ['docs/ROADMAP.md','docs/DATA_SOURCES.md']:
     if not Path(p).is_file(): fail('required project doc missing: '+p)
