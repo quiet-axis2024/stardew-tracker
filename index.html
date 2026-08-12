@@ -20,11 +20,10 @@
 </head>
 <body>
   <div id="root"><div id="boot-status">🌱 載入星露谷手帳…</div></div>
-  <script src="./cloud.js?v=44"></script>
-  <script src="./wardrobe-data-v34.js?v=44"></script>
-  <script src="./farmer-preview-v33.js?v=44"></script>
-  <script src="./animal-preview-v33.js?v=44"></script>
-  <script src="./item-prices-v44.js?v=44"></script>
+  <script src="./cloud.js?v=45"></script>
+  <script src="./wardrobe-data-v34.js?v=45"></script>
+  <script src="./farmer-preview-v33.js?v=45"></script>
+  <script src="./animal-preview-v33.js?v=45"></script>
   <script>
     (async()=>{
       const root=document.getElementById('root');
@@ -48,7 +47,7 @@
       try{ if(window.SDVCloud) await window.SDVCloud.init(); }
       catch(error){ console.warn('Cloud init failed, falling back to local mode:',error); }
       const script=document.createElement('script');
-      script.src='./app.js?v=44';
+      script.src='./app.js?v=45';
       script.onload=()=>{
         window.__SDV_APP_LOADED__=true;
         setTimeout(()=>{
@@ -67,4 +66,4 @@
   </script>
 </body>
 </html>
-<!-- deploy-v44 -->
+<!-- deploy-v45 -->

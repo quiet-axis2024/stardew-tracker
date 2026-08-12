@@ -2039,20 +2039,20 @@ function StardewTracker() {
       const name=cleanName(rawName); if(!name||/^\d[\d,]*g$/i.test(name))return null;
       const resolved=file||itemFileZhV26(name)||name;
       const key=String(resolved||name);
-      if(!index.has(key))index.set(key,{key,name,file:resolved,aliases:new Set(),kinds:new Set(),bundles:[],remix:[],cookNeed:0,cookGroups:new Set(),shippable:false});
+      if(!index.has(key))index.set(key,{key,name,file:resolved,aliases:new Set(),kinds:new Set(),sources:new Set(),bundles:[],remix:[],cookNeed:0,cookGroups:new Set(),shippable:false});
       const it=index.get(key);it.aliases.add(name);it.kinds.add(kind);
       if(kind!=="shipping"&&it.kinds.size<=2)it.name=name;
       return it;
     };
     SHIPPING_ITEMS_V30.forEach(([file,name])=>{const it=ensure(name,file,"shipping");if(it)it.shippable=true});
-    COLLECTIONS.fish.items.forEach((name,i)=>{const it=ensure(name,FISH_ICON_FILES[i],"fish");if(it)it.fishIndex=i});
-    COLLECTIONS.artifact.items.forEach((name,i)=>ensure(name,ARTIFACT_ICON_FILES[i],"artifact"));
-    COLLECTIONS.mineral.items.forEach((name,i)=>ensure(name,MINERAL_ICON_FILES[i],"mineral"));
-    COOKING_DISHES_V3.forEach(([,name,file])=>ensure(name,file,"cooking"));
+    COLLECTIONS.fish.items.forEach((name,i)=>{const it=ensure(name,FISH_ICON_FILES[i],"fish");if(it){it.fishIndex=i;if(FISH_INFO[i])it.sources.add(FISH_INFO[i])}});
+    COLLECTIONS.artifact.items.forEach((name,i)=>{const it=ensure(name,ARTIFACT_ICON_FILES[i],"artifact");if(it&&ARTIFACT_INFO[i])it.sources.add(ARTIFACT_INFO[i])});
+    COLLECTIONS.mineral.items.forEach((name,i)=>{const it=ensure(name,MINERAL_ICON_FILES[i],"mineral");if(it&&MINERAL_INFO[i])it.sources.add(MINERAL_INFO[i])});
+    COOKING_DISHES_V3.forEach(([,name,file])=>{const it=ensure(name,file,"cooking");if(it)it.sources.add("烹飪製作")});
     BUNDLE_ROOMS.forEach(room=>room.bundles.forEach(bundle=>bundle.items.forEach(raw=>{const it=ensure(raw,null,"bundle");if(it)it.bundles.push(`${room.name} · ${bundle.name}：${raw}`)})));
     Object.entries(REMIX_EXTRA_ITEMS_V28||{}).forEach(([roomId,items])=>{const room=BUNDLE_ROOMS.find(r=>r.id===roomId);(items||[]).forEach(raw=>{const it=ensure(raw,null,"remix");if(it)it.remix.push(`${room?.name||roomId}的混合收集包可能需要：${raw}`)})});
     COOKING_PREP_GROUPS_V3.forEach(group=>group.items.forEach(([,name,file,need])=>{const it=ensure(name,file,"ingredient");if(it){it.cookNeed+=Number(need||0);it.cookGroups.add(group.name)}}));
-    (MINE_BANDS_V28||[]).forEach(group=>(group.items||[]).forEach(([file,name])=>ensure(name,file,"mine")));
+    (MINE_BANDS_V28||[]).forEach(group=>(group.items||[]).forEach(([file,name])=>{const it=ensure(name,file,"mine");if(it)it.sources.add(`礦井 ${group.range} 層${group.note?` · ${group.note}`:""}`)}));
 
     // v43：物品搜尋統一支援繁中／簡中／英文。
     // 同一個英文素材名在既有中英對照表中的所有繁簡名稱，都自動加入 alias。
@@ -2090,14 +2090,23 @@ function StardewTracker() {
     const tailoring=selected?[...(wardrobeData.shirts||[]),...(wardrobeData.pants||[])].filter(x=>{const hay=`${x.recipe||""} ${x.sourceZh||""} ${x.source||""}`.toLowerCase();return [selected.name,selected.file,...selected.aliases].some(v=>v&&hay.includes(String(v).toLowerCase()))}).slice(0,6):[];
     const museum=Boolean(selected&&(selected.kinds.has("artifact")||selected.kinds.has("mineral")));
     const shipped=Boolean(selected?.shippable&&(data.shippingV30||[]).includes(selected.file));
-    const priceDbV44=window.SDVItemPricesV44||{};
-    const priceAliasV44=selected?[selected.file,...selected.aliases].find(v=>v&&Object.prototype.hasOwnProperty.call(priceDbV44,String(v))):null;
-    const baseSellPriceV44=priceAliasV44!=null?Number(priceDbV44[String(priceAliasV44)]):null;
     const fixedUses=selected?(selected.bundles.length+selected.remix.length+selected.cookNeed+tailoring.length+(museum?1:0)+(usageSpecial?.uses?.length||0)):0;
-    const mustKeepV44=Boolean(selected&&(usageSpecial?.keep||museum||(selected.shippable&&!shipped)||fixedUses));
-    const recommendActionV44=!selected?"":mustKeepV44?"留":((baseSellPriceV44!=null&&baseSellPriceV44>0)||selected.kinds.has("fish")||selected.kinds.has("cooking"))?"賣":"留";
-    const recommendReasonV44=!selected?"":usageSpecial?.keep||(museum?"第一次拿到先留 1 個給博物館。":selected.shippable&&!shipped?"先留 1 個完成出貨圖鑑，再處理多餘的。":fixedUses?"有收集包／料理／裁縫等固定用途，先留足需求。":recommendActionV44==="賣"?"目前沒有偵測到固定需求，可賣掉換錢。":"用途或售價資料不足，先留較安全。" );
-    const sellPriceTextV44=baseSellPriceV44==null?"未整理":baseSellPriceV44>0?`${baseSellPriceV44.toLocaleString()}g`:"0g";
+    const mustKeepV45=Boolean(selected&&(usageSpecial?.keep||museum||fixedUses));
+    const recommendActionV45=!selected?"":mustKeepV45?"留":"賣";
+    const sourceFallbackV45=()=>{
+      if(!selected)return "";
+      const known=[...selected.sources].filter(Boolean);
+      if(known.length)return known.slice(0,3).join("；");
+      const hay=`${selected.name} ${selected.file}`;
+      if(/Egg|Milk|Wool|Duck Feather|Rabbit's Foot|Truffle|雞蛋|牛奶|羊奶|羊毛|鴨毛|兔子的腳|松露/i.test(hay))return "飼養動物取得";
+      if(/Mayonnaise|Cheese|Oil|Jelly|Wine|Juice|Beer|Pale Ale|Mead|Pickles|Cloth|Caviar|Aged Roe|Smoked Fish|Dried|Green Tea|蛋黃醬|奶酪|油|果醬|果酒|果汁|啤酒|蜂蜜酒|醃菜|布料|魚子醬|陳年魚籽|燻魚|果乾|蘑菇乾|綠茶/i.test(hay))return "加工設備製作";
+      if(/Ore|Bar|Coal|Quartz|Stone|Geode|Crystal|礦|錠|煤|石英|晶球|水晶/i.test(hay))return "採礦／晶球／冶煉等";
+      if(/Wood|Hardwood|Sap|Fiber|Moss|木材|硬木|樹液|纖維|苔蘚/i.test(hay))return "砍樹／野外採集";
+      if(/Seed|種子/i.test(hay))return "商店、採集或相關解鎖取得";
+      if(selected.shippable)return "農作、採集、養殖或加工取得；詳細來源可看 Wiki";
+      return "取得方式較多；點 Wiki 看完整來源";
+    };
+    const sourceTextV45=sourceFallbackV45();
     const usageRowsV44=[];
     if(selected){
       (usageSpecial?.uses||[]).forEach(u=>usageRowsV44.push(["⭐",u]));
@@ -2106,7 +2115,7 @@ function StardewTracker() {
       selected.remix.forEach(u=>usageRowsV44.push(["📦",u]));
       if(selected.cookNeed)usageRowsV44.push(["🍳",`料理備料：目前手帳整理的全料理最低備料共需要 ${selected.cookNeed} 個。`]);
       tailoring.forEach(x=>usageRowsV44.push(["🧵",`裁縫：${x.name||"服飾"}${x.recipe?`（${x.recipe}）`:""}`]));
-      if(selected.shippable)usageRowsV44.push(["🚚",`出貨圖鑑：可出貨${shipped?"，目前已點亮":"，目前尚未點亮"}。`]);
+      if(selected.shippable)usageRowsV44.push(["🚚",`出貨圖鑑：${shipped?"已點亮":"賣出 1 個即可點亮"}。`]);
       if(!usageRowsV44.length)usageRowsV44.push(["・","目前手帳沒有偵測到固定用途。"]);
     }
     const tag=(text,bg)=> <span style={{fontSize:7.2,fontWeight:900,padding:"2px 5px",borderRadius:8,background:bg,color:C.brown,whiteSpace:"nowrap"}}>{text}</span>;
@@ -2118,9 +2127,9 @@ function StardewTracker() {
         <div style={{display:"flex",alignItems:"center",gap:8}}><GameIcon file={selected.file} size={44}/><div style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:14,color:C.darkBrown}}>{selected.name}</b><div style={{display:"flex",gap:3,flexWrap:"wrap",marginTop:4}}>{resultTags(selected).map(([t,b])=><span key={t}>{tag(t,b)}</span>)}</div></div><WikiBtn name={selected.name}/></div>
         <div style={{fontSize:12,fontWeight:950,color:C.darkBrown,marginTop:9}}>用途</div>
         <div style={{display:"grid",gap:5,marginTop:5}}>{usageRowsV44.map(([icon,text],i)=><div key={i} style={{display:"grid",gridTemplateColumns:"18px 1fr",gap:4,alignItems:"start",fontSize:9.4,color:C.ink,lineHeight:1.45}}><span>{icon}</span><span>{text}</span></div>)}</div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:9,paddingTop:7,borderTop:`1px dashed ${C.line}`}}>
-          <div style={{minWidth:0}}><span style={{fontSize:7.4,color:C.muted,fontWeight:900}}>建議</span><div style={{fontSize:11,fontWeight:950,color:recommendActionV44==="留"?C.green:C.orange,marginTop:1}}>{recommendActionV44}</div><div style={{fontSize:7.5,color:C.muted,lineHeight:1.3,marginTop:1}}>{recommendReasonV44}</div></div>
-          <div style={{minWidth:0}}><span style={{fontSize:7.4,color:C.muted,fontWeight:900}}>賣價</span><div style={{fontSize:11,fontWeight:950,color:C.brown,marginTop:1}}>{sellPriceTextV44}</div><div style={{fontSize:7.5,color:C.muted,lineHeight:1.3,marginTop:1}}>基礎賣價；品質與職業加成另計。</div></div>
+        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 58px",gap:8,alignItems:"stretch",marginTop:9,paddingTop:7,borderTop:`1px dashed ${C.line}`}}>
+          <div style={{minWidth:0}}><span style={{fontSize:7.4,color:C.muted,fontWeight:900}}>來源</span><div style={{fontSize:8.5,color:C.ink,lineHeight:1.35,marginTop:2}}>{sourceTextV45}</div></div>
+          <div style={{minWidth:0,textAlign:"center",borderLeft:`1px solid ${C.line}`,paddingLeft:7}}><span style={{fontSize:7.4,color:C.muted,fontWeight:900}}>建議</span><div style={{fontSize:18,fontWeight:950,color:recommendActionV45==="留"?C.green:C.orange,lineHeight:1.15,marginTop:3}}>{recommendActionV45}</div></div>
         </div>
       </Card>}
       <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:5,marginTop:6}}>{results.map(it=>{const on=selected?.key===it.key;return <button key={it.key} onClick={()=>setItemUsageSelectedV42(it.key)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFF0D2":C.paper,borderRadius:9,padding:"6px 5px",display:"grid",gridTemplateColumns:"34px 1fr",gap:5,alignItems:"center",textAlign:"left",minWidth:0}}><GameIcon file={it.file} size={32}/><span style={{minWidth:0}}><b style={{display:"block",fontSize:8.8,color:C.ink,lineHeight:1.12,overflow:"hidden",textOverflow:"ellipsis"}}>{it.name}</b><span style={{display:"flex",gap:2,flexWrap:"wrap",marginTop:3}}>{resultTags(it).map(([t,b])=><span key={t}>{tag(t,b)}</span>)}</span></span></button>})}</div>
