@@ -15,6 +15,29 @@ jobs:
           fetch-depth: 0
       - name: Apply v54 patch
         run: python3 .github/scripts/v54_patch.py
+      - name: Keep lookup normalizer in shared scope
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app.jsx')
+          s=p.read_text(encoding='utf-8')
+          old='''  const lookupRowV54 = raw => {
+    const needle = normalizeItemSearchV43(raw);
+    if(!needle) return null;
+    return (window.SDVLookupV46?.items || []).find(row => [row?.name,row?.zh,row?.file,...(row?.aliases || [])].filter(Boolean).some(v => normalizeItemSearchV43(v) === needle)) || null;
+  };
+'''
+          new='''  const normalizeLookupV54 = value => String(value||"").normalize("NFKC").toLowerCase().replace(/[\\s·・_\u0027’\\-]+/g,"");
+  const lookupRowV54 = raw => {
+    const needle = normalizeLookupV54(raw);
+    if(!needle) return null;
+    return (window.SDVLookupV46?.items || []).find(row => [row?.name,row?.zh,row?.file,switchNameV47(row?.name,row?.file),...(row?.aliases || [])].filter(Boolean).some(v => normalizeLookupV54(v) === needle)) || null;
+  };
+'''
+          if old not in s: raise RuntimeError('v54 lookup helper anchor missing')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
       - name: Install validation tools
         run: npm install --no-save eslint@8 react@18 react-dom@18 esbuild@0.25.8 >/dev/null 2>&1
       - name: Audit undefined runtime references
