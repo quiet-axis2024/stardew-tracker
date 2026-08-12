@@ -52,9 +52,8 @@ jobs:
           assert '法師地下室可改：體型' not in a
           assert '外觀款式</b>' not in a
           assert 'activeDyeKindV39&&<Card' in a
-          assert 'slot==="boots")&&<div' not in a
-          assert 'slot==="boots")&&<div' not in a
-          assert 'slot==="boots")&&' not in a or '!(wardrobeTargetV30==="player"&&slot==="boots")' in a
+          assert '!(wardrobeTargetV30==="player"&&slot==="boots")' in a
+          assert 'wardrobeFilterSafeV39=wardrobeTargetV30==="player"&&wardrobeCategoryV30==="boots"?"all"' in a
           assert 'summaryRow("帽子",hatMeta,null,"Cowboy Hat")' in a
           print('v39 compact wardrobe checks ok')
           PY
