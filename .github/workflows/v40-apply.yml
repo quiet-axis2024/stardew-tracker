@@ -1,69 +1,10 @@
-name: Apply v40 game HSV controls
+name: v40 temporary workflow cleanup
 
 on:
-  push:
-    branches: [v40-game-hsv-color-controls]
-
-permissions:
-  contents: write
+  workflow_dispatch:
 
 jobs:
-  apply:
-    if: github.actor != 'github-actions[bot]'
+  noop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: v40-game-hsv-color-controls
-          fetch-depth: 0
-      - name: Apply v40 patch
-        run: |
-          set -euo pipefail
-          python3 v40_patch.py
-      - name: Validate v40
-        run: |
-          set -euo pipefail
-          node --check farmer-preview-v33.js
-          node --check animal-preview-v33.js
-          node --check wardrobe-data-v34.js
-          npm install --no-save react@18 react-dom@18 esbuild@0.25.8
-          mkdir -p .verify
-          cat > .verify/entry.jsx <<'EOF'
-          import React from 'react';
-          import { createRoot } from 'react-dom/client';
-          window.React = React;
-          window.ReactDOM = { createRoot };
-          EOF
-          cat app.jsx >> .verify/entry.jsx
-          ./node_modules/.bin/esbuild .verify/entry.jsx --bundle --format=iife --target=safari15 --outfile=.verify/app.js
-          grep -q 'hexToGameHsvV40' app.jsx
-          grep -q 'gameHsvToHexV40' app.jsx
-          grep -q 'hsvEditorV40' app.jsx
-          grep -q 'ColorHSV' app.jsx
-          grep -q '髮色 HSV' app.jsx
-          grep -q '眼睛 HSV' app.jsx
-          grep -q '染色 HSV：' app.jsx
-          grep -q 'H／S／V（色相／飽和度／明度）' app.jsx
-          grep -q 'app.js?v=40' index.html
-          grep -q 'stardew-tracker-v40' sw.js
-          ! grep -q 'rgbEditor(' app.jsx
-          ! grep -q '染色 RGB：' app.jsx
-          python3 - <<'PY'
-          from pathlib import Path
-          a=Path('app.jsx').read_text(encoding='utf-8')
-          assert 'max="100"' in a
-          assert 'h=(h%100)/100*6' in a
-          assert 'activeDyeKindV39&&<Card' in a
-          assert 'summaryRow("上衣",shirtMeta,shirtDyeable?shirtColor:null,"Shirt003","shirt")' in a
-          assert 'summaryRow("下裝",pantsMeta,pantsDyeable?pantsColor:null,"Farmer Pants","pants")' in a
-          print('v40 HSV checks ok')
-          PY
-      - name: Commit v40 code
-        run: |
-          set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add app.jsx index.html sw.js
-          git rm -f v40_patch.py
-          git commit -m 'v40: use Stardew HSV color indices'
-          git push origin HEAD:v40-game-hsv-color-controls
+      - run: echo "v40 patch already applied and validated"
