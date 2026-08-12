@@ -14,7 +14,9 @@ jobs:
           ref: v58-profile-ocr-accuracy
           fetch-depth: 0
       - name: Apply OCR patch
-        run: python3 .github/scripts/v58_profile_ocr.py
+        run: |
+          python3 .github/scripts/v58_profile_ocr.py
+          python3 .github/scripts/v58_fix_debug.py
       - name: Validate runtime and OCR fields
         shell: bash
         run: |
@@ -27,6 +29,7 @@ jobs:
           grep -q 'seasonCrop = makeCrop(img, 0.565, 0.760, 0.060, 0.065, 8, 100)' app.jsx
           grep -q "makeWorkerV58('eng','英文／數字辨識')" app.jsx
           grep -q "makeWorkerV58(\['chi_sim','chi_tra'\],'中文辨識')" app.jsx
+          grep -q 'farmerColor: farmerZhResult.text' app.jsx
           grep -q 'app.js?v=58' index.html
           grep -q 'stardew-tracker-v58' sw.js
           mkdir -p build
