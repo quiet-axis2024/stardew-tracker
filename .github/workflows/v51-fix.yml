@@ -17,17 +17,15 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re, json, urllib.request
+          import json, urllib.request
 
           path=Path('app.jsx')
           s=path.read_text()
 
-          # 1) v50 social crash: use the existing expandedNPC state instead of an undeclared openNpc state.
           if 'openNpc' not in s and 'setOpenNpc' not in s:
               raise SystemExit('expected v50 openNpc references not found')
           s=s.replace('setOpenNpc','setExpandedNPC').replace('openNpc','expandedNPC')
 
-          # 2) Community Center rooms can collapse; inactive route is visibly gray.
           old='const room=BUNDLE_ROOMS.find(r=>r.id===bundleRoom)||BUNDLE_ROOMS[0];'
           if old not in s: raise SystemExit('room marker missing')
           s=s.replace(old, old+'\n    const showRoomV51=Boolean(bundleRoom);',1)
@@ -46,13 +44,11 @@ jobs:
           s=s.replace('<div style={{display:"grid",gap:7,marginTop:7}}>{room.bundles.map', '<div style={{display:showRoomV51?"grid":"none",gap:7,marginTop:7}}>{room.bundles.map',1)
           s=s.replace('<div style={{marginTop:8}}><button onClick={()=>toggleRoom(room.id,!roomDone(room))}', '<div style={{marginTop:8,display:showRoomV51?"block":"none"}}><button onClick={()=>toggleRoom(room.id,!roomDone(room))}',1)
 
-          # 3) Expand farm utility machines.
           old_farm='["sprinkler","灑水器","Sprinkler",[]],["quality_sprinkler","高級灑水器","Quality Sprinkler",[]],["iridium_sprinkler","銥製灑水器","Iridium Sprinkler",[]],["scarecrow","稻草人","Scarecrow",[]],["deluxe_scarecrow","豪華稻草人","Deluxe Scarecrow",[]],["garden_pot","花盆","Garden Pot",[]],["auto_grabber","自動收集器","Auto-Grabber",[]],["auto_petter","自動撫摸機","Auto-Petter",[]],["heater","加熱器","Heater",[]]'
           new_farm='["sprinkler","灑水器","Sprinkler",[]],["quality_sprinkler","高級灑水器","Quality Sprinkler",[]],["iridium_sprinkler","銥製灑水器","Iridium Sprinkler",[]],["scarecrow","稻草人","Scarecrow",[]],["deluxe_scarecrow","豪華稻草人","Deluxe Scarecrow",[]],["garden_pot","花盆","Garden Pot",[]],["auto_grabber","自動收集器","Auto-Grabber",[]],["auto_petter","自動撫摸機","Auto-Petter",[]],["heater","加熱器","Heater",[]],["coffee_maker","咖啡機","Coffee Maker",[["Coffee","咖啡"]]],["farm_computer","農場電腦","Farm Computer",[]],["hopper","料斗","Hopper",[]],["workbench","工作台","Workbench",[]],["mini_shipping","迷你出貨箱","Mini-Shipping Bin",[]]'
           if old_farm not in s: raise SystemExit('farm machine list marker missing')
           s=s.replace(old_farm,new_farm,1)
 
-          # machine recipe/source metadata loaded from local generated snapshot.
           marker='    const machineDefs={'
           s=s.replace(marker,'    const machineMetaV51=window.SDVMachineV51?.byName||{};\n'+marker,1)
 
@@ -67,20 +63,11 @@ jobs:
           new_machine='''const MachineTile=({id,name,file,products})=>{const n=Number(data.machines?.[id]||0),meta=machineMetaV51[file]||{};const lookup=window.SDVLookupV46?.items||[];const ingredientName=x=>{const r=lookup.find(v=>v?.name===x||v?.file===x);return switchNameV47(r?.zh||x,r?.file||x)};const footer=meta.ingredients?.length?<div><div style={{fontSize:6.7,color:C.muted,fontWeight:950,marginBottom:3}}>製作材料</div><div style={{display:"flex",gap:3,justifyContent:"center",flexWrap:"wrap"}}>{meta.ingredients.map((it,i)=><span key={`${file}-${it.name}-${i}`} title={`${ingredientName(it.name)} ×${it.quantity}`} style={{display:"inline-flex",alignItems:"center",gap:1,fontSize:6.4,color:C.brown,fontWeight:900}}><GameIcon file={it.name} size={14}/><span>×{it.quantity}</span></span>)}</div>{meta.sourceZh&&<div style={{fontSize:5.9,color:C.muted,lineHeight:1.2,marginTop:3}}>{meta.sourceZh}</div>}</div>:<div style={{fontSize:6.2,color:C.muted,lineHeight:1.25}}>{meta.obtainZh||"目前不可直接製作／特殊取得"}</div>;return <CountTile name={name} file={file} products={products} footer={footer} count={n} onMinus={()=>setMachineCount(id,n-1)} onPlus={()=>setMachineCount(id,n+1)}/>};'''
           if old_machine not in s: raise SystemExit('MachineTile marker missing')
           s=s.replace(old_machine,new_machine,1)
-
-          # machine tab count is dynamic now.
-          s=s.replace('[["artisan","工匠加工","Keg"],["refining","精煉設備","Furnace"],["farm","農務設備","Iridium Sprinkler"]]', '[["artisan","工匠加工","Keg"],["refining","精煉設備","Furnace"],["farm","農務設備","Iridium Sprinkler"]]',1)
-
           path.write_text(s)
 
-          # Generate local recipe snapshot from fixed public Stardew data, no runtime network dependency.
           url='https://raw.githubusercontent.com/chiefpansancolt/stardew-valley-data/70d5f8d306cc7f8cfeba31a8cbec310483390519/data/crafting.json'
           recipes=json.load(urllib.request.urlopen(url))
-          targets={
-            'Bee House','Cask','Cheese Press','Dehydrator','Fish Smoker','Keg','Loom','Mayonnaise Machine','Oil Maker','Preserves Jar',
-            'Bait Maker','Bone Mill','Charcoal Kiln','Crystalarium','Deluxe Worm Bin','Furnace','Geode Crusher','Heavy Furnace','Heavy Tapper','Lightning Rod','Mushroom Log','Ostrich Incubator','Recycling Machine','Seed Maker','Slime Egg-Press','Slime Incubator','Solar Panel','Tapper','Wood Chipper','Worm Bin',
-            'Sprinkler','Quality Sprinkler','Iridium Sprinkler','Scarecrow','Deluxe Scarecrow','Garden Pot','Farm Computer','Hopper'
-          }
+          targets={'Bee House','Cask','Cheese Press','Dehydrator','Fish Smoker','Keg','Loom','Mayonnaise Machine','Oil Maker','Preserves Jar','Bait Maker','Bone Mill','Charcoal Kiln','Crystalarium','Deluxe Worm Bin','Furnace','Geode Crusher','Heavy Furnace','Heavy Tapper','Lightning Rod','Mushroom Log','Ostrich Incubator','Recycling Machine','Seed Maker','Slime Egg-Press','Slime Incubator','Solar Panel','Tapper','Wood Chipper','Worm Bin','Sprinkler','Quality Sprinkler','Iridium Sprinkler','Scarecrow','Deluxe Scarecrow','Garden Pot','Farm Computer','Hopper'}
           by={}
           def source_zh(src):
               src=str(src or '')
@@ -90,12 +77,8 @@ jobs:
               if src=='Starter': return '初始配方'
               return ('配方來源：'+src) if src else ''
           for r in recipes:
-              name=r.get('name')
-              if name in targets:
-                  by[name]={
-                    'ingredients':[{'name':i.get('name'),'quantity':i.get('quantity',1)} for i in r.get('ingredients',[])],
-                    'sourceZh':source_zh(r.get('source'))
-                  }
+              if r.get('name') in targets:
+                  by[r['name']]={'ingredients':[{'name':i.get('name'),'quantity':i.get('quantity',1)} for i in r.get('ingredients',[])],'sourceZh':source_zh(r.get('source'))}
           manual={
             'Coffee Maker':{'obtainZh':'艾芙琳特殊訂單「給喬治的禮物」獎勵；每天早上自動產出咖啡。'},
             'Auto-Grabber':{'obtainZh':'瑪妮牧場購買；耕種 10 級後販售。'},
@@ -107,18 +90,18 @@ jobs:
           for k,v in manual.items(): by.setdefault(k,{}).update(v)
           Path('machine-data-v51.js').write_text('window.SDVMachineV51='+json.dumps({'byName':by},ensure_ascii=False,separators=(',',':'))+';\n')
 
-          # Load local metadata before app.
           ip=Path('index.html'); html=ip.read_text()
           if 'machine-data-v51.js' not in html:
-              anchor='<script src="social-data-v50.js"></script>'
+              anchor='<script src="./social-data-v50.js?v=50"></script>'
               if anchor not in html: raise SystemExit('social data script anchor missing')
-              html=html.replace(anchor,anchor+'\n  <script src="machine-data-v51.js"></script>',1)
-          html=html.replace('v50','v51')
+              html=html.replace(anchor,anchor+'\n  <script src="./machine-data-v51.js?v=51"></script>',1)
+          html=html.replace('?v=50','?v=51').replace('deploy-v50','deploy-v51')
           ip.write_text(html)
 
-          sw=Path('sw.js'); t=sw.read_text().replace('v50','v51')
-          if 'machine-data-v51.js' not in t:
-              t=t.replace("'./social-data-v50.js',", "'./social-data-v50.js',\n  './machine-data-v51.js',",1)
+          sw=Path('sw.js'); t=sw.read_text()
+          t=t.replace("const CACHE='stardew-tracker-v50';","const CACHE='stardew-tracker-v51';")
+          if "'./machine-data-v51.js'" not in t:
+              t=t.replace("'./social-data-v50.js',", "'./social-data-v50.js','./machine-data-v51.js',",1)
           sw.write_text(t)
           PY
       - name: Build browser bundle
@@ -130,12 +113,13 @@ jobs:
           node --check sw.js
           python3 - <<'PY'
           from pathlib import Path
-          s=Path('app.jsx').read_text()
+          s=Path('app.jsx').read_text(); h=Path('index.html').read_text(); sw=Path('sw.js').read_text()
           assert 'openNpc' not in s and 'setOpenNpc' not in s
           assert 'showRoomV51' in s and 'setBundleRoom(active?"":r.id)' in s
-          assert 'Coffee Maker' in s and 'Farm Computer' in s and 'Hopper' in s
+          assert 'Coffee Maker' in s and 'Farm Computer' in s and 'Hopper' in s and 'Geode Crusher' in s
           assert '製作材料' in s and 'machineMetaV51' in s
-          assert 'machine-data-v51.js' in Path('index.html').read_text()
+          assert './social-data-v50.js?v=51' in h and './machine-data-v51.js?v=51' in h
+          assert "stardew-tracker-v51" in sw and "social-data-v50.js" in sw and "machine-data-v51.js" in sw
           print('v51 requested regression checks passed')
           PY
       - name: Commit product changes
