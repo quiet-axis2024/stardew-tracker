@@ -968,13 +968,14 @@ function FarmerSpritePreviewV33({player,direction="front",large=false,scene="day
       selected:{hat:player.hat||"",shirt:player.shirt||"",pants:player.pants||"",boots:player.boots||""},
       shirtColor:player.shirtColor,pantsColor:player.pantsColor,
       hairColor:player.hairColor,hairIndex:player.hairIndex,
+      skinIndex:player.skinIndex,eyeColor:player.eyeColor,accessoryIndex:player.accessoryIndex,
       shirtDyeable,pantsDyeable
     }).catch(e=>console.warn("farmer sprite preview failed",e));
-  },[player.gender,player.hat,player.shirt,player.pants,player.boots,player.shirtColor,player.pantsColor,player.hairColor,player.hairIndex,direction,shirtDyeable,pantsDyeable]);
+  },[player.gender,player.hat,player.shirt,player.pants,player.boots,player.shirtColor,player.pantsColor,player.hairColor,player.hairIndex,player.skinIndex,player.eyeColor,player.accessoryIndex,direction,shirtDyeable,pantsDyeable]);
   const sc=WARDROBE_SCENE_V35[scene]||WARDROBE_SCENE_V35.day;
   // Helper backing is 48x84. 48x84 (small) and 96x168 (large) are exact integer scales.
   const w=large?96:48,h=large?168:84;
-  const sceneStyle=large?{backgroundColor:scene==="night"?"#17264B":"#8FD0F3",backgroundImage:`url(${sc.image})`,backgroundSize:"cover",backgroundPosition:"center",imageRendering:"pixelated"}:{background:sc.bg};
+  const sceneStyle=large?{backgroundColor:scene==="night"?"#17264B":"#8FD0F3",backgroundImage:`url(${sc.image})`,backgroundSize:"125% auto",backgroundPosition:"center 50%",backgroundRepeat:"no-repeat",imageRendering:"pixelated"}:{background:sc.bg};
   return <div style={{position:"relative",height:large?182:100,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",borderRadius:9,...sceneStyle,border:`1px solid ${C.line}`}}>
     <canvas ref={ref} aria-label={`玩家${WARDROBE_DIR_LABEL_V33[direction]||""}遊戲 sprite 預覽`} style={{width:w,height:h,imageRendering:"pixelated",display:"block"}}/>
     {large&&<span style={{position:"absolute",right:4,top:4,fontSize:7.5,fontWeight:950,color:sc.labelColor,background:sc.labelBg,padding:"2px 5px",borderRadius:5}}>{sc.label}</span>}
@@ -991,7 +992,7 @@ function AnimalSpritePreviewV33({type,hat,variant=0,direction="front",large=fals
   const sc=WARDROBE_SCENE_V35[scene]||WARDROBE_SCENE_V35.day;
   // Helper backing is 104x96. Small is exact 1/2, large is exact 1x.
   const w=large?104:52,h=large?96:48;
-  const sceneStyle=large?{backgroundColor:scene==="night"?"#17264B":"#8FD0F3",backgroundImage:`url(${sc.image})`,backgroundSize:"cover",backgroundPosition:"center",imageRendering:"pixelated"}:{background:sc.bg};
+  const sceneStyle=large?{backgroundColor:scene==="night"?"#17264B":"#8FD0F3",backgroundImage:`url(${sc.image})`,backgroundSize:"125% auto",backgroundPosition:"center 50%",backgroundRepeat:"no-repeat",imageRendering:"pixelated"}:{background:sc.bg};
   return <div style={{position:"relative",height:large?126:100,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",borderRadius:9,...sceneStyle,border:`1px solid ${C.line}`}}>
     <canvas ref={ref} aria-label={`${type}${WARDROBE_DIR_LABEL_V33[direction]||""}遊戲 sprite 預覽`} style={{width:w,height:h,imageRendering:"pixelated",display:"block"}}/>
     {large&&<span style={{position:"absolute",right:4,top:4,fontSize:7.5,fontWeight:950,color:sc.labelColor,background:sc.labelBg,padding:"2px 5px",borderRadius:5}}>{sc.label}</span>}
@@ -1056,8 +1057,18 @@ function StardewTracker() {
   const [wardrobeTargetV30, setWardrobeTargetV30] = useState("player");
   const [wardrobeDirectionV32, setWardrobeDirectionV32] = useState("front");
   const [wardrobeQueryV34, setWardrobeQueryV34] = useState("");
+  const [wardrobeFilterV37, setWardrobeFilterV37] = useState("all");
+  const [wardrobePageV37, setWardrobePageV37] = useState(0);
+  const [wardrobeAppearanceMetaV37, setWardrobeAppearanceMetaV37] = useState({hairCount:64,skinCount:24,accessoryCount:29,defaultEyeColor:"#5B4636"});
   const profileInputRef = useRef(null);
   const saveTimer = useRef(null);
+
+  useEffect(()=>{
+    let alive=true;
+    const api=window.SDVFarmerSpriteV33;
+    if(api?.getAppearanceMeta) api.getAppearanceMeta().then(meta=>{if(alive&&meta)setWardrobeAppearanceMetaV37(meta)}).catch(e=>console.warn("appearance metadata failed",e));
+    return()=>{alive=false};
+  },[]);
 
   /* 載入：讀取目前瀏覽器的本機進度，無則使用預填資料 */
   useEffect(() => {
@@ -1998,7 +2009,7 @@ function StardewTracker() {
 
   const renderWardrobeV30 = () => {
     const defaults={
-      player:{hat:"",shirt:"",pants:"",boots:"",shirtColor:"#5f8fb8",pantsColor:"#3f5f99",gender:"female",hairIndex:0,hairColor:"#6a402c"},
+      player:{hat:"",shirt:"",pants:"",boots:"",shirtColor:"#5f8fb8",pantsColor:"#3f5f99",gender:"female",hairIndex:0,hairColor:"#6a402c",skinIndex:0,eyeColor:wardrobeAppearanceMetaV37.defaultEyeColor||"#5B4636",accessoryIndex:-1},
       horse:{hat:""},cat:{hat:"",variant:0},dog:{hat:"",variant:0}
     };
     const stored=data.wardrobeV30||{};
@@ -2014,7 +2025,12 @@ function StardewTracker() {
     const cats={hat:hatsFull.length?hatsFull:HATS_V30,shirt:shirtsFull.length?shirtsFull:SHIRTS_V30,pants:pantsFull.length?pantsFull:PANTS_V30,boots:bootsFull};
     const rawList=wardrobeTargetV30==="player"?cats[wardrobeCategoryV30]:cats.hat;
     const q=wardrobeQueryV34.trim().toLowerCase();
-    const list=q?rawList.filter(it=>`${it[1]} ${it[2]} ${it[4]?.source||""} ${it[0]}`.toLowerCase().includes(q)):rawList;
+    const searched=q?rawList.filter(it=>`${it[1]} ${it[2]} ${it[4]?.source||""} ${it[0]}`.toLowerCase().includes(q)):rawList;
+    const list=searched.filter(it=>wardrobeFilterV37==="dyeable"?Boolean(it[3]):wardrobeFilterV37==="tailoring"?Boolean(it[4]?.recipe):wardrobeFilterV37==="other"?!it[4]?.recipe:true);
+    const WARDROBE_PAGE_SIZE_V37=18;
+    const wardrobePageCountV37=Math.max(1,Math.ceil(list.length/WARDROBE_PAGE_SIZE_V37));
+    const wardrobePageSafeV37=Math.min(wardrobePageV37,wardrobePageCountV37-1);
+    const pageList=list.slice(wardrobePageSafeV37*WARDROBE_PAGE_SIZE_V37,(wardrobePageSafeV37+1)*WARDROBE_PAGE_SIZE_V37);
     const slot=wardrobeTargetV30==="player"?wardrobeCategoryV30:"hat";
     const chosen=target[slot]||"";
     const targets=[["player","玩家","Inventory Tab"],["horse","馬","Horse"],["cat","貓","Cat 1"],["dog","狗","Dog 1"]];
@@ -2026,6 +2042,8 @@ function StardewTracker() {
     const hatMeta=findMeta("hat",player.hat),shirtMeta=findMeta("shirt",player.shirt),pantsMeta=findMeta("pants",player.pants),bootsMeta=findMeta("boots",player.boots);
     const shirtDyeable=Boolean(shirtMeta?.[3]),pantsDyeable=Boolean(pantsMeta?.[3]);
     const shirtColor=player.shirtColor||defaults.player.shirtColor,pantsColor=player.pantsColor||defaults.player.pantsColor;
+    const hairColor=player.hairColor||defaults.player.hairColor,eyeColor=player.eyeColor||wardrobeAppearanceMetaV37.defaultEyeColor||"#5B4636";
+    const hairCountV37=Math.max(1,Number(wardrobeAppearanceMetaV37.hairCount)||64),skinCountV37=Math.max(1,Number(wardrobeAppearanceMetaV37.skinCount)||24),accessoryCountV37=Math.max(1,Number(wardrobeAppearanceMetaV37.accessoryCount)||29);
     const hexRgb=hex=>{const m=String(hex||"").match(/^#([0-9a-f]{6})$/i);if(!m)return[0,0,0];const n=parseInt(m[1],16);return[(n>>16)&255,(n>>8)&255,n&255]};
     const rgbHex=rgb=>`#${rgb.map(v=>Math.max(0,Math.min(255,Number(v)||0)).toString(16).padStart(2,"0")).join("")}`;
     const rgbEditor=(kind,color,enabled)=>{const rgb=hexRgb(color);const set=(i,v)=>{const next=[...rgb];next[i]=Math.max(0,Math.min(255,Number(v)||0));setPlayer({[kind+"Color"]:rgbHex(next)})};return <div style={{display:"grid",gridTemplateColumns:"42px repeat(3,1fr)",gap:4,alignItems:"center",opacity:enabled?1:.42}}><input type="color" disabled={!enabled} value={color} onChange={e=>setPlayer({[kind+"Color"]:e.target.value})} style={{width:40,height:31,border:0,padding:0,background:"transparent"}}/>{rgb.map((v,i)=><input key={i} type="number" min="0" max="255" disabled={!enabled} value={v} onChange={e=>set(i,e.target.value)} style={{width:"100%",border:`1px solid ${C.line}`,borderRadius:6,padding:"5px 2px",fontSize:8.5,textAlign:"center",background:C.cream,color:C.ink}}/>)}</div>};
@@ -2034,9 +2052,9 @@ function StardewTracker() {
 
     return <div>
       <SectionTitle icon="🎩">衣櫥搭配</SectionTitle>
-      <Card style={{padding:8,background:"#FFF4D8"}}><div style={{fontSize:9.5,color:C.muted,lineHeight:1.45}}>v36：下方白天／夜晚預覽改用遊戲 daybg／nightbg 原圖；帽子取得方式中文化；髮型改為箭頭＋號碼輸入；貓狗可切換 6 種遊戲外觀；馬帽重新按 1.6 Horse.draw() 座標校正。</div></Card>
+      <Card style={{padding:8,background:"#FFF4D8"}}><div style={{fontSize:9.5,color:C.muted,lineHeight:1.45}}>v37：白天／夜晚仍使用遊戲 daybg／nightbg，但只顯示畫面內部、不露素材木框；角色外觀補上法師地下室可調的膚色、眼色、髮色 RGB 與配飾；衣物改成篩選＋分頁瀏覽。</div></Card>
 
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:5,marginTop:7}}>{targets.map(([id,name,file])=>{const on=wardrobeTargetV30===id;return <button key={id} onClick={()=>{setWardrobeTargetV30(id);setWardrobeQueryV34("");if(id!=="player")setWardrobeCategoryV30("hat")}} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFE2A8":C.paper,borderRadius:9,padding:"5px 2px",fontSize:8.5,fontWeight:950,color:C.brown,minWidth:0}}>{id==="player"?(data.profilePortrait?<img src={data.profilePortrait} alt="" style={{width:27,height:34,objectFit:"cover",borderRadius:4,imageRendering:"pixelated"}}/>:<GameIcon file="Inventory Tab" size={27}/>):<GameIcon file={file} size={27}/>}<div>{name}</div></button>})}</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:5,marginTop:7}}>{targets.map(([id,name,file])=>{const on=wardrobeTargetV30===id;return <button key={id} onClick={()=>{setWardrobeTargetV30(id);setWardrobeQueryV34("");setWardrobeFilterV37("all");setWardrobePageV37(0);if(id!=="player")setWardrobeCategoryV30("hat")}} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFE2A8":C.paper,borderRadius:9,padding:"5px 2px",fontSize:8.5,fontWeight:950,color:C.brown,minWidth:0}}>{id==="player"?(data.profilePortrait?<img src={data.profilePortrait} alt="" style={{width:27,height:34,objectFit:"cover",borderRadius:4,imageRendering:"pixelated"}}/>:<GameIcon file="Inventory Tab" size={27}/>):<GameIcon file={file} size={27}/>}<div>{name}</div></button>})}</div>
 
       <Card style={{marginTop:7,padding:8}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4}}>{directions.map(([id])=><button key={id} onClick={()=>setWardrobeDirectionV32(id)} style={{border:`1.5px solid ${wardrobeDirectionV32===id?C.orange:C.line}`,background:wardrobeDirectionV32===id?"#FFF0D2":C.paper,borderRadius:8,padding:3,minWidth:0}}>{preview(id,false)}</button>)}</div>
@@ -2058,18 +2076,29 @@ function StardewTracker() {
           {summaryRow("帽子",hatMeta)}{summaryRow("上衣",shirtMeta,shirtDyeable?shirtColor:null)}{summaryRow("下裝",pantsMeta,pantsDyeable?pantsColor:null)}{summaryRow("鞋",bootsMeta)}
         </Card>
         <Card style={{marginTop:7,padding:8}}>
-          <div style={{fontSize:9.5,fontWeight:950,color:C.brown,marginBottom:6}}>角色外觀</div>
+          <div style={{fontSize:9.5,fontWeight:950,color:C.brown}}>角色外觀</div>
+          <div style={{fontSize:7.4,color:C.muted,lineHeight:1.4,marginTop:3,marginBottom:7}}>法師地下室可改：體型、膚色、眼睛顏色、髮型、髮色、配飾；另外也能改名字與最愛。這裡只放會影響穿搭預覽的外觀項目。</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}><button onClick={()=>setPlayer({gender:"female"})} style={{border:`1.5px solid ${player.gender!=="male"?C.orange:C.line}`,background:player.gender!=="male"?"#FFF0D2":C.paper,borderRadius:8,padding:6,fontSize:9,fontWeight:950,color:C.brown}}>女性體型</button><button onClick={()=>setPlayer({gender:"male"})} style={{border:`1.5px solid ${player.gender==="male"?C.orange:C.line}`,background:player.gender==="male"?"#FFF0D2":C.paper,borderRadius:8,padding:6,fontSize:9,fontWeight:950,color:C.brown}}>男性體型</button></div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:8,alignItems:"end",marginTop:8}}><div><div style={{fontSize:8.5,fontWeight:950,color:C.ink,marginBottom:4}}>髮型號碼</div><div style={{display:"grid",gridTemplateColumns:"40px 64px 40px",gap:4,alignItems:"center"}}><button onClick={()=>setPlayer({hairIndex:Math.max(0,Number(player.hairIndex||0)-1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,padding:"6px 0",fontSize:11,fontWeight:950,color:C.brown}}>◀</button><input type="number" min="1" max="56" value={Number(player.hairIndex||0)+1} onChange={e=>{const n=Math.max(1,Math.min(56,Number(e.target.value)||1));setPlayer({hairIndex:n-1})}} style={{width:64,border:`1.5px solid ${C.line}`,background:C.paper,borderRadius:7,padding:"6px 4px",fontSize:10,fontWeight:950,textAlign:"center",color:C.ink}}/><button onClick={()=>setPlayer({hairIndex:Math.min(55,Number(player.hairIndex||0)+1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,padding:"6px 0",fontSize:11,fontWeight:950,color:C.brown}}>▶</button></div></div><label style={{fontSize:8.5,color:C.muted,textAlign:"center"}}><input type="color" value={player.hairColor||defaults.player.hairColor} onChange={e=>setPlayer({hairColor:e.target.value})} style={{width:42,height:32,border:0,background:"transparent",padding:0}}/><div>髮色</div></label></div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginTop:8}}>
+            <div><div style={{fontSize:8.2,fontWeight:950,color:C.ink,marginBottom:4}}>膚色</div><div style={{display:"grid",gridTemplateColumns:"32px 1fr 32px",gap:3}}><button onClick={()=>setPlayer({skinIndex:Math.max(0,Number(player.skinIndex||0)-1)})} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:6,fontWeight:950,color:C.brown}}>◀</button><input type="number" min="1" max={skinCountV37} value={Number(player.skinIndex||0)+1} onChange={e=>setPlayer({skinIndex:Math.max(0,Math.min(skinCountV37-1,(Number(e.target.value)||1)-1))})} style={{width:"100%",border:`1px solid ${C.line}`,borderRadius:6,padding:"5px 2px",background:C.paper,textAlign:"center",fontSize:9,fontWeight:900,color:C.ink}}/><button onClick={()=>setPlayer({skinIndex:Math.min(skinCountV37-1,Number(player.skinIndex||0)+1)})} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:6,fontWeight:950,color:C.brown}}>▶</button></div></div>
+            <div><div style={{fontSize:8.2,fontWeight:950,color:C.ink,marginBottom:4}}>配飾 <span style={{fontSize:7,color:C.muted}}>0＝無</span></div><div style={{display:"grid",gridTemplateColumns:"32px 1fr 32px",gap:3}}><button onClick={()=>setPlayer({accessoryIndex:Math.max(-1,Number(player.accessoryIndex??-1)-1)})} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:6,fontWeight:950,color:C.brown}}>◀</button><input type="number" min="0" max={accessoryCountV37} value={Number(player.accessoryIndex??-1)+1} onChange={e=>setPlayer({accessoryIndex:Math.max(-1,Math.min(accessoryCountV37-1,(Number(e.target.value)||0)-1))})} style={{width:"100%",border:`1px solid ${C.line}`,borderRadius:6,padding:"5px 2px",background:C.paper,textAlign:"center",fontSize:9,fontWeight:900,color:C.ink}}/><button onClick={()=>setPlayer({accessoryIndex:Math.min(accessoryCountV37-1,Number(player.accessoryIndex??-1)+1)})} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:6,fontWeight:950,color:C.brown}}>▶</button></div></div>
+          </div>
+          <div style={{marginTop:8}}><div style={{fontSize:8.2,fontWeight:950,color:C.ink,marginBottom:4}}>髮型號碼</div><div style={{display:"grid",gridTemplateColumns:"40px 72px 40px",gap:4,alignItems:"center"}}><button onClick={()=>setPlayer({hairIndex:Math.max(0,Number(player.hairIndex||0)-1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,padding:"6px 0",fontSize:11,fontWeight:950,color:C.brown}}>◀</button><input type="number" min="1" max={hairCountV37} value={Number(player.hairIndex||0)+1} onChange={e=>{const n=Math.max(1,Math.min(hairCountV37,Number(e.target.value)||1));setPlayer({hairIndex:n-1})}} style={{width:72,border:`1.5px solid ${C.line}`,background:C.paper,borderRadius:7,padding:"6px 4px",fontSize:10,fontWeight:950,textAlign:"center",color:C.ink}}/><button onClick={()=>setPlayer({hairIndex:Math.min(hairCountV37-1,Number(player.hairIndex||0)+1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,padding:"6px 0",fontSize:11,fontWeight:950,color:C.brown}}>▶</button></div></div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr",gap:7,marginTop:8}}>
+            <div><b style={{fontSize:8.5,color:C.ink}}>髮色 RGB</b>{rgbEditor("hair",hairColor,true)}</div>
+            <div><b style={{fontSize:8.5,color:C.ink}}>眼睛 RGB</b>{rgbEditor("eye",eyeColor,true)}</div>
+          </div>
         </Card>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:5,marginTop:7}}>{slotDefs.map(([id,name,file])=>{const on=wardrobeCategoryV30===id;const selected=player[id];const sm=findMeta(id,selected);return <button key={id} onClick={()=>{setWardrobeCategoryV30(id);setWardrobeQueryV34("")}} style={{border:`1.5px solid ${on?C.orange:selected?C.green:C.line}`,background:on?"#FFE2A8":selected?"#EEF7DD":C.paper,borderRadius:8,padding:"5px 2px",fontSize:8.5,fontWeight:950,color:C.brown,minWidth:0}}><GameIcon file={sm?.[4]?.icon||selected||file} size={25}/><div>{name}</div></button>})}</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:5,marginTop:7}}>{slotDefs.map(([id,name,file])=>{const on=wardrobeCategoryV30===id;const selected=player[id];const sm=findMeta(id,selected);return <button key={id} onClick={()=>{setWardrobeCategoryV30(id);setWardrobeQueryV34("");setWardrobeFilterV37("all");setWardrobePageV37(0)}} style={{border:`1.5px solid ${on?C.orange:selected?C.green:C.line}`,background:on?"#FFE2A8":selected?"#EEF7DD":C.paper,borderRadius:8,padding:"5px 2px",fontSize:8.5,fontWeight:950,color:C.brown,minWidth:0}}><GameIcon file={sm?.[4]?.icon||selected||file} size={25}/><div>{name}</div></button>})}</div>
         {(shirtDyeable||pantsDyeable)&&<Card style={{marginTop:7,padding:8}}><div style={{fontSize:9.5,fontWeight:950,color:C.brown,marginBottom:6}}>染色數值</div><div style={{fontSize:7.5,color:C.muted,marginBottom:5}}>左邊挑色；右邊三格依序是 R / G / B（0–255），可直接輸入攻略數值。</div><div style={{display:"grid",gridTemplateColumns:"1fr",gap:7}}><div><b style={{fontSize:8.5,color:shirtDyeable?C.ink:C.muted}}>上衣</b>{rgbEditor("shirt",shirtColor,shirtDyeable)}</div><div><b style={{fontSize:8.5,color:pantsDyeable?C.ink:C.muted}}>下裝</b>{rgbEditor("pants",pantsColor,pantsDyeable)}</div></div></Card>}
       </>}
 
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,marginTop:8}}><div style={{fontSize:9.5,fontWeight:950,color:C.brown}}>{wardrobeTargetV30==="player"?slotDefs.find(x=>x[0]===slot)?.[1]:`${currentTargetLabel}帽子`}・{rawList.length} 項</div>{chosen&&<button onClick={()=>setTarget({[slot]:""})} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:7,padding:"4px 7px",fontSize:8.5,fontWeight:900,color:C.red}}>清除</button>}</div>
-      <input value={wardrobeQueryV34} onChange={e=>setWardrobeQueryV34(e.target.value)} placeholder={`搜尋${wardrobeTargetV30==="player"?(slotDefs.find(x=>x[0]===slot)?.[1]||""):"帽子"}名稱或材料…`} style={{width:"100%",marginTop:6,border:`1.5px solid ${C.line}`,background:C.paper,borderRadius:9,padding:"8px 10px",fontSize:10,color:C.ink,outline:"none"}}/>
-      {q&&<div style={{fontSize:8,color:C.muted,marginTop:3}}>找到 {list.length} 項</div>}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:5,marginTop:6}}>{list.map(it=>{const [key,name,source,dye,meta]=it;const on=chosen===key;return <button key={key} onClick={()=>setTarget({[slot]:on?"":key})} style={{border:`1.5px solid ${on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:9,padding:"5px 3px",minHeight:104,textAlign:"center",cursor:"pointer",minWidth:0}}><GameIcon file={meta?.icon||key} size={36}/><div style={{fontSize:8.2,fontWeight:950,color:on?C.green:C.ink,lineHeight:1.08,marginTop:2}}>{name}</div><div style={{fontSize:6.7,color:C.muted,lineHeight:1.22,marginTop:3,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{meta?.recipe?`製作：${meta.recipe}`:source}</div>{dye&&<div style={{fontSize:6.5,color:C.blue,fontWeight:900,marginTop:2}}>可染色</div>}</button>})}</div>
+      <input value={wardrobeQueryV34} onChange={e=>{setWardrobeQueryV34(e.target.value);setWardrobePageV37(0)}} placeholder={`搜尋${wardrobeTargetV30==="player"?(slotDefs.find(x=>x[0]===slot)?.[1]||""):"帽子"}名稱或材料…`} style={{width:"100%",marginTop:6,border:`1.5px solid ${C.line}`,background:C.paper,borderRadius:9,padding:"8px 10px",fontSize:10,color:C.ink,outline:"none"}}/>
+      <div style={{display:"flex",gap:4,overflowX:"auto",padding:"5px 0 1px",WebkitOverflowScrolling:"touch"}}>{[["all","全部"],["tailoring","裁縫"],...((wardrobeTargetV30==="player"&&(slot==="shirt"||slot==="pants"))?[["dyeable","可染色"]]:[]),["other","其他取得"]].map(([id,label])=><button key={id} onClick={()=>{setWardrobeFilterV37(id);setWardrobePageV37(0)}} style={{flex:"0 0 auto",border:`1.5px solid ${wardrobeFilterV37===id?C.orange:C.line}`,background:wardrobeFilterV37===id?"#FFF0D2":C.cream,borderRadius:14,padding:"4px 9px",fontSize:8,fontWeight:900,color:C.brown}}>{label}</button>)}</div>
+      <div style={{fontSize:7.8,color:C.muted,marginTop:3}}>顯示 {list.length} / {rawList.length} 項 ・ 第 {wardrobePageSafeV37+1} / {wardrobePageCountV37} 頁</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:5,marginTop:6}}>{pageList.map(it=>{const [key,name,source,dye,meta]=it;const on=chosen===key;return <button key={key} onClick={()=>setTarget({[slot]:on?"":key})} title={meta?.recipe?`製作：${meta.recipe}`:source} style={{border:`1.5px solid ${on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:9,padding:"5px 3px",minHeight:78,textAlign:"center",cursor:"pointer",minWidth:0}}><GameIcon file={meta?.icon||key} size={34}/><div style={{fontSize:7.9,fontWeight:950,color:on?C.green:C.ink,lineHeight:1.12,marginTop:2,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{name}</div><div style={{display:"flex",justifyContent:"center",gap:3,marginTop:3}}>{meta?.recipe&&<span style={{fontSize:6.3,color:C.brown,background:"#FFF0D2",borderRadius:5,padding:"1px 4px",fontWeight:900}}>裁縫</span>}{dye&&<span style={{fontSize:6.3,color:C.blue,background:"#E8F3FA",borderRadius:5,padding:"1px 4px",fontWeight:900}}>可染</span>}</div></button>})}</div>
+      {wardrobePageCountV37>1&&<div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:6,alignItems:"center",marginTop:7}}><button disabled={wardrobePageSafeV37<=0} onClick={()=>setWardrobePageV37(Math.max(0,wardrobePageSafeV37-1))} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:8,padding:6,fontSize:8.5,fontWeight:900,color:C.brown,opacity:wardrobePageSafeV37<=0?.4:1}}>◀ 上一頁</button><span style={{fontSize:8.2,fontWeight:900,color:C.muted}}>{wardrobePageSafeV37+1} / {wardrobePageCountV37}</span><button disabled={wardrobePageSafeV37>=wardrobePageCountV37-1} onClick={()=>setWardrobePageV37(Math.min(wardrobePageCountV37-1,wardrobePageSafeV37+1))} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:8,padding:6,fontSize:8.5,fontWeight:900,color:C.brown,opacity:wardrobePageSafeV37>=wardrobePageCountV37-1?.4:1}}>下一頁 ▶</button></div>}
     </div>;
   };
 
