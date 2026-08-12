@@ -867,6 +867,14 @@ function itemFileZhV26(name){
   return "";
 }
 
+const SWITCH_T2S_V47 = Object.fromEntries(Array.from("萬與專業東絲丟兩嚴喪個豐臨為麗舉麼義烏樂喬習鄉書買亂爭於亞產畝親複見觀規覺覽觸訂訥訓議訊記講許論證評識詐詞詔詛話誠誼誤說請諸諾謀謎謝謠謹譜貝負財貢貧貨販貪貫責貯貴貸貿費賀賄賊賓賜賞賠賢賣賦質賬購贈贊趕趨躍車軌軒轉輪輕載較輔輛輝輩轎輸轟辦邊遙鄧鄭鄰醫釋釣鈴鈣鈾鉤銀銅銘銷鋪鋒鋤鋼錄錘錠錢錦錯鍋鍵鍛鍬鎖鎮鏡鐵鑄鑑鑰長門閉開閒間閣闊隊陽陰陣階際陸險雜雙雞離難雲電靈靜頂頃項順須頑頓領頭顏類風飛飯飲飼餅館馬駕驢騎騙騷鬥鬆鬍魚魷鮭鯉鯊鯰鰻鱒鱘鳥鳳鴨鵝鷹麥黃點齊齒龍龜體髮鬚鬱鹽麵湯餃燴燻蘿蔔蘋薑蘚蕪纖維礦寶鑽遠種樹葉爐煉繩飾鏈環殘頁圖場鎮島灣澤層區傳獎勵殺敵數據應該夠賣買獲採網燈漿殼塊" ).map((ch,i)=>[ch,Array.from("万与专业东丝丢两严丧个丰临为丽举么义乌乐乔习乡书买乱争于亚产亩亲复见观规觉览触订讷训议讯记讲许论证评识诈词诏诅话诚谊误说请诸诺谋谜谢谣谨谱贝负财贡贫货贩贪贯责贮贵贷贸费贺贿贼宾赐赏赔贤卖赋质账购赠赞赶趋跃车轨轩转轮轻载较辅辆辉辈轿输轰办边遥邓郑邻医释钓铃钙铀钩银铜铭销铺锋锄钢录锤锭钱锦错锅键锻锹锁镇镜铁铸鉴钥长门闭开闲间阁阔队阳阴阵阶际陆险杂双鸡离难云电灵静顶顷项顺须顽顿领头颜类风飞饭饮饲饼馆马驾驴骑骗骚斗松胡鱼鱿鲑鲤鲨鲶鳗鳟鲟鸟凤鸭鹅鹰麦黄点齐齿龙龟体发须郁盐面汤饺烩熏萝卜苹姜藓芜纤维矿宝钻远种树叶炉炼绳饰链环残页图场镇岛湾泽层区传奖励杀敌数据应该够卖买获采网灯浆壳块")[i]]));
+function switchNameV47(name,file=""){
+  const map=window.SDVSwitchNamesV47||{};
+  const direct=map[String(file||"")]||map[String(name||"")];
+  if(direct)return direct;
+  return String(name||"").split("").map(ch=>SWITCH_T2S_V47[ch]||ch).join("");
+}
+
 const STARDROP_SOURCES_V26 = [
   {id:"fair",name:"星露谷展覽會",desc:"用 2,000 星幣購買。"},
   {id:"mine100",name:"礦井 100 層",desc:"開啟第 100 層寶箱取得。"},
@@ -1120,9 +1128,9 @@ function PetVariantPreviewV36({type,variant=0,compact=false}) {
 function StardewTracker() {
   const [data, setData] = useState(PREFILL);
   const [tab, setTab] = useState("overview");
-  const [dataSection, setDataSection] = useState("farm");
+  const [dataSection, setDataSection] = useState("skills");
   const [farmSection, setFarmSection] = useState("animals");
-  const [skillSection, setSkillSection] = useState("skills");
+  const [skillSection, setSkillSection] = useState("milestones");
   const [machineGroup, setMachineGroup] = useState("artisan");
   const [bundleRoom, setBundleRoom] = useState("crafts");
   const [mineRangeV28, setMineRangeV28] = useState("1");
@@ -1470,26 +1478,27 @@ function StardewTracker() {
         </div>
         <div style={{minWidth:0}}>
           <div style={{fontSize:15,fontWeight:950,color:C.darkBrown,lineHeight:1.15}}>{data.base.name || "未記錄農夫名"}</div>
-          <div style={{fontSize:17,fontWeight:950,color:C.darkBrown,marginTop:2,lineHeight:1.15}}>{data.base.farm}</div>
-          <div style={{fontSize:11.5,color:C.brown,marginTop:8,fontWeight:850}}>持有 {Number(data.base.money||0).toLocaleString()}g</div>
-          <div style={{fontSize:10.5,color:C.muted,marginTop:1}}>累計 {Number(data.base.totalIncome||0).toLocaleString()}g</div>
+          <div style={{fontSize:17,fontWeight:950,color:C.darkBrown,marginTop:2,lineHeight:1.15}}>{(data.profilePortrait||data.base.profileDataVerifiedV47)?`${String(data.base.farm||"").replace(/(?:農場|农场)$/u,"")||"未記錄"}農場`:"未記錄農場"}</div>
+          <div style={{fontSize:11.5,color:C.brown,marginTop:8,fontWeight:850}}>持有 {(data.profilePortrait||data.base.profileDataVerifiedV47)?`${Number(data.base.money||0).toLocaleString()}g`:"—"}</div>
+          <div style={{fontSize:10.5,color:C.muted,marginTop:1}}>累計 {(data.profilePortrait||data.base.profileDataVerifiedV47)?`${Number(data.base.totalIncome||0).toLocaleString()}g`:"—"}</div>
           <div style={{display:"grid",gridTemplateColumns:"26px auto 26px",alignItems:"center",gap:4,marginTop:8,width:"fit-content"}}>
             <button onClick={()=>updateBase({year:Math.max(1,Number(data.base.year||1)-1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,height:25,fontWeight:950,color:C.brown,padding:0}}>−</button>
             <div style={{fontSize:10.5,fontWeight:950,color:C.darkBrown,textAlign:"center",minWidth:50}}>第 {data.base.year} 年</div>
             <button onClick={()=>updateBase({year:Math.min(99,Number(data.base.year||1)+1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,height:25,fontWeight:950,color:C.brown,padding:0}}>＋</button>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:3,marginTop:6}}>{SEASONS.map(season=>{const active=data.base.season===season;return <button key={season} onClick={()=>updateBase({season})} style={{border:`1.5px solid ${active?C.green:C.line}`,background:active?C.lightGreen:C.cream,borderRadius:14,padding:"4px 2px",fontSize:9.5,fontWeight:900,color:active?C.green:C.ink,whiteSpace:"nowrap"}}>{SEASON_ICON[season]} {season}</button>})}</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:3,marginTop:6}}>{[["等級",`${skillTotal}/50`],["社區",`${rp.done}/30`],["礦井",`${data.mine.normal}/120`],["動物",`${totalAnimals}`]].map(([k,v])=><div key={k} style={{background:"#FFF4D8",border:`1px solid ${C.line}`,borderRadius:7,padding:"3px 2px",textAlign:"center",minWidth:0}}><div style={{fontSize:6.5,color:C.muted,fontWeight:900}}>{k}</div><b style={{display:"block",fontSize:8.5,color:C.brown,lineHeight:1.15,marginTop:1}}>{v}</b></div>)}</div>
         </div>
         <details style={{gridColumn:"1 / -1",borderTop:`1px dashed ${C.line}`,paddingTop:5,marginTop:0}}>
           <summary style={{fontSize:9.5,color:C.muted,fontWeight:900,cursor:"pointer",width:"fit-content"}}>✎ 編輯資料</summary>
           <div style={{display:"grid",gap:5,marginTop:6}}>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
-              <input value={data.base.name||""} onChange={e=>updateBase({name:e.target.value})} placeholder="農夫名字" style={{minWidth:0,border:`1.5px solid ${C.line}`,background:"#FFFCF0",borderRadius:7,padding:"6px 7px",fontSize:10.5,fontWeight:800,color:C.ink}}/>
-              <input value={data.base.farm||""} onChange={e=>updateBase({farm:e.target.value})} placeholder="農場名稱" style={{minWidth:0,border:`1.5px solid ${C.line}`,background:"#FFFCF0",borderRadius:7,padding:"6px 7px",fontSize:10.5,fontWeight:800,color:C.ink}}/>
+              <input value={data.base.name||""} onChange={e=>updateBase({name:e.target.value,profileDataVerifiedV47:true})} placeholder="農夫名字" style={{minWidth:0,border:`1.5px solid ${C.line}`,background:"#FFFCF0",borderRadius:7,padding:"6px 7px",fontSize:10.5,fontWeight:800,color:C.ink}}/>
+              <input value={data.base.farm||""} onChange={e=>updateBase({farm:e.target.value,profileDataVerifiedV47:true})} placeholder="農場名稱" style={{minWidth:0,border:`1.5px solid ${C.line}`,background:"#FFFCF0",borderRadius:7,padding:"6px 7px",fontSize:10.5,fontWeight:800,color:C.ink}}/>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
-              <label style={{fontSize:8.5,color:C.muted,fontWeight:900}}>目前金錢<div style={{marginTop:2}}><NumInput value={data.base.money} max={999999999} onChange={v=>updateBase({money:v})} suffix="g" width={118}/></div></label>
-              <label style={{fontSize:8.5,color:C.muted,fontWeight:900}}>累計收入<div style={{marginTop:2}}><NumInput value={data.base.totalIncome} max={999999999} onChange={v=>updateBase({totalIncome:v})} suffix="g" width={118}/></div></label>
+              <label style={{fontSize:8.5,color:C.muted,fontWeight:900}}>目前金錢<div style={{marginTop:2}}><NumInput value={data.base.money} max={999999999} onChange={v=>updateBase({money:v,profileDataVerifiedV47:true})} suffix="g" width={118}/></div></label>
+              <label style={{fontSize:8.5,color:C.muted,fontWeight:900}}>累計收入<div style={{marginTop:2}}><NumInput value={data.base.totalIncome} max={999999999} onChange={v=>updateBase({totalIncome:v,profileDataVerifiedV47:true})} suffix="g" width={118}/></div></label>
             </div>
           </div>
         </details>
@@ -1500,7 +1509,7 @@ function StardewTracker() {
 
   const renderMiniItemV26 = (name, tone=C.cream) => {
     const file=itemFileZhV26(name);
-    return <div key={name} style={{width:54,minWidth:54,border:`1px solid ${C.line}`,background:tone,borderRadius:8,padding:"4px 2px",textAlign:"center"}}>{file?<GameIcon file={file} size={26} alt={name}/>:<div style={{height:26,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}}>•</div>}<div style={{fontSize:7.2,fontWeight:900,color:C.ink,lineHeight:1.05,marginTop:2,overflow:"hidden",textOverflow:"ellipsis"}}>{name}</div></div>;
+    return <div key={name} style={{width:54,minWidth:54,border:`1px solid ${C.line}`,background:tone,borderRadius:8,padding:"4px 2px",textAlign:"center"}}>{file?<GameIcon file={file} size={26} alt={name}/>:<div style={{height:26,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}}>•</div>}<div style={{fontSize:7.2,fontWeight:900,color:C.ink,lineHeight:1.05,marginTop:2,overflow:"hidden",textOverflow:"ellipsis"}}>{switchNameV47(name,file)}</div></div>;
   };
 
   const renderTodayCalendarItemV26 = (it) => {
@@ -1541,7 +1550,8 @@ function StardewTracker() {
           <div style={{fontSize:10.5,color:C.muted,fontWeight:950,marginBottom:3}}>接下來</div>
           <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{upcoming.map(x=><button key={x.day} onClick={()=>updateBase({day:x.day})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:9,padding:"4px 7px",fontSize:10,fontWeight:900,color:C.brown,cursor:"pointer"}}>{x.day}日 · {x.items.map(i=>i.text).join("／")}</button>)}</div>
         </div>}
-        <div style={{fontSize:9.5,color:C.muted,marginTop:6,lineHeight:1.4}}>直接點上方遊戲日曆的日期格即可切換手帳日期；頁首、當日事件與魚類「今日可釣」會一起更新。書商每季日期依存檔隨機，無法只靠年份／季節推算。</div>
+        {data.base.season==="夏"&&<div style={{marginTop:7,padding:"6px 8px",borderRadius:8,background:"#EAF4D8",border:`1px solid ${C.line}`,display:"flex",alignItems:"center",gap:6}}><GameIcon file="Mossy Seed" size={24}/><div style={{fontSize:8.8,color:C.ink,lineHeight:1.35}}><b style={{color:C.green}}>綠雨提醒</b>：每年夏季隨機 1 天，只可能落在 5、6、7、14、15、16、18、23 日；手帳不預猜是哪一天。</div></div>}
+        <div style={{fontSize:9.5,color:C.muted,marginTop:6,lineHeight:1.4}}>直接點上方遊戲日曆的日期格即可切換手帳日期；頁首與當日事件會一起更新。書商每季日期依存檔隨機，無法只靠年份／季節推算。</div>
       </Card>
     </>;
   };
@@ -1553,7 +1563,7 @@ function StardewTracker() {
         <div style={{minWidth:0}}><div style={{fontSize:16,fontWeight:950,letterSpacing:.3,lineHeight:1.1}}>星露谷農場手帳</div></div>
         <div style={{marginLeft:"auto",textAlign:"right",minWidth:0}}>
           <div style={{fontWeight:950,fontSize:12.5,lineHeight:1.15}}>{SEASON_ICON[data.base.season]} 第 {data.base.year} 年 {data.base.season} {data.base.day} 日</div>
-          <div style={{fontSize:10.5,color:"#E8C88F",marginTop:2}}>{Number(data.base.money||0).toLocaleString()}g</div>
+          <div style={{fontSize:10.5,color:"#E8C88F",marginTop:2}}>{(data.profilePortrait||data.base.profileDataVerifiedV47)?`${Number(data.base.money||0).toLocaleString()}g`:""}</div>
         </div>
       </div>
     </div>
@@ -1562,17 +1572,6 @@ function StardewTracker() {
   const renderOverview = () => <div>
     {renderProfileCard()}
     {renderCalendar()}
-    <SectionTitle icon="📊">進度速覽</SectionTitle>
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 10 }}>
-      <Card style={{ padding: 11 }}><div style={{ fontSize: 11, color: C.muted, fontWeight: 800 }}>技能總等級</div><div style={{ fontSize: 24, fontWeight: 950, color: C.green }}>{skillTotal}<span style={{ fontSize: 12, color: C.muted }}>/50</span></div><ProgressBar value={skillTotal} max={50}/></Card>
-      <Card style={{ padding: 11 }}><div style={{ fontSize: 11, color: C.muted, fontWeight: 800 }}>社區收集包</div><div style={{ fontSize: 24, fontWeight: 950, color: C.orange }}>{rp.done}<span style={{ fontSize: 12, color: C.muted }}>/30</span></div><ProgressBar value={rp.done} max={30} color={C.orange}/></Card>
-      <Card style={{ padding: 11 }}><div style={{ fontSize: 11, color: C.muted, fontWeight: 800 }}>礦井最深</div><div style={{ fontSize: 24, fontWeight: 950, color: C.blue }}>{data.mine.normal}<span style={{ fontSize: 12, color: C.muted }}>/120</span></div><ProgressBar value={data.mine.normal} max={120} color={C.blue}/></Card>
-      <Card style={{ padding: 11 }}><div style={{ fontSize: 11, color: C.muted, fontWeight: 800 }}>動物總數</div><div style={{ fontSize: 24, fontWeight: 950, color: C.brown }}>{totalAnimals}</div><div style={{ fontSize: 11, color: C.muted }}>雞舍＋牛棚</div></Card>
-    </div>
-
-    <SectionTitle icon="🏆">重要里程碑</SectionTitle>
-    <Card>{MILESTONES.map(m => <CheckRow key={m.id} checked={data.milestones.includes(m.id)} onChange={v => update({ milestones: v ? [...new Set([...data.milestones, m.id])] : data.milestones.filter(x => x !== m.id) })} sub={m.desc}>{m.name}</CheckRow>)}</Card>
-
   </div>;
 
   const renderSkills = () => {
@@ -1592,7 +1591,8 @@ function StardewTracker() {
     const powerKind=powerSection==="books"?"books":"special";
     const powerList=powerKind==="books"?BOOK_POWERS_V2:SPECIAL_ITEMS_V2;
     return <div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:6,marginTop:8}}><SkillTab id="skills" label="技能" file="Skills Tab Icon"/><SkillTab id="mine" label="礦井" file="MinesEntrance"/><SkillTab id="special" label="特殊能力" file="Special Items & Powers Tab"/><SkillTab id="stardrops" label="星之果實" file="Stardrop"/></div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:8}}><SkillTab id="milestones" label="里程碑" file="Achievement Star 01"/><SkillTab id="skills" label="等級" file="Skills Tab Icon"/><SkillTab id="mine" label="礦井" file="MinesEntrance"/><SkillTab id="special" label="特殊能力" file="Special Items & Powers Tab"/><SkillTab id="stardrops" label="星之果實" file="Stardrop"/></div>
+      {skillSection==="milestones"&&<><SectionTitle icon="🏆">重要里程碑</SectionTitle><Card style={{padding:8}}>{MILESTONES.map(m => <CheckRow key={m.id} checked={data.milestones.includes(m.id)} onChange={v => update({ milestones: v ? [...new Set([...data.milestones, m.id])] : data.milestones.filter(x => x !== m.id) })} sub={m.desc}>{m.name}</CheckRow>)}</Card></>}
       {skillSection==="skills"&&<><SectionTitle icon="⭐">技能・專精・精通</SectionTitle><Card style={{padding:7}}>{SKILLS.map((sk,si)=>{const lv=Number(data.skills?.[sk.id]||0),l5=sk.id+"5",p5=data.prof?.[l5]||"";const branches=Object.entries(PROF[sk.id].l10);const mastery=MASTERY_POWERS_V2.find(x=>x.id===sk.id);const mastered=(data.mastery||[]).includes(sk.id);return <div key={sk.id} style={{padding:"7px 0",borderBottom:si<SKILLS.length-1?`1px dashed ${C.line}`:"none"}}>
         <div style={{display:"flex",alignItems:"center",gap:6}}><GameIcon file={SKILL_ICON_FILES[sk.id]} size={31}/><div style={{minWidth:0,flex:1}}><div style={{display:"flex",alignItems:"center",gap:5}}><b style={{fontSize:11.5,color:C.ink}}>{sk.name}</b><span style={{fontSize:8,color:C.muted}}>{SKILL_BASE_DESC_V27[sk.id]}</span></div></div><button onClick={()=>updateNested("skills",{[sk.id]:Math.max(0,lv-1)})} style={{border:0,background:C.cream,borderRadius:6,width:21,height:21,padding:0,fontWeight:950,color:C.brown}}>−</button><b style={{fontSize:10.5,color:C.green,minWidth:31,textAlign:"center"}}>Lv.{lv}</b><button onClick={()=>updateNested("skills",{[sk.id]:Math.min(10,lv+1)})} style={{border:0,background:C.cream,borderRadius:6,width:21,height:21,padding:0,fontWeight:950,color:C.brown}}>＋</button></div>
         <div style={{display:"grid",gridTemplateColumns:"28px repeat(2,minmax(0,1fr))",gap:4,alignItems:"stretch",marginTop:5}}><div style={{fontSize:7.5,fontWeight:950,color:C.muted,display:"flex",alignItems:"center",justifyContent:"center"}}>5級</div>{PROF[sk.id].l5.map(p=>profPick(sk,p,5))}</div>
@@ -1798,13 +1798,13 @@ function StardewTracker() {
 
   const renderData = () => {
     const DataTab=({id,label,file})=>{const active=dataSection===id;return <button onClick={()=>setDataSection(id)} style={{border:`2px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.paper,borderRadius:11,padding:"7px 4px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",minWidth:0}}><GameIcon file={file} size={39}/><span style={{fontSize:10,fontWeight:950,color:active?C.darkBrown:C.muted}}>{label}</span></button>};
-    return <div><SectionTitle icon="📊">資料</SectionTitle><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:6,marginTop:7}}><DataTab id="farm" label="農場" file="Animals Tab"/><DataTab id="skills" label="技能" file="Skills Tab Icon"/><DataTab id="bundles" label="社區" file="Golden Scroll"/><DataTab id="collection" label="收藏" file="Collections Tab"/></div>{dataSection==="farm"&&renderFarm()}{dataSection==="skills"&&renderSkills()}{dataSection==="bundles"&&renderBundles()}{dataSection==="collection"&&renderCollection()}</div>;
+    return <div><SectionTitle icon="📊">資料</SectionTitle><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:6,marginTop:7}}><DataTab id="skills" label="角色" file="Skills Tab Icon"/><DataTab id="farm" label="農場" file="Animals Tab"/><DataTab id="bundles" label="社區" file="Golden Scroll"/><DataTab id="collection" label="收藏" file="Collections Tab"/></div>{dataSection==="skills"&&renderSkills()}{dataSection==="farm"&&renderFarm()}{dataSection==="bundles"&&renderBundles()}{dataSection==="collection"&&renderCollection()}</div>;
   };
 
   const renderPeople = () => {
     const g=NPC_GROUPS.find(x=>x.id===socialGroup)||NPC_GROUPS[0];
-    const GiftGrid=({title,items,tone})=><div style={{marginTop:6}}><div style={{fontSize:9,fontWeight:950,color:tone,marginBottom:4}}>{title}</div><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4}}>{(items||[]).map(item=>{const file=itemFileZhV26(item),unknown=item.includes("百科");return <div key={item} style={{border:`1px solid ${C.line}`,background:unknown?"#F2ECE0":C.paper,borderRadius:8,padding:"4px 2px",textAlign:"center",minHeight:55}}>{file?<GameIcon file={file} size={27} alt={item}/>:<div style={{height:27,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:C.muted}}>•</div>}<div style={{fontSize:7.1,fontWeight:900,color:C.ink,lineHeight:1.05,marginTop:2}}>{item}</div></div>})}</div></div>;
-    return <div><SectionTitle icon="💛">社交</SectionTitle><div style={{display:"flex",gap:6,marginTop:7,flexWrap:"wrap"}}>{NPC_GROUPS.map(x=><Pill key={x.id} active={socialGroup===x.id} onClick={()=>{setSocialGroup(x.id);setExpandedNPC(null)}}>{x.id==="single"?"可交往對象":x.id==="town"?"村民":"特殊角色"}</Pill>)}</div><div style={{display:"grid",gap:7,marginTop:8}}>{g.list.map(n=>{const hearts=Number(data.friendship?.[n]||0),open=expandedNPC===n,gift=NPC_GIFTS[n];return <Card key={n} style={{padding:8}}><div onClick={()=>setExpandedNPC(open?null:n)} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer"}}><GameIcon file={NPC_ICON_FILES[n]} size={38}/><div style={{flex:1,minWidth:0}}><b style={{fontSize:12,color:C.ink}}>{n}</b>{gift?.love?.length>0&&<div style={{display:"flex",gap:2,marginTop:2}}>{gift.love.slice(0,4).map(x=>{const f=itemFileZhV26(x);return f?<GameIcon key={x} file={f} size={18} alt={x}/>:null})}</div>}</div><span style={{fontSize:11,color:C.red,fontWeight:950}}>♥ {hearts}/{g.max}</span><span style={{color:C.brown,fontWeight:950}}>{open?"▲":"▼"}</span></div><div style={{display:"flex",gap:2,flexWrap:"wrap",marginTop:5}}>{Array.from({length:g.max},(_,i)=><button key={i} onClick={()=>updateNested("friendship",{[n]:i+1===hearts?i:i+1})} style={{border:0,background:"transparent",padding:0,fontSize:15,color:i<hearts?C.red:"#D8CFC3",cursor:"pointer"}}>♥</button>)}</div>{open&&<div style={{marginTop:7,paddingTop:6,borderTop:`1px dashed ${C.line}`}}>{gift&&<><GiftGrid title="❤ 最愛" items={gift.love} tone={C.red}/><GiftGrid title="● 喜歡" items={gift.like} tone={C.green}/><GiftGrid title="× 不喜歡／討厭" items={gift.hate} tone={C.muted}/></>}<div style={{marginTop:7}}><WikiBtn name={NPC_WIKI[n]||n}/></div></div>}</Card>})}</div></div>;
+    const GiftGrid=({title,items,tone})=><div style={{marginTop:6}}><div style={{fontSize:9,fontWeight:950,color:tone,marginBottom:4}}>{title}</div><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4}}>{(items||[]).map(item=>{const file=itemFileZhV26(item),unknown=item.includes("百科");return <div key={item} style={{border:`1px solid ${C.line}`,background:unknown?"#F2ECE0":C.paper,borderRadius:8,padding:"4px 2px",textAlign:"center",minHeight:55}}>{file?<GameIcon file={file} size={27} alt={item}/>:<div style={{height:27,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:C.muted}}>•</div>}<div style={{fontSize:7.1,fontWeight:900,color:C.ink,lineHeight:1.05,marginTop:2}}>{switchNameV47(item,file)}</div></div>})}</div></div>;
+    return <div><SectionTitle icon="💛">社交</SectionTitle><div style={{display:"flex",gap:6,marginTop:7,flexWrap:"wrap"}}>{NPC_GROUPS.map(x=><Pill key={x.id} active={socialGroup===x.id} onClick={()=>{setSocialGroup(x.id);setExpandedNPC(null)}}>{x.id==="single"?"可交往對象":x.id==="town"?"村民":"特殊角色"}</Pill>)}</div><div style={{display:"grid",gap:7,marginTop:8}}>{g.list.map(n=>{const hearts=Number(data.friendship?.[n]||0),open=expandedNPC===n,gift=NPC_GIFTS[n];return <Card key={n} style={{padding:8}}><div onClick={()=>setExpandedNPC(open?null:n)} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer"}}><GameIcon file={NPC_ICON_FILES[n]} size={38}/><div style={{flex:1,minWidth:0}}><b style={{fontSize:12,color:C.ink}}>{n}</b>{gift?.love?.length>0&&<div style={{display:"flex",gap:2,marginTop:2}}>{gift.love.slice(0,4).map(x=>{const f=itemFileZhV26(x);return f?<GameIcon key={x} file={f} size={18} alt={x}/>:null})}</div>}</div><span style={{fontSize:11,color:C.red,fontWeight:950}}>♥ {hearts}/{g.max}</span><span style={{color:C.brown,fontWeight:950}}>{open?"▲":"▼"}</span></div><div style={{display:"flex",gap:2,flexWrap:"wrap",marginTop:5}}>{Array.from({length:g.max},(_,i)=><button key={i} onClick={()=>updateNested("friendship",{[n]:i+1===hearts?i:i+1})} style={{border:0,background:"transparent",padding:0,fontSize:15,color:i<hearts?C.red:"#D8CFC3",cursor:"pointer"}}>♥</button>)}</div>{open&&<div style={{marginTop:7,paddingTop:6,borderTop:`1px dashed ${C.line}`}}>{gift&&<><GiftGrid title="❤ 最愛" items={gift.love} tone={C.red}/><GiftGrid title="● 喜歡" items={gift.like} tone={C.green}/><GiftGrid title="× 不喜歡／討厭" items={gift.hate} tone={C.muted}/></>}<div style={{marginTop:7}}></div></div>}</Card>})}</div></div>;
   };
 
 
@@ -1885,48 +1885,21 @@ function StardewTracker() {
     </div>;
   };
 
-  const renderAchievements = () => <div>
-    <Card style={{padding:9,background:"#FFF4D8",fontSize:10.5,color:C.muted,lineHeight:1.45}}>對應遊戲「＋ → 收集品 → 成就」。能從目前手帳可靠推斷的成就標成「自動」，其餘可手動點亮。</Card>
-    <div style={{display:"grid",gap:6,marginTop:8}}>{ACHIEVEMENTS_V2.map(a=>{
-      const auto=derivedAchievement(a.id), checked=achievementChecked(a.id);
-      return <Card key={a.id} style={{padding:8,background:checked?"#EAF4D8":C.paper}}><div style={{display:"flex",alignItems:"center",gap:7}}><GameIcon file="Achievement Star 01" size={28}/><div style={{flex:1}}><b style={{fontSize:12.5,color:C.ink}}>{a.name}</b>{auto&&<span style={{fontSize:9,color:C.green,fontWeight:900,marginLeft:5}}>自動</span>}<div style={{fontSize:10,color:C.muted,marginTop:1}}>{a.desc}</div></div><button disabled={auto} onClick={()=>toggleAchievement(a.id)} style={{border:`2px solid ${checked?C.green:C.line}`,background:checked?C.lightGreen:C.cream,borderRadius:8,padding:"4px 7px",fontWeight:900,color:checked?C.green:C.muted,opacity:auto?0.75:1}}>{checked?"✓":"○"}</button></div></Card>;
-    })}</div>
-  </div>;
+  const renderAchievements = () => {
+    const count=ACHIEVEMENTS_V2.filter(a=>achievementChecked(a.id)).length;
+    return <div style={{marginTop:8}}>
+      <Card style={{padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:900,color:C.muted,marginBottom:5}}><span>成就</span><span>{count}/{ACHIEVEMENTS_V2.length}</span></div><ProgressBar value={count} max={ACHIEVEMENTS_V2.length}/></Card>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:8}}>{ACHIEVEMENTS_V2.map(a=>{const auto=derivedAchievement(a.id),on=achievementChecked(a.id);return <button key={a.id} disabled={auto} onClick={()=>toggleAchievement(a.id)} title={a.desc} style={{position:"relative",border:`2px solid ${on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:9,padding:"6px 3px",minHeight:82,cursor:auto?"default":"pointer",opacity:auto?.85:1}}><GameIcon file="Achievement Star 01" size={35}/><div style={{fontSize:8.7,fontWeight:900,color:on?C.green:C.ink,lineHeight:1.08,marginTop:2}}>{a.name}</div><span style={{position:"absolute",right:2,top:2,fontSize:12,color:on?C.green:"#C9B99A",fontWeight:950}}>{on?"✓":"○"}</span>{auto&&<span style={{position:"absolute",left:2,top:2,fontSize:5.8,color:C.green,fontWeight:950}}>自動</span>}</button>})}</div>
+    </div>;
+  };
 
   const renderDexCollection = () => {
-    const c = COLLECTIONS[selectedCollection];
-    const got = data.collections[selectedCollection] || [];
-    const effectiveSeason = fishSeason === "當季" ? data.base.season : fishSeason;
-    const visible = c.items.map((it,i)=>({it,i,meta:selectedCollection==="fish"?parseFishMeta(c.info?.[i]||""):null})).filter(row=>{
-      if(selectedCollection!=="fish") return true;
-      const m=row.meta;
-      if(effectiveSeason!=="全部" && !m.seasons.includes(effectiveSeason)) return false;
-      if(fishWeather!=="全部" && m.weather!=="任意" && m.weather!==fishWeather) return false;
-      if(fishArea!=="全部" && !m.areas.includes(fishArea)) return false;
-      if(fishMissingOnly && got.includes(row.i)) return false;
-      return true;
-    });
-    return <div>
-      <SectionTitle icon="📖">圖鑑</SectionTitle>
-
-      <Card style={{marginTop:10,padding:10}}><div style={{display:"flex",justifyContent:"space-between",fontSize:12,fontWeight:900,color:C.muted,marginBottom:5}}><span>{c.name}</span><span>{got.length}/{c.items.length}</span></div><ProgressBar value={got.length} max={c.items.length}/></Card>
-      {selectedCollection==="fish" && <Card style={{marginTop:9,padding:9,background:"#FFF4D8"}}>
-        <div style={{fontSize:11,fontWeight:950,color:C.brown,marginBottom:5}}>快速找魚</div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{["當季","春","夏","秋","冬","全部"].map(x=><Pill key={x} small active={fishSeason===x} onClick={()=>setFishSeason(x)}>{x}</Pill>)}</div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:5}}>{["全部","晴","雨"].map(x=><Pill key={x} small active={fishWeather===x} onClick={()=>setFishWeather(x)}>{x==="全部"?"全部天氣":x}</Pill>)}</div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:5}}>{["全部","河流","湖泊","海洋","礦井","沙漠","特殊","薑島","夜市"].map(x=><Pill key={x} small active={fishArea===x} onClick={()=>setFishArea(x)}>{x==="全部"?"全部地區":x}</Pill>)}</div>
-        <label style={{display:"flex",alignItems:"center",gap:6,marginTop:7,fontSize:11,fontWeight:900,color:C.brown}}><input type="checkbox" checked={fishMissingOnly} onChange={e=>setFishMissingOnly(e.target.checked)}/>只看尚未收集</label>
-        <div style={{fontSize:10,color:C.muted,marginTop:5}}>顯示 {visible.length} 項；「任意」天氣的魚在晴／雨篩選中都會保留。</div>
-      </Card>}
-      {selectedItem != null && <Card style={{marginTop:10,background:"#FFF9E8"}}><div style={{display:"flex",gap:10,alignItems:"center"}}>{ICON_URLS[selectedCollection]?.[selectedItem] && <img src={ICON_URLS[selectedCollection][selectedItem]} alt="" style={{width:48,height:48,imageRendering:"pixelated",objectFit:"contain"}}/>}<div style={{flex:1,minWidth:0}}><b style={{fontSize:16,color:C.darkBrown}}>{c.items[selectedItem]}</b><div style={{fontSize:12,color:C.muted,marginTop:3}}>{c.info?.[selectedItem] || ""}</div>{selectedCollection==="fish"&&<FishTags meta={parseFishMeta(c.info?.[selectedItem]||"")}/>}</div><WikiBtn name={c.items[selectedItem]}/></div></Card>}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:10}}>{visible.map(({it,i,meta})=>{
-        const checked=got.includes(i);
-        return <button key={i} onClick={()=>setSelectedItem(i)} onDoubleClick={()=>updateNested("collections",{[selectedCollection]:checked?got.filter(x=>x!==i):[...got,i]})} style={{position:"relative",border:`2px solid ${selectedItem===i?C.orange:checked?C.green:C.line}`,background:checked?"#E5F3CF":C.paper,borderRadius:9,padding:"6px 3px",minHeight:selectedCollection==="fish"?96:78,cursor:"pointer",boxShadow:`0 2px 5px ${C.shadow}`}}>
-          <div style={{height:38,display:"flex",alignItems:"center",justifyContent:"center"}}>{ICON_URLS[selectedCollection]?.[i]?<img src={ICON_URLS[selectedCollection][i]} alt={it} loading="lazy" onError={e=>{e.currentTarget.style.opacity=.25}} style={{width:36,height:36,imageRendering:"pixelated",objectFit:"contain"}}/>:<span style={{fontSize:13,color:C.muted,fontWeight:900}}>{i+1}</span>}</div>
-          <div style={{fontSize:9.5,fontWeight:900,color:C.ink,lineHeight:1.15,marginTop:2}}>{it}</div>
-          {selectedCollection==="fish"&&<FishTags meta={meta} compact/>}
-          <button onClick={e=>{e.stopPropagation();updateNested("collections",{[selectedCollection]:checked?got.filter(x=>x!==i):[...got,i]})}} style={{position:"absolute",right:2,top:2,border:0,background:"transparent",fontSize:13,color:checked?C.green:"#C9B99A",fontWeight:950}}>{checked?"✓":"○"}</button>
-        </button>})}</div>
+    const c=COLLECTIONS[selectedCollection];
+    const got=data.collections[selectedCollection]||[];
+    return <div style={{marginTop:8}}>
+      <Card style={{padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:900,color:C.muted,marginBottom:5}}><span>{selectedCollection==="artifact"?"古物圖鑑":"礦物圖鑑"}</span><span>{got.length}/{c.items.length}</span></div><ProgressBar value={got.length} max={c.items.length}/></Card>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:8}}>{c.items.map((it,i)=>{const checked=got.includes(i),file=ICON_URLS[selectedCollection]?.[i];return <button key={i} onClick={()=>setSelectedItem(i)} onDoubleClick={()=>updateNested("collections",{[selectedCollection]:checked?got.filter(x=>x!==i):[...got,i]})} style={{position:"relative",border:`2px solid ${selectedItem===i?C.orange:checked?C.green:C.line}`,background:checked?"#E5F3CF":C.paper,borderRadius:9,padding:"6px 3px",minHeight:78,cursor:"pointer"}}>{file?<img src={file} alt="" style={{width:36,height:36,imageRendering:"pixelated",objectFit:"contain"}}/>:<GameIcon file={itemFileZhV26(it)||it} size={36}/>}<div style={{fontSize:9,fontWeight:900,color:C.ink,lineHeight:1.1,marginTop:2}}>{switchNameV47(it,itemFileZhV26(it))}</div><button onClick={e=>{e.stopPropagation();updateNested("collections",{[selectedCollection]:checked?got.filter(x=>x!==i):[...got,i]})}} style={{position:"absolute",right:2,top:2,border:0,background:"transparent",fontSize:13,color:checked?C.green:"#C9B99A",fontWeight:950}}>{checked?"✓":"○"}</button></button>})}</div>
+      {selectedItem!=null&&c.items[selectedItem]&&<Card style={{marginTop:8,background:"#FFF8E2"}}><div style={{display:"flex",gap:9,alignItems:"center"}}>{ICON_URLS[selectedCollection]?.[selectedItem]?<img src={ICON_URLS[selectedCollection][selectedItem]} alt="" style={{width:48,height:48,imageRendering:"pixelated"}}/>:<GameIcon file={itemFileZhV26(c.items[selectedItem])||c.items[selectedItem]} size={48}/>}<div style={{flex:1,minWidth:0}}><b style={{fontSize:15,color:C.darkBrown}}>{switchNameV47(c.items[selectedItem],itemFileZhV26(c.items[selectedItem]))}</b><div style={{fontSize:10.5,color:C.muted,marginTop:3}}>{c.info?.[selectedItem]||""}</div></div></div></Card>}
     </div>;
   };
 
@@ -1947,7 +1920,7 @@ function StardewTracker() {
       <label style={{display:"flex",alignItems:"center",gap:6,margin:"8px 2px 0",fontSize:11,fontWeight:900,color:C.brown}}><input type="checkbox" checked={prepMissingOnlyV3} onChange={e=>setPrepMissingOnlyV3(e.target.checked)}/>只看還沒準備的材料</label>
       {COOKING_PREP_GROUPS_V3.map(g=>{const rows=g.items.filter(it=>!prepMissingOnlyV3||!prepSetV3.includes(it[0]));return rows.length?<Card key={g.id} style={{marginTop:8,padding:9,background:g.id==="g5"?"#FFF0D2":C.paper}}><div style={{fontSize:12.5,fontWeight:950,color:C.darkBrown}}>{g.name}</div><div style={{fontSize:9.5,color:C.muted,marginTop:2,lineHeight:1.35}}>{g.desc}</div><div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:7}}>{rows.map(it=>{const [id,name,file,need]=it,on=prepSetV3.includes(id);return <button key={id} onClick={()=>togglePrepV3(id)} style={{position:"relative",border:`2px solid ${on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:9,minHeight:82,padding:"5px 2px",boxShadow:`0 1px 4px ${C.shadow}`,cursor:"pointer"}}><div style={{height:35,display:"flex",alignItems:"center",justifyContent:"center"}}><GameIcon file={file} size={34}/></div><div style={{fontSize:9,fontWeight:950,color:C.ink,lineHeight:1.1,marginTop:2}}>{name}</div><span style={{position:"absolute",left:3,top:2,fontSize:8.5,fontWeight:950,color:C.brown,background:"#FFF1C9",borderRadius:6,padding:"1px 3px"}}>×{need}</span><span style={{position:"absolute",right:2,top:1,fontSize:12,color:on?C.green:"#C9B99A",fontWeight:950}}>{on?"✓":"○"}</span></button>})}</div></Card>:null})}
     </>}
-    {cookingModeV3==="dishes" && <Card style={{marginTop:8,padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:950,color:C.brown}}><span>遊戲烹飪收集</span><span>{cookedSetV3.length}/{COOKING_DISHES_V3.length}</span></div><ProgressBar value={cookedSetV3.length} max={COOKING_DISHES_V3.length}/><div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:8}}>{COOKING_DISHES_V3.map(it=>{const [id,name,file]=it,on=cookedSetV3.includes(id);return <button key={id} onClick={()=>toggleCookedV3(id)} style={{position:"relative",border:`2px solid ${on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:8,minHeight:75,padding:"5px 2px",cursor:"pointer"}}><GameIcon file={file} size={34}/><div style={{fontSize:8.8,fontWeight:900,color:C.ink,lineHeight:1.1,marginTop:2}}>{name}</div><span style={{position:"absolute",right:2,top:1,fontSize:11,color:on?C.green:"#C9B99A"}}>{on?"✓":"○"}</span></button>})}</div></Card>}
+    {cookingModeV3==="dishes" && <Card style={{marginTop:8,padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:950,color:C.brown}}><span>遊戲烹飪收集</span><span>{cookedSetV3.length}/{COOKING_DISHES_V3.length}</span></div><ProgressBar value={cookedSetV3.length} max={COOKING_DISHES_V3.length}/><div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:8}}>{COOKING_DISHES_V3.map(it=>{const [id,name,file]=it,on=cookedSetV3.includes(id);return <button key={id} onClick={()=>toggleCookedV3(id)} style={{position:"relative",border:`2px solid ${on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:8,minHeight:75,padding:"5px 2px",cursor:"pointer"}}><GameIcon file={file} size={34}/><div style={{fontSize:8.8,fontWeight:900,color:C.ink,lineHeight:1.1,marginTop:2}}>{switchNameV47(name,file)}</div><span style={{position:"absolute",right:2,top:1,fontSize:11,color:on?C.green:"#C9B99A"}}>{on?"✓":"○"}</span></button>})}</div></Card>}
   </div>;
 
   const renderPaperCollectionV3 = (kind,total,title) => {
@@ -1965,13 +1938,13 @@ function StardewTracker() {
   };
 
   const renderFishCardV4 = (i, area=null, compact=false, showCollection=true) => {
-    const name=COLLECTIONS.fish.items[i]; const got=(data.collections.fish||[]).includes(i); const rule=fishRuleV4(i);
+    const name=COLLECTIONS.fish.items[i]; const displayName=switchNameV47(name,FISH_ICON_FILES[i]); const got=(data.collections.fish||[]).includes(i); const rule=fishRuleV4(i);
     const seasons=area?.forceSeasons||area?.seasonOverride?.[i]||rule.s;
     const seasonText=seasons.length===4?"四季":seasons.join("／");
     const timeText=formatFishTimeV4(rule,area?.timeOverride);
     return <button key={`${area?.id||"fish"}-${i}`} onClick={()=>setSelectedItem(i)} style={{position:"relative",border:`2px solid ${showCollection?(!got?C.orange:C.line):C.line}`,background:showCollection?(got?"#F5F0DF":"#FFF2CF"):C.paper,borderRadius:9,padding:compact?"6px":"8px",display:"flex",alignItems:"center",gap:8,textAlign:"left",cursor:"pointer",width:"100%",opacity:showCollection&&got?0.78:1}}>
       <img src={ICON_URLS.fish[i]} alt="" loading="lazy" style={{width:compact?34:40,height:compact?34:40,imageRendering:"pixelated",objectFit:"contain",flex:"0 0 auto"}}/>
-      <span style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:compact?11:12.5,color:C.ink}}>{name}{rule.legend?" · 傳說":""}</b><span style={{display:"flex",gap:3,flexWrap:"wrap",marginTop:3}}>
+      <span style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:compact?11:12.5,color:C.ink}}>{displayName}{rule.legend?" · 傳說":""}</b><span style={{display:"flex",gap:3,flexWrap:"wrap",marginTop:3}}>
         <span style={{fontSize:8.5,fontWeight:900,padding:"1px 4px",borderRadius:7,background:"#F0E2C5",color:C.brown}}>{seasonText}</span>
         <span style={{fontSize:8.5,fontWeight:900,padding:"1px 4px",borderRadius:7,background:rule.w==="雨"?"#D9EAF8":rule.w==="晴"?"#FFF0A9":"#EAE3D4",color:C.ink}}>{rule.w}</span>
         <span style={{fontSize:8.5,fontWeight:900,padding:"1px 4px",borderRadius:7,background:"#E5EDF2",color:C.blue}}>{timeText}</span>
@@ -1984,8 +1957,8 @@ function StardewTracker() {
     const got=data.collections.fish||[];
     return <div style={{marginTop:8}}>
       <Card style={{padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:900,color:C.muted,marginBottom:5}}><span>魚類圖鑑</span><span>{got.length}/{COLLECTIONS.fish.items.length}</span></div><ProgressBar value={got.length} max={COLLECTIONS.fish.items.length}/></Card>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:8}}>{COLLECTIONS.fish.items.map((name,i)=>{const on=got.includes(i);return <button key={i} onClick={()=>setSelectedItem(i)} style={{position:"relative",border:`2px solid ${!on?C.orange:C.line}`,background:on?"#E8F1D5":C.paper,borderRadius:9,minHeight:76,padding:"5px 2px",cursor:"pointer"}}><img src={ICON_URLS.fish[i]} alt="" style={{width:36,height:36,imageRendering:"pixelated",objectFit:"contain"}}/><div style={{fontSize:9,fontWeight:900,color:C.ink,lineHeight:1.05}}>{name}</div><button onClick={e=>{e.stopPropagation();updateNested("collections",{fish:on?got.filter(x=>x!==i):[...got,i]})}} style={{position:"absolute",right:2,top:2,border:0,background:"transparent",fontSize:12,color:on?C.green:"#C9A86A",fontWeight:950}}>{on?"✓":"○"}</button></button>})}</div>
-      {selectedItem!=null&&<Card style={{marginTop:8,background:"#FFF8E2"}}><div style={{display:"flex",gap:9,alignItems:"center"}}><img src={ICON_URLS.fish[selectedItem]} alt="" style={{width:48,height:48,imageRendering:"pixelated"}}/><div style={{flex:1,minWidth:0}}><b style={{fontSize:15,color:C.darkBrown}}>{COLLECTIONS.fish.items[selectedItem]}</b><div style={{fontSize:10.5,color:C.muted,marginTop:3}}>{FISH_INFO[selectedItem]||""}</div></div><WikiBtn name={COLLECTIONS.fish.items[selectedItem]}/></div></Card>}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:6,marginTop:8}}>{COLLECTIONS.fish.items.map((name,i)=>{const on=got.includes(i);return <button key={i} onClick={()=>setSelectedItem(i)} style={{position:"relative",border:`2px solid ${!on?C.orange:C.line}`,background:on?"#E8F1D5":C.paper,borderRadius:9,minHeight:76,padding:"5px 2px",cursor:"pointer"}}><img src={ICON_URLS.fish[i]} alt="" style={{width:36,height:36,imageRendering:"pixelated",objectFit:"contain"}}/><div style={{fontSize:9,fontWeight:900,color:C.ink,lineHeight:1.05}}>{switchNameV47(name,FISH_ICON_FILES[i])}</div><button onClick={e=>{e.stopPropagation();updateNested("collections",{fish:on?got.filter(x=>x!==i):[...got,i]})}} style={{position:"absolute",right:2,top:2,border:0,background:"transparent",fontSize:12,color:on?C.green:"#C9A86A",fontWeight:950}}>{on?"✓":"○"}</button></button>})}</div>
+      {selectedItem!=null&&<Card style={{marginTop:8,background:"#FFF8E2"}}><div style={{display:"flex",gap:9,alignItems:"center"}}><img src={ICON_URLS.fish[selectedItem]} alt="" style={{width:48,height:48,imageRendering:"pixelated"}}/><div style={{flex:1,minWidth:0}}><b style={{fontSize:15,color:C.darkBrown}}>{switchNameV47(COLLECTIONS.fish.items[selectedItem],FISH_ICON_FILES[selectedItem])}</b><div style={{fontSize:10.5,color:C.muted,marginTop:3}}>{FISH_INFO[selectedItem]||""}</div></div></div></Card>}
     </div>;
   };
 
@@ -2101,9 +2074,6 @@ function StardewTracker() {
     const tailoring=selected?[...(wardrobeData.shirts||[]),...(wardrobeData.pants||[])].filter(x=>{const hay=`${x.recipe||""} ${x.sourceZh||""} ${x.source||""}`.toLowerCase();return [selected.name,selected.file,...selected.aliases].some(v=>v&&hay.includes(String(v).toLowerCase()))}).slice(0,6):[];
     const museum=Boolean(selected&&(selected.kinds.has("artifact")||selected.kinds.has("mineral")));
     const shipped=Boolean(selected?.shippable&&(data.shippingV30||[]).includes(selected.file));
-    const fixedUses=selected?(selected.bundles.length+selected.remix.length+selected.cookNeed+tailoring.length+(museum?1:0)+(usageSpecial?.uses?.length||0)):0;
-    const mustKeepV46=Boolean(selected&&(selected.recommend==="留"||usageSpecial?.keep||museum||fixedUses));
-    const recommendActionV46=!selected?"":selected.recommend|| (mustKeepV46?"留":"賣");
     const sourceFallbackV45=()=>{
       if(!selected)return "";
       const known=[...selected.sources].filter(Boolean);
@@ -2136,15 +2106,14 @@ function StardewTracker() {
       <Card style={{padding:8,background:"#FFF4D8"}}><div style={{fontSize:10.5,fontWeight:950,color:C.darkBrown}}>拿到東西不知道要不要留，就先查這裡</div><div style={{fontSize:8.5,color:C.muted,lineHeight:1.4,marginTop:2}}>會整理用途、取得方式、收集包、料理、裁縫、製作與重要特殊用途。</div></Card>
       <div style={{position:"relative",marginTop:7}}><input value={itemUsageQueryV42} onChange={e=>{setItemUsageQueryV42(e.target.value);setItemUsageSelectedV42("")}} placeholder="可輸入繁中／簡中／English，例如：黃玉、黄玉、Topaz…" style={{width:"100%",border:`1.5px solid ${C.line}`,background:C.paper,borderRadius:9,padding:"9px 34px 9px 10px",fontSize:10.5,color:C.ink,outline:"none"}}/>{itemUsageQueryV42&&<button onClick={()=>{setItemUsageQueryV42("");setItemUsageSelectedV42("")}} style={{position:"absolute",right:6,top:5,border:0,background:"transparent",fontSize:14,color:C.muted}}>×</button>}</div>
       {selected&&<Card style={{marginTop:7,padding:9,background:"#FFF8E9"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}><GameIcon file={selected.file} size={44}/><div style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:14,color:C.darkBrown}}>{selected.name}</b><div style={{display:"flex",gap:3,flexWrap:"wrap",marginTop:4}}>{resultTags(selected).map(([t,b])=><span key={t}>{tag(t,b)}</span>)}</div></div></div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}><GameIcon file={selected.file} size={44}/><div style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:14,color:C.darkBrown}}>{switchNameV47(selected.name,selected.file)}</b><div style={{display:"flex",gap:3,flexWrap:"wrap",marginTop:4}}>{resultTags(selected).map(([t,b])=><span key={t}>{tag(t,b)}</span>)}</div></div></div>
         <div style={{fontSize:12,fontWeight:950,color:C.darkBrown,marginTop:9}}>用途</div>
         <div style={{display:"grid",gap:5,marginTop:5}}>{usageRowsV44.map(([icon,text],i)=><div key={i} style={{display:"grid",gridTemplateColumns:"18px 1fr",gap:4,alignItems:"start",fontSize:9.4,color:C.ink,lineHeight:1.45}}><span>{icon}</span><span>{text}</span></div>)}</div>
-        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,alignItems:"center",marginTop:9,paddingTop:7,borderTop:`1px dashed ${C.line}`}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8,alignItems:"center",marginTop:9,paddingTop:7,borderTop:`1px dashed ${C.line}`}}>
           <div style={{minWidth:0}}><span style={{fontSize:8,color:C.muted,fontWeight:950}}>來源／取得方式</span><div style={{fontSize:9.4,color:C.ink,lineHeight:1.4,marginTop:2,fontWeight:750}}>{sourceTextV45}</div></div>
-          <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:7.3,color:C.muted,fontWeight:900}}>建議</span><span style={{fontSize:9,fontWeight:950,color:recommendActionV46==="留"?C.green:C.orange,background:recommendActionV46==="留"?"#EAF4D8":"#FFF0D2",borderRadius:8,padding:"3px 6px"}}>{recommendActionV46}</span></div>
         </div>
       </Card>}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:5,marginTop:6}}>{results.map(it=>{const on=selected?.key===it.key;return <button key={it.key} onClick={()=>setItemUsageSelectedV42(it.key)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFF0D2":C.paper,borderRadius:9,padding:"6px 5px",display:"grid",gridTemplateColumns:"34px 1fr",gap:5,alignItems:"center",textAlign:"left",minWidth:0}}><GameIcon file={it.file} size={32}/><span style={{minWidth:0}}><b style={{display:"block",fontSize:8.8,color:C.ink,lineHeight:1.12,overflow:"hidden",textOverflow:"ellipsis"}}>{it.name}</b><span style={{display:"flex",gap:2,flexWrap:"wrap",marginTop:3}}>{resultTags(it).map(([t,b])=><span key={t}>{tag(t,b)}</span>)}</span></span></button>})}</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:5,marginTop:6}}>{results.map(it=>{const on=selected?.key===it.key;return <button key={it.key} onClick={()=>setItemUsageSelectedV42(it.key)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFF0D2":C.paper,borderRadius:9,padding:"6px 5px",display:"grid",gridTemplateColumns:"34px 1fr",gap:5,alignItems:"center",textAlign:"left",minWidth:0}}><GameIcon file={it.file} size={32}/><span style={{minWidth:0}}><b style={{display:"block",fontSize:8.8,color:C.ink,lineHeight:1.12,overflow:"hidden",textOverflow:"ellipsis"}}>{switchNameV47(it.name,it.file)}</b><span style={{display:"flex",gap:2,flexWrap:"wrap",marginTop:3}}>{resultTags(it).map(([t,b])=><span key={t}>{tag(t,b)}</span>)}</span></span></button>})}</div>
       {!q&&<div style={{fontSize:7.8,color:C.muted,marginTop:4}}>上面先放常查的例子；輸入名稱後會搜尋手帳目前整理到的物品。</div>}
       {q&&!results.length&&<Card style={{marginTop:7,textAlign:"center",fontSize:9.5,color:C.muted}}>目前沒有找到；可改用繁中／簡中／英文名稱或常見別名。</Card>}
 
@@ -2183,7 +2152,7 @@ function StardewTracker() {
     const shipped=data.shippingV30||[];
     const toggle=file=>update({shippingV30:shipped.includes(file)?shipped.filter(x=>x!==file):[...shipped,file]});
     return <div style={{marginTop:8}}>
-      <Card style={{padding:9}}><div style={{display:"flex",alignItems:"center",gap:7}}><GameIcon file="Mini-Shipping Bin" size={34}/><div style={{flex:1}}><b style={{fontSize:12,color:C.brown}}>出貨圖鑑</b><div style={{fontSize:9.5,color:C.muted,marginTop:1}}>照遊戲 1.6「出貨」收藏排列點亮。</div></div><b style={{fontSize:11,color:C.green}}>{shipped.length}/{SHIPPING_ITEMS_V30.length}</b></div><div style={{marginTop:6}}><ProgressBar value={shipped.length} max={SHIPPING_ITEMS_V30.length}/></div>{!shipped.length&&Number(extrasState.shippedCount||0)>0&&<div style={{fontSize:8.5,color:C.muted,marginTop:5}}>舊版只記過「{extrasState.shippedCount} 項」總數，無法知道是哪幾項；請照遊戲圖鑑重新點亮一次。</div>}</Card>
+      <Card style={{padding:9}}><div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:900,color:C.muted,marginBottom:5}}><span>出貨圖鑑</span><span>{shipped.length}/{SHIPPING_ITEMS_V30.length}</span></div><ProgressBar value={shipped.length} max={SHIPPING_ITEMS_V30.length}/>{!shipped.length&&Number(extrasState.shippedCount||0)>0&&<div style={{fontSize:8.5,color:C.muted,marginTop:5}}>舊版只記過「{extrasState.shippedCount} 項」總數，無法知道是哪幾項；請照遊戲圖鑑重新點亮一次。</div>}</Card>
       <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:8}}>{SHIPPING_ITEMS_V30.map(([file,name])=>{const on=shipped.includes(file);return <button key={file} onClick={()=>toggle(file)} style={{position:"relative",border:`1.5px solid ${on?C.green:C.line}`,background:on?"#E5F3CF":C.paper,borderRadius:8,padding:"5px 2px",minHeight:70,cursor:"pointer"}}><GameIcon file={file} size={34} alt={name}/><div style={{fontSize:7.7,fontWeight:900,color:on?C.green:C.ink,lineHeight:1.05,marginTop:2}}>{name}</div><span style={{position:"absolute",right:2,top:1,fontSize:10,color:on?C.green:"#C9B99A",fontWeight:950}}>{on?"✓":"○"}</span></button>})}</div>
     </div>;
   };
@@ -2191,8 +2160,6 @@ function StardewTracker() {
   const renderCollection = () => {
     const tabClick = k => { setCollectionSection(k); if(["fish","artifact","mineral"].includes(k)){setSelectedCollection(k);setSelectedItem(null);} };
     return <div>
-      <SectionTitle icon="📖">收集品</SectionTitle>
-      <Card style={{padding:8,background:"#FFF4D8",fontSize:10.5,color:C.muted,lineHeight:1.4}}>對應遊戲「＋ → 收集品」。每個子頁用遊戲素材當圖示；烹飪裡同時放一次性備料圖鑑。</Card>
       <div style={{display:"flex",gap:5,overflowX:"auto",padding:"8px 0 4px",WebkitOverflowScrolling:"touch"}}>{COLLECTION_TABS_V3.map(([k,n,file])=><button key={k} onClick={()=>tabClick(k)} style={{flex:"0 0 auto",minWidth:58,border:`2px solid ${collectionSection===k?C.orange:C.line}`,background:collectionSection===k?"#FFE0A8":C.paper,borderRadius:9,padding:"5px 5px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,color:C.ink,fontWeight:900,fontSize:9.5}}><GameIcon file={file} size={29}/><span>{n}</span></button>)}</div>
       {collectionSection==="fish"&&renderFishDexV4()}
       {collectionSection==="artifact"&&renderDexCollection()}
@@ -2273,9 +2240,9 @@ function StardewTracker() {
     const setTarget=patch=>update({wardrobeV30:{...wardrobe,[wardrobeTargetV30]:{...target,...patch}}});
     const setPlayer=patch=>update({wardrobeV30:{...wardrobe,player:{...wardrobe.player,...patch}}});
     const db=window.SDVWardrobeV34||{};
-    const wrap=arr=>(arr||[]).map(x=>[x.key,x.name,x.sourceZh||x.source,x.dyeable,x]);
+    const wrap=arr=>(arr||[]).map(x=>[x.key,switchNameV47(x.name,x.icon||x.key),x.sourceZh||x.source,x.dyeable,x]);
     const hatsFull=wrap(db.hats); const shirtsFull=wrap(db.shirts); const pantsFull=wrap(db.pants);
-    const bootsFull=BOOTS_V30.map(x=>[...x,false,{key:x[0],icon:x[0],name:x[1],source:x[2],recipe:"",dyeable:false}]);
+    const bootsFull=BOOTS_V30.map(x=>[x[0],switchNameV47(x[1],x[0]),x[2],false,{key:x[0],icon:x[0],name:switchNameV47(x[1],x[0]),source:x[2],recipe:"",dyeable:false}]);
     const cats={hat:hatsFull.length?hatsFull:HATS_V30,shirt:shirtsFull.length?shirtsFull:SHIRTS_V30,pants:pantsFull.length?pantsFull:PANTS_V30,boots:bootsFull};
     const rawList=wardrobeTargetV30==="player"?cats[wardrobeCategoryV30]:cats.hat;
     const q=wardrobeQueryV34.trim().toLowerCase();
