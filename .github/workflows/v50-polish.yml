@@ -1,0 +1,43 @@
+name: Polish v50 farm and social changes
+
+on:
+  push:
+    branches: [v50-farm-social]
+    paths:
+      - 'v50_polish.py'
+      - '.github/workflows/v50-polish.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  polish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v50-farm-social
+          fetch-depth: 0
+      - name: Apply polish
+        run: python3 v50_polish.py
+      - name: Build
+        run: npx --yes esbuild@0.25.0 app.jsx --bundle --format=iife --outfile=/tmp/app-v50.js --loader:.jsx=jsx
+      - name: Validate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('app.jsx').read_text()
+          assert 'Trailer Cabin Stage 1' in s
+          assert 'flexWrap:"wrap"' in s and 'CompactLovesV50' in s
+          assert 'canLookup' in s and 'availabilityTextV50' in s
+          assert 'GameIcon file="Telephone" size={25}' in s
+          print('v50 polish validation passed')
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx
+          git rm -f v50_polish.py .github/workflows/v50-polish.yml
+          git commit -m 'v50: polish social lookup links and cabin image'
+          git push origin v50-farm-social
