@@ -1,0 +1,42 @@
+name: Audit v54 runtime refs
+on:
+  push:
+    branches: [v54-ui-regression-fixes]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install audit tools
+        run: npm install --no-save eslint@8 react@18 react-dom@18 esbuild@0.25.8 >/dev/null 2>&1
+      - name: Audit undefined runtime references
+        shell: bash
+        run: |
+          set +e
+          ./node_modules/.bin/eslint app.jsx \
+            --no-eslintrc \
+            --env browser,es2021 \
+            --parser-options '{"ecmaVersion":2022,"sourceType":"script","ecmaFeatures":{"jsx":true}}' \
+            --global React:readonly \
+            --rule 'no-undef:error' \
+            --format unix | tee /tmp/no-undef.txt
+          code=${PIPESTATUS[0]}
+          echo "eslint_exit=$code"
+          echo "---- unique undefined identifiers ----"
+          sed -n "s/.*'\([^']*\)' is not defined.*/\1/p" /tmp/no-undef.txt | sort -u
+          exit 0
+      - name: Browser build smoke test
+        shell: bash
+        run: |
+          mkdir -p build
+          cat > build/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> build/entry.jsx
+          ./node_modules/.bin/esbuild build/entry.jsx --bundle --format=iife --target=safari15 --outfile=/tmp/app.js
+          test -s /tmp/app.js
