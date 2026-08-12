@@ -19,6 +19,13 @@ jobs:
       - name: Apply v42 patch
         run: |
           set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('v42_patch.py')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('re.subn(pattern, repl, s, count=1, flags=re.S)', 're.subn(pattern, lambda m: repl, s, count=1, flags=re.S)')
+          p.write_text(s, encoding='utf-8')
+          PY
           python3 v42_patch.py
       - name: Validate v42
         run: |
