@@ -1,0 +1,60 @@
+name: Apply v41 wardrobe flow polish
+
+on:
+  push:
+    branches: [v41-wardrobe-flow-polish]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v41-wardrobe-flow-polish
+          fetch-depth: 0
+      - name: Apply v41 patch
+        run: |
+          set -euo pipefail
+          python3 v41_patch.py
+      - name: Validate v41
+        run: |
+          set -euo pipefail
+          node --check farmer-preview-v33.js
+          node --check animal-preview-v33.js
+          node --check wardrobe-data-v34.js
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8
+          mkdir -p .verify
+          cat > .verify/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> .verify/entry.jsx
+          ./node_modules/.bin/esbuild .verify/entry.jsx --bundle --format=iife --target=safari15 --outfile=.verify/app.js
+          grep -q '點上方四個方向切換；下方同步預覽白天／夜晚效果。' app.jsx
+          grep -q '!meta?.recipe&&source' app.jsx
+          grep -q 'app.js?v=41' index.html
+          grep -q 'stardew-tracker-v41' sw.js
+          python3 - <<'PY'
+          from pathlib import Path
+          a=Path('app.jsx').read_text(encoding='utf-8')
+          assert a.count('>角色外觀</b>') == 1
+          assert a.index('>角色外觀</b>') < a.index('wardrobeTargetV30==="cat"||wardrobeTargetV30==="dog"')
+          assert '同一方向同時看白天／夜晚；使用固定整數像素倍率' not in a
+          assert 'WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{source}' in a
+          print('v41 wardrobe flow checks ok')
+          PY
+      - name: Commit v41 code
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx index.html sw.js
+          git rm -f v41_patch.py
+          git commit -m 'v41: streamline wardrobe flow and acquisition cards'
+          git push origin HEAD:v41-wardrobe-flow-polish
