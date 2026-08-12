@@ -1,50 +1,84 @@
-# 星露谷進度手帳
+# 星露谷農場手帳
 
-一個為《星露谷物語》1.6 製作的非官方手機進度紀錄器，適合遊玩時放在手機旁隨手更新。
+一個為《星露谷物語》1.6 製作的非官方手機手帳／進度記錄器。主要使用情境是玩 Switch 時把手機放在旁邊，隨手查資料、記進度、看日曆與社交資訊。
 
-## 功能
+## 公開網址
 
-- 年份、季節、日期、金錢與農場基本進度
-- 總覽農場名片：可上傳 Switch「＋」玩家資料畫面，自動裁出角色區域並顯示在手帳總覽
-- 當季 28 天日曆：節日、村民生日與固定季節事件一眼查看，點日期即可切換手帳日期
-- 技能與專精紀錄
-- 社區中心收集包進度
-- 建築、動物、魚塘與重要里程碑
-- NPC 好感度、遊戲人物頭像與送禮速查
-- 魚類、古物、礦物圖鑑與 Stardew Valley Wiki 遊戲圖像
-- 魚類快速篩選：依當季／四季、晴雨、河流／湖泊／海洋／礦井／沙漠／特殊區域／薑島／夜市篩選，並在魚卡直接顯示季節、地區、天氣與時間資訊
-- 遊戲原始像素圖風格的底部選單、技能、社區、工具、農場動物與社交人物圖示
-- 進度摘要，可複製或分享給朋友、AI 助手一起討論遊戲安排
-- JSON 完整備份與匯入
-- PWA：可加入手機主畫面，成功載入後支援離線使用
-- 選用的 Supabase 雲端同步與唯讀分享模式
+正式分享網址：
+
+`https://stardewfarm-handbook.pages.dev/`
+
+GitHub Pages 仍保留作為備援部署：
+
+`https://quiet-axis2024.github.io/stardew-tracker/`
+
+iPhone／iPad 可用 Safari「分享 → 加入主畫面」，當成 PWA 使用。
+
+## 主要功能
+
+底部目前分成 6 個主要頁面：
+
+- **總覽**：農場名片、年份／季節／日期、金錢、遊戲日曆、生日與節日提醒。
+- **資料**：角色能力、農場、社區中心／Joja 路線、收藏與各類進度記錄。
+- **社交**：NPC 好感度、生日、喜愛／討厭物品、特殊訂單、商店與角色服務資訊。
+- **查找**：物品用途／來源查詢，以及依季節、天氣、地點、時間反查魚類。
+- **衣櫥**：玩家、馬、貓、狗的實際遊戲 sprite 四方向換裝預覽，包含服裝、帽子與染色。
+- **備註**：唯讀分享、純文字摘要、JSON 備份／匯入、App 網址分享與資料管理。
+
+另外包含：
+
+- Switch 16:9 玩家資料頁截圖匯入：自動裁角色肖像，預填農夫／農場名稱；金錢、年份、季節與日期採較保守的多路 OCR／一致性檢查，辨識不可靠時不覆蓋原值。
+- 28 天季節日曆：生日、節日、固定季節事件，生日人物可直接跳到社交速查。
+- 社區中心、Joja、森林鄰居、建築、動物、工具、設備、魚塘與里程碑記錄。
+- 出貨、魚類、古物、礦物、料理、成就、秘密紙條與日誌殘頁收藏。
+- Switch 中文名稱對照、Stardew Valley Wiki 圖像與資料整合。
+- 本機儲存、Supabase 雲端手帳、唯讀分享網址與跨舊 GitHub Pages 網址搬移。
+- Service Worker 快取與離線使用。
 
 ## 資料儲存
 
-### 一般使用者
+### 一般使用
 
-直接開啟公開網站時，進度只儲存在目前瀏覽器／裝置的 `localStorage`。不同使用者彼此完全獨立，不會看到或改到其他人的記錄。
+直接開啟公開 App 時，資料會保存在目前瀏覽器／裝置。不同使用者的本機記錄互不影響。
 
-建議定期使用「匯出 JSON」保存完整備份；換裝置時可再匯入。
+建議重要進度定期在「備註 → 完整備份」匯出 JSON。
 
-### 雲端管理模式
+### 雲端手帳
 
-此專案另外支援以管理憑證連接 Supabase 雲端存檔。管理模式仍會先寫入本機，因此短暫離線時可以繼續記錄；網路恢復後再同步雲端。
+連接管理憑證後可同步至 Supabase。管理憑證不寫進公開 repo；唯讀分享網址只能讀取該份手帳，不能修改雲端資料。
 
-管理憑證不寫入公開 repo。第一次透過管理網址開啟後，憑證會存進該裝置的本機儲存空間，並從網址列移除。
+目前正式網域為 `stardewfarm-handbook.pages.dev`。舊 GitHub Pages 上既有的雲端身份可透過 App 內的一次性搬移流程接回新網址。
 
-### 唯讀分享模式
+## 專案結構
 
-雲端存檔可產生獨立唯讀網址供朋友觀看。分享網址只能讀取雲端進度，不能寫入玩家的雲端存檔。
+目前 repo 只保留實際執行與部署需要的檔案：
 
-## 使用
+- `app.jsx`：主要 React UI、手帳狀態與互動邏輯。
+- `index.html`：PWA 啟動頁與 runtime 載入。
+- `cloud.js`：雲端／分享／舊網址搬移邏輯。
+- `sw.js`、`manifest.webmanifest`、`icon.svg`：PWA 與離線快取。
+- `lookup-data-v46.js`、`lookup-extra-v49.js`：物品／魚類查找資料。
+- `social-data-v50.js`：NPC 社交資料。
+- `machine-data-v51.js`：農場設備／製作資料。
+- `switch-names-v47.js`：Switch 中文名稱對照。
+- `wardrobe-data-v34.js`、`farmer-preview-v33.js`、`animal-preview-v33.js`：衣櫥與角色／動物 sprite 預覽。
+- `build-cloudflare.sh`：Cloudflare Pages 建置腳本。
+- `.github/workflows/pages.yml`：GitHub Pages 備援部署。
 
-網站：`https://quiet-axis2024.github.io/stardew-tracker/`
+資料檔名中的版本尾碼是歷史資料 schema 名稱，目前仍由 runtime 直接引用，因此暫時保留；舊的測試稿與一次性 migration workflow 不留在 `main`。
 
-iPhone／iPad 可使用 Safari 的「分享 → 加入主畫面」，以類似 App 的方式開啟。
+## 建置／部署
+
+Cloudflare Pages：
+
+- Production branch：`main`
+- Build command：`bash build-cloudflare.sh`
+- Build output directory：`dist`
+
+GitHub Pages 由 `.github/workflows/pages.yml` 自動建置；兩邊都使用 esbuild 將 `app.jsx` 打包成瀏覽器可執行的 `app.js`。
 
 ## 資料來源與聲明
 
-遊戲資料以《星露谷物語》1.6 為基準。日曆、魚類條件、圖鑑與介面像素圖片主要參考 Stardew Valley Wiki。
+遊戲資料以《星露谷物語》1.6 為基準，名稱以 Switch 中文版本實際顯示為優先；圖鑑、魚類、NPC、設備與遊戲圖片主要參考 Stardew Valley Wiki 及遊戲資料。
 
 本專案為非官方玩家工具，與 ConcernedApe、Stardew Valley 官方及 Stardew Valley Wiki 無隸屬關係。《Stardew Valley》及其遊戲素材之權利歸原權利人所有。
