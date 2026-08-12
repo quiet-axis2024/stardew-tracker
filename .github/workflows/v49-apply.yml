@@ -21,7 +21,17 @@ jobs:
 
       - name: Apply v49 patch
         run: |
-          python3 v49_patch.py
+          rm -f v49_patch.log
+          if ! python3 v49_patch.py > v49_patch.log 2>&1; then
+            cat v49_patch.log
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add -f v49_patch.log
+            git commit -m 'chore: record v49 patch failure'
+            git push origin v49-pwa-search-share-data
+            exit 1
+          fi
+          cat v49_patch.log
           # Turn the two intentionally escaped CSS line separators into real newlines.
           python3 - <<'PY'
           from pathlib import Path
@@ -44,43 +54,27 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import json,re
           app=Path('app.jsx').read_text()
           idx=Path('index.html').read_text()
           cloud=Path('cloud.js').read_text()
           sw=Path('sw.js').read_text()
           extra=Path('lookup-extra-v49.js').read_text()
-          checks={
-            'skill tab':'<SkillTab id="skills" label="技能"',
-            'farm skill tile':'["技能",`${skillTotal}/50`]',
-            'no notes textarea':'<SectionTitle icon="📝">備註</SectionTitle>',
-            'app url share':'分享 App 網址',
-            'reconnect cloud':'reconnectCloudV49',
-            'filters direct':'清除全部條件',
-            'mountain marker':'label:"山湖",x:66,y:29',
-            'island south':'南部／東南部海域',
-            'current season':'itemCurrentSeasonV49',
-            'nutrition':'技能／狀態加成',
-            'summary no platform':'；平台：',
-            'plain text icon':'game:Journal Scrap',
-          }
-          assert checks['skill tab'] in app
-          assert checks['farm skill tile'] in app
-          assert checks['no notes textarea'] not in app
-          assert checks['app url share'] in app
-          assert checks['reconnect cloud'] in app
+          assert '<SkillTab id="skills" label="技能"' in app
+          assert '["技能",`${skillTotal}/50`]' in app
+          assert '<SectionTitle icon="📝">備註</SectionTitle>' not in app
+          assert '分享 App 網址' in app and 'copyPublicAppUrlV49' in app
+          assert 'reconnectCloudV49' in app
           assert 'fishFiltersOpenV46' not in app
-          assert checks['mountain marker'] in app
-          assert checks['island south'] in app
-          assert checks['current season'] in app
-          assert checks['nutrition'] in app
-          assert checks['summary no platform'] not in app
-          assert checks['plain text icon'] in app
+          assert 'label:"山湖",x:66,y:29' in app
+          assert '南部／東南部海域' in app and '海盜灣水域' in app
+          assert 'itemCurrentSeasonV49' in app and 'currentSeasonFishV49' in app
+          assert '技能／狀態加成' in app and 'buffDuration' in app
+          assert '；平台：' not in app
+          assert 'game:Journal Scrap' in app
           assert '分享給朋友</SectionTitle>' not in app
           assert 'switch-names-v48.js' not in idx
           assert 'lookup-extra-v49.js?v=49' in idx
-          assert 'main-logo-zh.png?v=49' in idx
-          assert 'LOADING…' in idx
+          assert 'main-logo-zh.png?v=49' in idx and 'LOADING…' in idx
           assert 'connectFromManagementUrl' in cloud and 'OWNER_COOKIE' in cloud
           assert "stardew-tracker-v49" in sw and 'lookup-extra-v49.js' in sw and 'main-logo-zh.png' in sw
           assert 'Parsnip' in extra and 'Fried Egg' in extra and 'Pancakes' in extra
@@ -93,6 +87,6 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add app.jsx index.html cloud.js sw.js lookup-extra-v49.js main-logo-zh.png
-          git rm -f v49_patch.py .github/workflows/v49-apply.yml
+          git rm -f v49_patch.py .github/workflows/v49-apply.yml v49_patch.log 2>/dev/null || true
           git commit -m 'v49: PWA sharing, lookup seasons and nutrition, search UI polish'
           git push origin v49-pwa-search-share-data
