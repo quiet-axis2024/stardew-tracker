@@ -4,7 +4,7 @@ import json,re
 def fail(msg): raise SystemExit(msg)
 
 t=Path('app.jsx').read_text()
-forbidden=['城镇修复路线','Joja 仓库路线内容','社区中心路线内容','点人物卡 → 社交速查；点礼物 → 物品资料','>农场设备<','通用喜好分类','点击查看详细用途／来源','特殊物品／分类','功能／服务','鵜鶘鎮']
+forbidden=['城镇修复路线','Joja 仓库路线内容','社区中心路线内容','点人物卡 → 社交速查；点礼物 → 物品资料','>农场设备<','通用喜好分类','点击查看详细用途／来源','特殊物品／分类','功能／服务','鵜鶘鎮','姜島','揹包','社群升級','鍛造臺']
 bad=[x for x in forbidden if x in t]
 if bad: fail(f'App UI language regressions: {bad}')
 

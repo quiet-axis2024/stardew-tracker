@@ -631,7 +631,7 @@ const MACHINE_EXTRA_V55 = {
   "Statue Of The Dwarf King":{ingredients:[{name:"Iridium Bar",quantity:20}],sourceZh:"採礦精通後解鎖配方。"},
   "Deconstructor":{sourceZh:"齊先生核桃房以齊鑽購買。"},
   "Anvil":{ingredients:[{name:"Iron Bar",quantity:50}],sourceZh:"戰鬥精通後解鎖配方。"},
-  "Mini-Forge":{ingredients:[{name:"Dragon Tooth",quantity:5},{name:"Iron Bar",quantity:10},{name:"Gold Bar",quantity:10},{name:"Iridium Bar",quantity:5}],sourceZh:"戰鬥精通後解鎖配方；功能類似火山鍛造臺。"},
+  "Mini-Forge":{ingredients:[{name:"Dragon Tooth",quantity:5},{name:"Iron Bar",quantity:10},{name:"Gold Bar",quantity:10},{name:"Iridium Bar",quantity:5}],sourceZh:"戰鬥精通後解鎖配方；功能類似火山鍛造台。"},
   "Crab Pot":{ingredients:[{name:"Wood",quantity:40},{name:"Iron Bar",quantity:3}],sourceZh:"釣魚 3 級基礎配方；誘捕者職業會改變材料需求。"}
 };
 
@@ -671,16 +671,16 @@ const SOCIAL_EMPTY_RULES_V55 = {
   "矮人":{hates:["All Universal Hates"]}
 };
 const NPC_SERVICES_V55 = {
-  "罗宾":[["Silo","建造／管理農場建築","建造、升級、移動或拆除多數農場建築，並負責農舍升級與部分社群升級。"]],
-  "羅賓":[["Silo","建造／管理農場建築","建造、升級、移動或拆除多數農場建築，並負責農舍升級與部分社群升級。"]],
+  "罗宾":[["Silo","建造／管理農場建築","建造、升級、移動或拆除多數農場建築，並負責農舍升級與部分城鎮設施改善。"]],
+  "羅賓":[["Silo","建造／管理農場建築","建造、升級、移動或拆除多數農場建築，並負責農舍升級與部分城鎮設施改善。"]],
   "玛妮":[["Cow","購買農場動物","為雞舍或牲口棚購買動物；也銷售乾草、暖氣機、擠奶桶等動物照護用品。"]],
   "瑪妮":[["Cow","購買農場動物","為雞舍或牲口棚購買動物；也銷售乾草、暖氣機、擠奶桶等動物照護用品。"]],
   "克林特":[["Pickaxe","工具升級","支付金錢與金屬錠升級主要手持工具。"],["Geode","處理晶球","在鐵匠鋪敲開晶球；每個基礎處理費 25g。"]],
   "刘易斯":[["Prize Ticket","獎券兌換機","鎮長家內可用獎品券在獎品機領取連續獎勵。"]],
   "劉易斯":[["Prize Ticket","獎券兌換機","鎮長家內可用獎品券在獎品機領取連續獎勵。"]],
-  "威利":[["Boat","姜島船運","修復魚店後室的舊船後可搭船前往姜島；單程船票 1,000g。"]],
-  "皮埃尔":[["36 Backpack","揹包升級","雜貨店可購買兩次揹包擴充，每次增加 12 格。"]],
-  "皮埃爾":[["36 Backpack","揹包升級","雜貨店可購買兩次揹包擴充，每次增加 12 格。"]],
+  "威利":[["Boat","姜岛船運","修復魚店後室的舊船後可搭船前往姜岛；單程船票 1,000g。"]],
+  "皮埃尔":[["36 Backpack","背包升級","雜貨店可購買兩次背包擴充，每次增加 12 格。"]],
+  "皮埃爾":[["36 Backpack","背包升級","雜貨店可購買兩次背包擴充，每次增加 12 格。"]],
   "法师":[["Magic Ink","幻象神龕","達到條件後可付費修改角色外觀。"],["Junimo Hut","魔法建築","歸還魔法墨水後可購買祝尼魔小屋、方尖碑與黃金時鐘等魔法建築。"]],
   "法師":[["Magic Ink","幻象神龕","達到條件後可付費修改角色外觀。"],["Junimo Hut","魔法建築","歸還魔法墨水後可購買祝尼魔小屋、方尖碑與黃金時鐘等魔法建築。"]]
 };
