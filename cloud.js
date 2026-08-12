@@ -6,6 +6,8 @@
   const OWNER_COOKIE = 'sdv_cloud_owner_v1';
   const SHARE_COOKIE = 'sdv_cloud_share_v1';
   const PROGRESS_KEYS = new Set(['sdv2-progress-pub', 'sdv2-progress-v3']);
+  const LEGACY_APP_URL = 'https://quiet-axis2024.github.io/stardew-tracker/';
+  const CLOUDFLARE_APP_URL = 'https://stardewfarm-handbook.pages.dev/';
 
   const proto = Storage.prototype;
   const rawGet = proto.getItem;
@@ -154,6 +156,26 @@
     const manage = url.searchParams.get('manage');
     const view = url.searchParams.get('view');
     const shareKey = url.searchParams.get('sharekey');
+    const migration = url.searchParams.get('sdv_migrate');
+
+    // v56: one-click migration. The new pages.dev app temporarily sends this browser
+    // back to the known legacy GitHub Pages origin, where that origin is allowed to
+    // read its own localStorage/cookies. It then hands only the existing cloud tokens
+    // back to the hard-coded new origin. No arbitrary redirect target is accepted.
+    if (migration === 'cloudflare') {
+      const legacy = new URL(LEGACY_APP_URL);
+      const hereIsLegacy = url.origin === legacy.origin && url.pathname.startsWith(legacy.pathname);
+      if (hereIsLegacy) {
+        const owner = lsGet(OWNER_STORE) || cookieGet(OWNER_COOKIE) || '';
+        const share = lsGet(SHARE_STORE) || cookieGet(SHARE_COOKIE) || '';
+        const target = new URL(CLOUDFLARE_APP_URL);
+        if (owner) target.searchParams.set('manage', owner);
+        if (share) target.searchParams.set('sharekey', share);
+        target.searchParams.set('migrated', owner ? '1' : 'missing');
+        window.location.replace(target.toString());
+        return;
+      }
+    }
 
     if (manage) {
       const pairedShare = shareKey || lsGet(SHARE_STORE) || cookieGet(SHARE_COOKIE) || '';
@@ -165,6 +187,7 @@
       // 管理密鑰只在第一次開啟時出現在網址；存入本機後立即清掉。
       url.searchParams.delete('manage');
       url.searchParams.delete('sharekey');
+      url.searchParams.delete('migrated');
       window.history.replaceState({}, '', url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : '') + url.hash);
     } else if (view) {
       state.mode = 'share';
@@ -178,6 +201,11 @@
         state.token = storedOwner;
         state.shareToken = storedShare || '';
       }
+    }
+
+    if (url.searchParams.has('migrated')) {
+      url.searchParams.delete('migrated');
+      window.history.replaceState({}, '', url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : '') + url.hash);
     }
 
     document.documentElement.dataset.sdvCloudMode = state.mode;
@@ -272,7 +300,12 @@
 
   function connectFromManagementUrl(raw) {
     const url = new URL(String(raw || '').trim(), window.location.href);
-    if (url.origin !== window.location.origin) throw new Error('管理連結不是這個手帳 App 的網址');
+    const legacy = new URL(LEGACY_APP_URL);
+    const cloudflare = new URL(CLOUDFLARE_APP_URL);
+    const currentOk = url.origin === window.location.origin;
+    const legacyOk = url.origin === legacy.origin && url.pathname.startsWith(legacy.pathname);
+    const cloudflareOk = url.origin === cloudflare.origin;
+    if (!currentOk && !legacyOk && !cloudflareOk) throw new Error('這不是這個手帳的管理連結');
     const owner = url.searchParams.get('manage') || '';
     const share = url.searchParams.get('sharekey') || '';
     if (!owner || !share) throw new Error('管理連結需要同時包含 manage 與 sharekey');
@@ -281,5 +314,14 @@
     return true;
   }
 
-  window.SDVCloud = { init, state, shareUrl, copyShareLink, connectFromManagementUrl };
+  function migrateFromLegacy() {
+    const cloudflare = new URL(CLOUDFLARE_APP_URL);
+    if (window.location.origin !== cloudflare.origin) return false;
+    const legacy = new URL(LEGACY_APP_URL);
+    legacy.searchParams.set('sdv_migrate', 'cloudflare');
+    window.location.assign(legacy.toString());
+    return true;
+  }
+
+  window.SDVCloud = { init, state, shareUrl, copyShareLink, connectFromManagementUrl, migrateFromLegacy };
 })();
