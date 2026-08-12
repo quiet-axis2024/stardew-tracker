@@ -180,14 +180,22 @@ const MASTERY = [
 ];
 
 const MILESTONES = [
-  { id: "bus", name: "公車修復（沙漠）", desc: "完成保險庫收集包（共 42,500g）" },
-  { id: "minecart", name: "礦車修復", desc: "完成鍋爐房收集包" },
-  { id: "bridge", name: "採石場橋修復", desc: "完成工藝室收集包" },
-  { id: "panning", name: "淘金解鎖", desc: "完成魚缸收集包，威利贈送淘盤" },
-  { id: "cc", name: "社區中心完成", desc: "全部 30 個收集包達成" },
-  { id: "island", name: "薑島解鎖", desc: "社區中心完成後，幫威利修好船" },
-  { id: "forge", name: "熔爐（火山）", desc: "薑島火山口，可鍛造與附魔武器" },
-  { id: "qi", name: "齊先生房間", desc: "抵達骷髏洞窟 100 層" },
+  { id: "greenhouse", name: "溫室修復", desc: "解鎖全年種植空間" },
+  { id: "mine120", name: "普通礦井 120 層", desc: "抵達礦井底層並取得骷髏鑰匙" },
+  { id: "bus", name: "公車修復（沙漠）", desc: "解鎖沙漠與骷髏洞窟路線" },
+  { id: "minecart", name: "礦車修復", desc: "解鎖主要區域快速移動" },
+  { id: "bridge", name: "採石場橋修復", desc: "解鎖採石場" },
+  { id: "panning", name: "淘金解鎖", desc: "解鎖淘盤" },
+  { id: "sewer", name: "下水道解鎖", desc: "取得生鏽的鑰匙" },
+  { id: "casino", name: "賭場解鎖", desc: "完成神秘的齊先生任務線並取得俱樂部卡" },
+  { id: "skull100", name: "骷髏洞窟 100 層", desc: "抵達骷髏洞窟第 100 層" },
+  { id: "cc", name: "社區中心完成", desc: "完成社區中心修復" },
+  { id: "movie", name: "電影院解鎖", desc: "完成後期城鎮設施解鎖" },
+  { id: "island", name: "薑島解鎖", desc: "修復威利的船並抵達薑島" },
+  { id: "volcano", name: "火山地牢頂層", desc: "抵達火山第 10 層並解鎖鍛造台" },
+  { id: "walnutRoom", name: "齊先生的核桃房", desc: "收集 100 顆金色核桃後解鎖" },
+  { id: "masteryCave", name: "精通洞穴解鎖", desc: "五項技能皆達 10 級" },
+  { id: "perfection", name: "完美度 100%", desc: "達成遊戲完美度 100%" },
 ];
 
 /* 圖鑑清單：排列順序與遊戲收藏頁一致（1.6），名稱採遊戲內原文以便對照與百科查詢 */
@@ -224,10 +232,29 @@ const NPC_ICON_FILES = {
   克羅巴斯:"Krobus Icon", 矮人:"Dwarf Icon", 雷歐:"Leo Icon"
 };
 
+function retryWikiImageV48(e){
+  const img=e.currentTarget;
+  const tries=Number(img.dataset.sdvRetry||0);
+  const original=img.dataset.sdvSrc||img.getAttribute("src")||"";
+  if(!original)return;
+  if(tries>=2){img.style.visibility="hidden";return;}
+  img.dataset.sdvRetry=String(tries+1);
+  img.style.opacity=".35";
+  window.setTimeout(()=>{
+    const join=original.includes("?")?"&":"?";
+    img.src=`${original}${join}sdvRetry=${Date.now()}-${tries+1}`;
+  },tries===0?450:1400);
+}
+function imageLoadedV48(e){
+  const img=e.currentTarget; img.dataset.sdvRetry="0"; img.style.opacity="1"; img.style.visibility="visible";
+}
+function WikiImg({src,alt="",loading="lazy",style}){
+  if(!src)return null;
+  return <img src={src} data-sdv-src={src} alt={alt} loading={loading} onError={retryWikiImageV48} onLoad={imageLoadedV48} style={style}/>;
+}
 function GameIcon({ file, size = 28, alt = "" }) {
   if (!file) return null;
-  return <img src={GAME_FILE(file)} alt={alt} loading="lazy" onError={e => { e.currentTarget.style.display = "none"; }}
-    style={{ width:size, height:size, objectFit:"contain", imageRendering:"pixelated", flex:"0 0 auto" }} />;
+  return <WikiImg src={GAME_FILE(file)} alt={alt} style={{ width:size, height:size, objectFit:"contain", imageRendering:"pixelated", flex:"0 0 auto" }} />;
 }
 
 
@@ -315,7 +342,7 @@ const COOKING_DISHES_V3 = [
 ];
 
 const COLLECTION_TABS_V3 = [
- ["shipping","出貨","Mini-Shipping Bin"],["fish","魚類","Pufferfish"],["artifact","古物","Dwarf Scroll I"],["mineral","礦物","Diamond"],["cooking","烹飪","Cooking Icon"],["achievements","成就","Achievements Icon"],["letters","信件","Mail"],["notes","秘密紙條","Secret Note Icon"],["scraps","日誌殘頁","Journal Scrap"]
+ ["shipping","出貨","Mini-Shipping Bin"],["fish","魚類","Pufferfish"],["artifact","古物","Dwarf Scroll I"],["mineral","礦物","Diamond"],["cooking","烹飪","Cooking Icon"],["achievements","成就","Achievements Icon"],["notes","秘密紙條","Secret Note Icon"],["scraps","日誌殘頁","Journal Scrap"]
 ];
 
 const SHIPPING_ITEMS_V30 = [
@@ -900,35 +927,17 @@ const FESTIVAL_GUIDE_V26 = {
   "冬日星盛宴":{desc:"秘密送禮活動；到現場後把禮物送給指定村民，也會收到另一位村民的禮物。",items:[]}
 };
 
-/* ================= 預填進度（對話紀錄） ================= */
+/* ================= 全新手帳預設：不帶任何玩家進度 ================= */
 const PREFILL = {
-  base: { year: 2, season: "夏", day: 14, money: 89929, totalIncome: 744005, backpack: 36, farm: "四角農場", platform: "Switch 2 / 1.6" },
-  skills: { farming: 10, mining: 8, foraging: 10, fishing: 9, combat: 7 },
-  prof: { farming5: "農耕者", farming10: "工匠", mining5: "", mining10: "", foraging5: "樵夫", foraging10: "伐木工", fishing5: "", fishing10: "", combat5: "", combat10: "" },
-  mine: { normal: 120, skullBest: 0 },
-  tools: { watering: "金", pickaxe: "金", axe: "金", hoe: "金", trash: "銅" },
-  house: 1,
-  buildings: { coop: 3, barn: 3, silos: 2, fishPonds: 4, sheds: 0, other: ["溫室", "馬廄", "連線小屋"] },
-  animals: { 雞: 3, 鴨: 4, 恐龍: 1, 兔子: 2, 牛: 2, 山羊: 3, 綿羊: 2, 豬: 2 },
-  ponds: [
-    { fish: "大海參", count: 6, cap: 7, need: "尚未觸發下一次擴容需求" },
-    { fish: "幽靈魚", count: 3, cap: 3, need: "尚待下一次擴容需求" },
-    { fish: "鱘魚", count: 5, cap: 5, need: "萬象晶球 ×3" },
-    { fish: "水滴魚", count: 3, cap: 3, need: "" },
-  ],
-  milestones: ["bus", "minecart", "bridge", "panning", "cc"],
-  wallet: ["放大鏡", "矮人語聖典", "銹鑰匙（下水道）", "骷髏鑰匙", "俱樂部卡", "特殊護符", "魔法墨水", "黑暗護符"],
-  abilities: ["森林魔法", "熊的知識", "春洋蔥精通"],
-  bundleDone: ["crafts", "pantry", "fishtank", "boiler", "vault"],
-  bundleItems: {},
-  friendship: {},
-  collections: { fish: [], artifact: [], mineral: [] },
-  mastery: [],
-  notes: "第2年夏14。明日（夏15）預告綠雨。\n豪華雞舍：雞3、鴨4、恐龍1、兔2。\n豪華牛棚：牛2、山羊3、綿羊2、豬2。\n自動收集器已裝。\n夜間結算收入通常約10,000g。\n工具除垃圾桶外皆金；垃圾桶銅。\n銥礦不足，尚未升銥工具。\n魚塘：大海參6/7、幽靈魚3/3、鱘魚5/5（需萬象晶球×3）、水滴魚3/3。\n溫室已開；曾種滿草莓；上古種子×2、稀有種子×3。\n豪華牛棚已有豬×2。",
-  extras: {
-    starfruit: 2,
-    buildingNote: "筒倉×2；溫室春12解鎖；連線小屋×1（朋友）",
-  },
+  base: { year: 1, season: "春", day: 1, money: 0, totalIncome: 0, backpack: 12, farm: "", name: "", platform: "Switch 2 / 1.6", profileDataVerifiedV47: false },
+  skills: { farming: 0, mining: 0, foraging: 0, fishing: 0, combat: 0 },
+  prof: { farming5: "", farming10: "", mining5: "", mining10: "", foraging5: "", foraging10: "", fishing5: "", fishing10: "", combat5: "", combat10: "" },
+  mine: { normal: 0, skullBest: 0 },
+  tools: { watering: "初始", pickaxe: "初始", axe: "初始", hoe: "初始", trash: "初始" },
+  house: 0,
+  buildings: { coop: 0, barn: 0, silos: 0, fishPonds: 0, sheds: 0, other: [] },
+  animals: {}, ponds: [], milestones: [], wallet: [], abilities: [], bundleDone: [], bundleItems: {}, friendship: {},
+  collections: { fish: [], artifact: [], mineral: [] }, mastery: [], notes: "", extras: { starfruit: 0, buildingNote: "" },
 };
 
 const STORAGE_KEY = "sdv2-progress-v3";
@@ -1377,14 +1386,17 @@ function StardewTracker() {
         .filter(r => r.text)
         .sort((a,b) => nameScore(b) - nameScore(a))[0] || {text:"", confidence:0};
 
-      // 依 Switch 16:9 玩家資料頁的固定比例裁切；只辨識真正需要的欄位。
-      const farmerCropColor = makeCrop(img, 0.282, 0.775, 0.155, 0.078, 5, false);
-      const farmerCropMono = makeCrop(img, 0.282, 0.775, 0.155, 0.078, 5, true);
-      const farmCropColor = makeCrop(img, 0.430, 0.548, 0.340, 0.085, 4, false);
-      const farmCropMono = makeCrop(img, 0.430, 0.548, 0.340, 0.085, 4, true);
-      const moneyCrop = makeCrop(img, 0.555, 0.638, 0.185, 0.060, 3.5, true);
-      const incomeCrop = makeCrop(img, 0.555, 0.697, 0.185, 0.060, 3.5, true);
-      const dateCrop = makeCrop(img, 0.505, 0.758, 0.230, 0.065, 3.5, true);
+      // Switch 16:9 玩家資料頁固定比例裁切。v48 改成窄欄位，避免標籤／邊框被 OCR 當成數字。
+      const farmerCropColor = makeCrop(img, 0.285, 0.783, 0.130, 0.055, 6, false);
+      const farmerCropMono = makeCrop(img, 0.285, 0.783, 0.130, 0.055, 6, true);
+      const farmCropColor = makeCrop(img, 0.480, 0.568, 0.230, 0.055, 5, false);
+      const farmCropMono = makeCrop(img, 0.480, 0.568, 0.230, 0.055, 5, true);
+      // 目前金錢改讀右上 HUD 的純數字，避免「目前持有現金」字樣造成假數字。
+      const hudMoneyCrop = makeCrop(img, 0.890, 0.198, 0.100, 0.070, 4, true);
+      const incomeCrop = makeCrop(img, 0.582, 0.704, 0.090, 0.045, 5, true);
+      const yearCrop = makeCrop(img, 0.533, 0.768, 0.019, 0.050, 6, true);
+      const seasonCrop = makeCrop(img, 0.575, 0.768, 0.040, 0.050, 5, false);
+      const dayCrop = makeCrop(img, 0.615, 0.768, 0.033, 0.050, 6, true);
       const clockCrop = makeCrop(img, 0.868, 0.139, 0.095, 0.055, 4, true);
 
       setProfileOcrStatus("辨識農夫與農場名稱…");
@@ -1398,9 +1410,11 @@ function StardewTracker() {
       const farmerRaw = farmerBest.text;
       const farmRaw = farmBest.text;
       setProfileOcrStatus("辨識金錢與日期…");
-      const moneyRaw = await recognize(moneyCrop, "0123456789,");
+      const moneyRaw = await recognize(hudMoneyCrop, "0123456789");
       const incomeRaw = await recognize(incomeCrop, "0123456789,");
-      const dateRaw = await recognize(dateCrop, "");
+      const yearRaw = await recognize(yearCrop, "0123456789");
+      const seasonRaw = await recognize(seasonCrop, "");
+      const dayRaw = await recognize(dayCrop, "0123456789");
       const clockRaw = await recognize(clockCrop, "0123456789:：");
       await worker.terminate();
 
@@ -1409,28 +1423,26 @@ function StardewTracker() {
         .replace(/^[^\p{L}\p{N}®©·・._@☆★♡♥♪♫~～+\-]+|[^\p{L}\p{N}®©·・._@☆★♡♥♪♫~～+\-]+$/gu, "")
         .trim();
       let farmName = cleanNameCandidate(farmRaw)
-        // 只移除 UI 固定的「農場／农场」字樣；© / ® / @ 若在它前面，視為農場名的一部分保留。
-        .replace(/\s*(?:農場|农场)\s*$/u, "")
         .replace(/^(?:農場|农场)\s*/u, "")
         .replace(/\s+/g, " ")
         .trim();
+      // 若 OCR 在「農場」後又幻覺出字串，直接以 UI 固定後綴為界截斷。
+      const farmSuffixAt = farmName.search(/(?:農場|农场)/u);
+      if (farmSuffixAt >= 0) farmName = farmName.slice(0, farmSuffixAt).trim();
+      // Switch 字型的中點偶爾會被辨識成 +。
+      farmName = farmName.replace(/\s+\+\s+/g, " · ").replace(/\s+/g, " ").trim();
       // OCR 偶爾會把「目前持有現金」等標籤吃進來；這裡只保留較短的名稱片段。
       if (farmName.length > 28) farmName = farmName.slice(0,28).trim();
       if (farmerName.length > 24) farmerName = farmerName.slice(0,24).trim();
 
       const currentMoney = digitsOnly(moneyRaw);
       const totalIncome = digitsOnly(incomeRaw);
-
-      const compactDate = dateRaw.replace(/\s+/g, "");
-      let year = null, season = null, day = null;
-      let dm = compactDate.match(/第?(\d+)年.*?([春夏秋冬]).*?(\d+)日/u);
-      if (!dm) dm = compactDate.match(/(\d+).*?([春夏秋冬]).*?(\d+)/u);
-      if (dm) {
-        year = Number(dm[1]); season = dm[2]; day = Number(dm[3]);
-      } else {
-        const nums = compactDate.match(/\d+/g) || [];
-        if (nums.length >= 2) { year = Number(nums[0]); day = Number(nums[nums.length-1]); }
-      }
+      let year = digitsOnly(yearRaw);
+      let day = digitsOnly(dayRaw);
+      const seasonMatch = String(seasonRaw||"").match(/[春夏秋冬]/u);
+      let season = seasonMatch ? seasonMatch[0] : null;
+      if (!(year && year >= 1 && year <= 99)) year = null;
+      if (!(day && day >= 1 && day <= 28)) day = null;
 
       let gameTime = clockRaw.replace(/\s+/g, "").replace("：", ":");
       const tm = gameTime.match(/([0-2]?\d):?([0-5]\d)/);
@@ -1449,7 +1461,7 @@ function StardewTracker() {
 
       setData(d => ({ ...d, profilePortrait:portrait, base:{...d.base, ...patch} }));
       setProfileOcrResult({
-        farmerRaw, farmRaw, moneyRaw, incomeRaw, dateRaw, clockRaw, applied:patch,
+        farmerRaw, farmRaw, moneyRaw, incomeRaw, yearRaw, seasonRaw, dayRaw, clockRaw, applied:patch,
         farmerColor: farmerColorResult.text, farmerMono: farmerMonoResult.text,
         farmColor: farmColorResult.text, farmMono: farmMonoResult.text
       });
@@ -1487,7 +1499,7 @@ function StardewTracker() {
             <button onClick={()=>updateBase({year:Math.min(99,Number(data.base.year||1)+1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,height:25,fontWeight:950,color:C.brown,padding:0}}>＋</button>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:3,marginTop:6}}>{SEASONS.map(season=>{const active=data.base.season===season;return <button key={season} onClick={()=>updateBase({season})} style={{border:`1.5px solid ${active?C.green:C.line}`,background:active?C.lightGreen:C.cream,borderRadius:14,padding:"4px 2px",fontSize:9.5,fontWeight:900,color:active?C.green:C.ink,whiteSpace:"nowrap"}}>{SEASON_ICON[season]} {season}</button>})}</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:3,marginTop:6}}>{[["等級",`${skillTotal}/50`],["社區",`${rp.done}/30`],["礦井",`${data.mine.normal}/120`],["動物",`${totalAnimals}`]].map(([k,v])=><div key={k} style={{background:"#FFF4D8",border:`1px solid ${C.line}`,borderRadius:7,padding:"3px 2px",textAlign:"center",minWidth:0}}><div style={{fontSize:6.5,color:C.muted,fontWeight:900}}>{k}</div><b style={{display:"block",fontSize:8.5,color:C.brown,lineHeight:1.15,marginTop:1}}>{v}</b></div>)}</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:3,marginTop:6}}>{[["等級",`${skillTotal}/50`],["社區",`${rp.done}/30`],(Number(data.mine?.skullBest||0)>0?["骷髏洞",`${Number(data.mine.skullBest)}層`]:["礦井",`${Math.min(120,Number(data.mine?.normal||0))}/120`]),["動物",`${totalAnimals}`]].map(([k,v])=><div key={k} style={{background:"#FFF4D8",border:`1px solid ${C.line}`,borderRadius:7,padding:"3px 2px",textAlign:"center",minWidth:0}}><div style={{fontSize:6.5,color:C.muted,fontWeight:900}}>{k}</div><b style={{display:"block",fontSize:8.5,color:C.brown,lineHeight:1.15,marginTop:1}}>{v}</b></div>)}</div>
         </div>
         <details style={{gridColumn:"1 / -1",borderTop:`1px dashed ${C.line}`,paddingTop:5,marginTop:0}}>
           <summary style={{fontSize:9.5,color:C.muted,fontWeight:900,cursor:"pointer",width:"fit-content"}}>✎ 編輯資料</summary>
@@ -1575,7 +1587,7 @@ function StardewTracker() {
   </div>;
 
   const renderSkills = () => {
-    const SkillTab=({id,label,file})=>{const active=skillSection===id;return <button onClick={()=>setSkillSection(id)} style={{border:`2px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.paper,borderRadius:11,padding:"6px 3px 5px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",minWidth:0}}><GameIcon file={file} size={35}/><span style={{fontSize:9.5,fontWeight:950,color:active?C.darkBrown:C.muted}}>{label}</span></button>};
+    const SkillTab=({id,label,file})=>{const active=skillSection===id;return <button onClick={()=>setSkillSection(id)} style={{border:`1.5px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.paper,borderRadius:8,padding:"3px 2px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",minWidth:0}}><GameIcon file={file} size={25}/><span style={{fontSize:8.4,fontWeight:950,color:active?C.darkBrown:C.muted}}>{label}</span></button>};
     const drops=data.stardropsV2||[];
     const autoDrop=id=>id==="mine100"?Number(data.mine?.normal||0)>=100:id==="angler"?(data.collections?.fish||[]).length>=FISH_ICON_FILES.length:id==="museum"?(data.achievementsV2||[]).includes("museum_all"):false;
     const toggleDrop=id=>{if(autoDrop(id))return;update({stardropsV2:drops.includes(id)?drops.filter(x=>x!==id):[...drops,id]})};
@@ -1627,8 +1639,8 @@ function StardewTracker() {
     const bundleNeedFor=b=>{const items=bundleItemsFor(b);const d=b.need||b.items.length;return Math.max(1,Math.min(items.length||1,mode==="custom"&&customNeeds[b.id]!=null?Number(customNeeds[b.id]):d));};
     const setCustomBundle=(b,items,need=bundleNeedFor(b))=>update({bundleCustomV28:{...customItems,[b.id]:items},bundleNeedV28:{...customNeeds,[b.id]:Math.max(1,Math.min(items.length||1,Number(need)||1))}});
     const setCustomName=(b,name)=>update({bundleNameV28:{...customNames,[b.id]:name||b.name}});
-    const RoomTab=({r})=>{const rd=roomDone(r),active=room.id===r.id;return <button onClick={()=>{setBundleRoom(r.id);setBundleEditV28(null)}} style={{border:`2px solid ${active?C.orange:rd?C.green:C.line}`,background:active?"#FFE2A8":rd?"#EEF7DD":C.paper,borderRadius:10,padding:"5px 2px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",minWidth:0}}><GameIcon file={ROOM_ICON_FILES[r.id]} size={31}/><span style={{fontSize:8.5,fontWeight:950,color:active?C.darkBrown:rd?C.green:C.muted}}>{rd?"✓ ":""}{r.name}</span></button>};
-    const routeButton=(id,label,file)=>{const active=route===id;return <button onClick={()=>{update({communityRouteV28:id});setBundleEditV28(null)}} style={{border:`2px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.paper,borderRadius:10,padding:7,display:"flex",alignItems:"center",justifyContent:"center",gap:7,fontSize:10,fontWeight:950,color:C.brown}}><GameIcon file={file} size={32}/>{label}</button>};
+    const RoomTab=({r})=>{const rd=roomDone(r),active=room.id===r.id;return <button onClick={()=>{setBundleRoom(r.id);setBundleEditV28(null)}} style={{border:`1.5px solid ${active?C.orange:rd?C.green:C.line}`,background:active?"#FFE2A8":rd?"#EEF7DD":C.paper,borderRadius:8,padding:"5px 2px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",minWidth:0}}><GameIcon file={ROOM_ICON_FILES[r.id]} size={24}/><span style={{fontSize:8.2,fontWeight:950,color:active?C.darkBrown:rd?C.green:C.muted}}>{rd?"✓ ":""}{r.name}</span></button>};
+    const routeButton=(id,label,file)=>{const active=route===id;return <button onClick={()=>{update({communityRouteV28:id});setBundleEditV28(null)}} style={{border:`1.5px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.paper,borderRadius:8,padding:4,display:"flex",alignItems:"center",justifyContent:"center",gap:7,fontSize:8.5,fontWeight:950,color:C.brown}}><GameIcon file={file} size={25}/>{label}</button>};
     return <div>
       <SectionTitle icon="📦">城鎮修復路線</SectionTitle>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7}}>{routeButton("cc","社區中心","Golden Scroll")}{routeButton("joja","Joja","Joja Warehouse")}</div>
@@ -1716,7 +1728,7 @@ function StardewTracker() {
     const setAnimalCount=(name,value)=>updateNested("animals",{[name]:Math.max(0,Math.min(99,value))});
     const setMachineCount=(key,value)=>update({machines:{...(data.machines||{}),[key]:Math.max(0,Math.min(999,Number(value)||0))}});
     const cycleLevel=(key,levels)=>updateNested("buildings",{[key]:(Number(data.buildings?.[key]||0)+1)%levels.length});
-    const FarmTab=({id,label,file})=>{const active=farmSection===id;return <button onClick={()=>setFarmSection(id)} style={{border:`2px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.paper,borderRadius:11,padding:"6px 3px 5px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",minWidth:0}}><GameIcon file={file} size={35}/><span style={{fontSize:9.5,fontWeight:950,color:active?C.darkBrown:C.muted}}>{label}</span></button>};
+    const FarmTab=({id,label,file})=>{const active=farmSection===id;return <button onClick={()=>setFarmSection(id)} style={{border:`1.5px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.paper,borderRadius:8,padding:"3px 2px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",minWidth:0}}><GameIcon file={file} size={25}/><span style={{fontSize:8.4,fontWeight:950,color:active?C.darkBrown:C.muted}}>{label}</span></button>};
     const ProductLine=({name})=>{const ps=animalProducts[name]||[];return <div style={{marginTop:3,minHeight:27}}><div style={{display:"flex",justifyContent:"center",gap:2}}>{ps.map(([file,label])=><span key={file} title={label}><GameIcon file={file} size={18} alt={label}/></span>)}</div><div style={{fontSize:6.8,color:C.muted,fontWeight:800,lineHeight:1.05,marginTop:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{ps.map(x=>x[1]).join("／")}</div></div>};
     const AnimalGrid=({items})=><div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:6}}>{items.map(a=>{const n=Number(data.animals?.[a.name]||0);return <div key={a.name} style={{border:`1.5px solid ${n>0?C.green:C.line}`,background:n>0?"#EEF7DD":C.paper,borderRadius:9,padding:"5px 3px",textAlign:"center",minWidth:0}}><GameIcon file={ANIMAL_ICON_FILES[a.name]} size={34}/><div style={{fontSize:9,fontWeight:950,color:C.ink}}>{a.name}</div><ProductLine name={a.name}/><div style={{display:"grid",gridTemplateColumns:"22px 1fr 22px",alignItems:"center",gap:2,marginTop:3}}><button onClick={()=>setAnimalCount(a.name,n-1)} style={{border:0,background:C.cream,borderRadius:6,height:21,fontWeight:950,color:C.brown,padding:0}}>−</button><b style={{fontSize:10.5,color:n?C.green:C.muted}}>{n}</b><button onClick={()=>setAnimalCount(a.name,n+1)} style={{border:0,background:C.cream,borderRadius:6,height:21,fontWeight:950,color:C.brown,padding:0}}>＋</button></div></div>})}</div>;
     const BuildingImage=({file,active=true})=><img src={GAME_FILE(file)} alt="" loading="lazy" onError={e=>{e.currentTarget.style.visibility="hidden"}} style={{width:"100%",height:54,objectFit:"contain",imageRendering:"pixelated",filter:active?"none":"grayscale(1)",opacity:active?1:.35}}/>;
@@ -1933,7 +1945,7 @@ function StardewTracker() {
     const selected=selectedPaperV3?.kind===kind?selectedPaperV3.n:null;
     return <div>
       <Card style={{marginTop:8,padding:9}}><div style={{fontSize:12,fontWeight:950,color:C.brown,marginBottom:7}}>{title} {list.length}/{total}</div><div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:5}}>{Array.from({length:total},(_,i)=>i+1).map(n=>{const on=list.includes(n);return <button key={n} onClick={()=>setSelectedPaperV3({kind,n})} style={{position:"relative",border:`1.5px solid ${selected===n?C.orange:on?C.green:C.line}`,background:on?C.lightGreen:C.cream,borderRadius:7,padding:"7px 1px",fontSize:10,fontWeight:900,color:on?C.green:C.brown}}>{n}<span onClick={e=>{e.stopPropagation();updateExtras({[kind]:on?list.filter(x=>x!==n):[...list,n]})}} style={{position:"absolute",right:1,top:0,fontSize:9}}>{on?"✓":"○"}</span></button>})}</div></Card>
-      {selected&&<Card style={{marginTop:8,padding:10,background:"#F6E5B9"}}><div style={{display:"flex",gap:8,alignItems:"center"}}><GameIcon file={isNotes?"Secret Note":"Journal Scrap"} size={36}/><div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:950,color:C.darkBrown}}>{title} #{selected}</div><div style={{fontSize:9.5,color:C.muted,marginTop:2}}>{isNotes?"紙條內容與可執行解法":"日誌內容速查"}</div></div></div>{imageMap[selected]&&<img src={GAME_FILE(imageMap[selected])} alt={`${title} ${selected} 圖像內容`} onError={e=>e.currentTarget.style.display="none"} style={{display:"block",width:"min(216px,100%)",height:"auto",margin:"10px auto 7px",imageRendering:"pixelated",borderRadius:5}}/>}<div style={{marginTop:8,padding:"8px 9px",background:"#FFF8E2",borderRadius:8,border:`1px solid ${C.line}`}}><div style={{fontSize:9.5,fontWeight:950,color:C.brown,marginBottom:3}}>{isNotes?"紙條內容":"內容"}</div><div style={{fontSize:11,color:C.ink,lineHeight:1.55}}>{content[selected]||"尚未整理內容。"}</div></div>{solution[selected]&&<div style={{marginTop:7,padding:"8px 9px",background:"#EAF4D8",borderRadius:8,border:`1px solid ${C.green}`}}><div style={{fontSize:9.5,fontWeight:950,color:C.green,marginBottom:3}}>解法／效果</div><div style={{fontSize:11,color:C.ink,lineHeight:1.55}}>{solution[selected]}</div></div>}<a href={isNotes?"https://stardewvalleywiki.com/Secret_Notes":"https://stardewvalleywiki.com/Journal_Scraps"} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:7,fontSize:10,fontWeight:900,color:C.blue}}>Wiki 完整頁面 ↗</a></Card>}
+      {selected&&<Card style={{marginTop:8,padding:10,background:"#F6E5B9"}}><div style={{display:"flex",gap:8,alignItems:"center"}}><GameIcon file={isNotes?"Secret Note":"Journal Scrap"} size={36}/><div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:950,color:C.darkBrown}}>{title} #{selected}</div><div style={{fontSize:9.5,color:C.muted,marginTop:2}}>{isNotes?"紙條內容與可執行解法":"日誌內容速查"}</div></div></div>{imageMap[selected]&&<img src={GAME_FILE(imageMap[selected])} alt={`${title} ${selected} 圖像內容`} onError={e=>e.currentTarget.style.display="none"} style={{display:"block",width:"min(216px,100%)",height:"auto",margin:"10px auto 7px",imageRendering:"pixelated",borderRadius:5}}/>}<div style={{marginTop:8,padding:"8px 9px",background:"#FFF8E2",borderRadius:8,border:`1px solid ${C.line}`}}><div style={{fontSize:9.5,fontWeight:950,color:C.brown,marginBottom:3}}>{isNotes?"紙條內容":"內容"}</div><div style={{fontSize:11,color:C.ink,lineHeight:1.55}}>{content[selected]||"尚未整理內容。"}</div></div>{solution[selected]&&<div style={{marginTop:7,padding:"8px 9px",background:"#EAF4D8",borderRadius:8,border:`1px solid ${C.green}`}}><div style={{fontSize:9.5,fontWeight:950,color:C.green,marginBottom:3}}>解法／效果</div><div style={{fontSize:11,color:C.ink,lineHeight:1.55}}>{solution[selected]}</div></div>}</Card>}
     </div>;
   };
 
@@ -1992,7 +2004,9 @@ function StardewTracker() {
           <img src={GAME_FILE(mapMeta.file)} alt={`${group.name}地圖`} style={{display:"block",width:"100%",height:"auto",imageRendering:"pixelated"}}/>
           {mapMeta.clusters.map(c=>{const on=c.ids.includes(area?.id);return <button key={c.id} onClick={()=>setFishAreaV4(c.ids[0])} style={{position:"absolute",left:`${c.x}%`,top:`${c.y}%`,transform:"translate(-50%,-50%)",border:`1.5px solid ${on?C.orange:"#8B683C"}`,background:on?"#FFE1A0":"rgba(255,248,226,.94)",boxShadow:"0 1px 3px rgba(0,0,0,.25)",borderRadius:10,padding:"2px 5px",fontSize:7.3,fontWeight:950,color:C.darkBrown,whiteSpace:"nowrap"}}>{c.label}</button>})}
         </div>
-        {activeCluster?.ids?.length>1&&<div style={{marginTop:6}}><div style={{fontSize:7.8,fontWeight:900,color:C.muted,marginBottom:4}}>選具體水域／位置</div><div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(4,activeCluster.ids.length)},minmax(0,1fr))`,gap:4}}>{activeCluster.ids.map(id=>{const a=FISH_AREAS_V4.find(x=>x.id===id);if(!a)return null;const thumb=FISH_AREA_THUMB_V46[id]||activeCluster;const on=area.id===id;return <button key={id} onClick={()=>setFishAreaV4(id)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFF0D2":C.paper,borderRadius:8,padding:3,minWidth:0,textAlign:"center"}}><div style={{position:"relative",height:47,borderRadius:6,overflow:"hidden",backgroundImage:`url(${GAME_FILE(mapMeta.file)})`,backgroundSize:"290% auto",backgroundPosition:`${thumb.x}% ${thumb.y}%`,backgroundRepeat:"no-repeat",imageRendering:"pixelated"}}><span style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",width:9,height:9,borderRadius:"50%",background:"#F7E6A4",border:"2px solid #9C3D2B",boxShadow:"0 1px 2px rgba(0,0,0,.35)"}}/></div><div style={{fontSize:7.2,fontWeight:950,color:on?C.orange:C.ink,lineHeight:1.08,marginTop:3}}>{a.sub}</div></button>})}</div></div>}
+        {activeCluster?.ids?.length>1&&<div style={{marginTop:6}}><div style={{fontSize:7.8,fontWeight:900,color:C.muted,marginBottom:4}}>選具體水域／位置</div><div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(4,activeCluster.ids.length)},minmax(0,1fr))`,gap:4}}>{activeCluster.ids.map(id=>{const a=FISH_AREAS_V4.find(x=>x.id===id);if(!a)return null;const thumb=FISH_AREA_THUMB_V46[id]||activeCluster;const on=area.id===id;return <button key={id} onClick={()=>setFishAreaV4(id)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFF0D2":C.paper,borderRadius:8,padding:3,minWidth:0,textAlign:"center"}}><div style={{position:"relative",height:47,borderRadius:6,overflow:"hidden",background:"#DCE9C2"}}>
+                          <WikiImg src={GAME_FILE(mapMeta.file)} alt="" style={{position:"absolute",width:"290%",height:"auto",maxWidth:"none",left:"50%",top:"50%",transform:`translate(-${thumb.x}%,-${thumb.y}%)`,imageRendering:"pixelated"}}/>
+                          <span style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",width:9,height:9,borderRadius:"50%",background:"#F7E6A4",border:"2px solid #9C3D2B",boxShadow:"0 1px 2px rgba(0,0,0,.35)"}}/></div><div style={{fontSize:7.2,fontWeight:950,color:on?C.orange:C.ink,lineHeight:1.08,marginTop:3}}>{a.sub}</div></button>})}</div></div>}
       </Card>:<Card style={{marginTop:7,padding:8}}>
         <div style={{fontSize:9,color:C.muted,marginBottom:5}}>特殊水域不在同一張世界地圖上，直接用入口／樓層圖示選。</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:5}}>{groupAreas.map(a=>{const on=a.id===area.id;return <button key={a.id} onClick={()=>setFishAreaV4(a.id)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFF0D2":C.paper,borderRadius:8,padding:"5px 2px",minWidth:0}}><GameIcon file={a.icon} size={27}/><div style={{fontSize:7.4,fontWeight:950,color:C.ink,lineHeight:1.08,marginTop:2}}>{a.name}</div><div style={{fontSize:6.7,color:C.muted,lineHeight:1.05}}>{a.sub}</div></button>})}</div>
@@ -2169,7 +2183,6 @@ function StardewTracker() {
       {collectionSection==="notes"&&renderPaperCollectionV3("notes",27,"秘密紙條")}
       {collectionSection==="scraps"&&renderPaperCollectionV3("scraps",11,"日誌殘頁")}
       {collectionSection==="shipping"&&renderShippingV30()}
-      {collectionSection==="letters"&&<Card style={{marginTop:8}}><div style={{display:"flex",gap:8,alignItems:"center"}}><GameIcon file="Mail" size={34}/><b style={{fontSize:12,color:C.brown}}>信件備忘</b></div><textarea value={extrasState.lettersNote||""} onChange={e=>updateExtras({lettersNote:e.target.value})} placeholder="記錄想回頭查看的配方信、獎勵信、劇情信件……" style={{width:"100%",minHeight:120,marginTop:6,border:`1.5px solid ${C.line}`,borderRadius:7,padding:7,background:"#FFFCF0",fontSize:11,color:C.ink}}/></Card>}
     </div>;
   };
 
@@ -2353,7 +2366,7 @@ function StardewTracker() {
     <SectionTitle icon="📱">手機使用</SectionTitle>
     <Card><div style={{fontSize:12,color:C.muted,lineHeight:1.6}}>建議把頁面加入 iPhone 主畫面，玩 Switch 時像 App 一樣直接打開。進度存在目前裝置；若要換裝置請先匯出 JSON 備份再匯入。圖鑑圖片來自 Stardew Valley Wiki。</div></Card>
     <SectionTitle icon="⚠️">資料管理</SectionTitle>
-    <button onClick={async()=>{if(confirm("確定要清除全部進度並恢復預填資料嗎？")){await storageDelete(PUB_KEY,true);await storageDelete(STORAGE_KEY,false);setData(PREFILL)}}} style={{width:"100%",border:`2px solid ${C.red}`,background:"#FBE4DE",color:C.red,borderRadius:9,padding:10,fontWeight:950}}>重設全部進度</button>
+    <button onClick={async()=>{if(confirm("確定要清除全部進度並回到空白手帳嗎？")){await storageDelete(PUB_KEY,true);await storageDelete(STORAGE_KEY,false);setData(PREFILL)}}} style={{width:"100%",border:`2px solid ${C.red}`,background:"#FBE4DE",color:C.red,borderRadius:9,padding:10,fontWeight:950}}>重設全部進度</button>
   </div>;
 
   if(!loaded)return <div style={{minHeight:"100vh",background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui",color:C.darkBrown,fontWeight:900}}>載入星露谷手帳…</div>;
