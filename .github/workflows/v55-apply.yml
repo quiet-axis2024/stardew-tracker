@@ -1,0 +1,82 @@
+name: Apply and validate v55
+on:
+  push:
+    branches: [v55-data-ui-polish]
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v55-data-ui-polish
+          fetch-depth: 0
+      - name: Apply v55 product patch
+        run: |
+          python3 .github/scripts/v55_patch.py
+          python3 .github/scripts/v55_post_patch.py
+      - name: Install validation tools
+        run: npm install --no-save eslint@8 react@18 react-dom@18 esbuild@0.25.8 >/dev/null 2>&1
+      - name: Audit runtime references and requested fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./node_modules/.bin/eslint app.jsx \
+            --no-eslintrc \
+            --env browser,es2021 \
+            --parser-options '{"ecmaVersion":2022,"sourceType":"script","ecmaFeatures":{"jsx":true}}' \
+            --global React \
+            --global ReactDOM \
+            --rule 'no-undef:error'
+          grep -q 'file:"Ways Of The Wild"' app.jsx
+          grep -q 'file:"Horse The Book"' app.jsx
+          ! grep -q 'file:"Raccoon Journal"' app.jsx
+          ! grep -q 'file:"Horse: The Book"' app.jsx
+          grep -q '"Lava Eel".*Gold Ore.*Cave Jelly.*Spicy Eel.*Magma Geode' app.jsx
+          grep -q 'pondFishQueryV55' app.jsx
+          grep -q 'stableMaxV55' app.jsx
+          grep -q '"Sewing Machine"' app.jsx
+          grep -q '"Mini-Forge"' app.jsx
+          grep -q 'SOCIAL_GENERIC_V55' app.jsx
+          grep -q 'NPC_SERVICES_V55' app.jsx
+          grep -q 'Special order board' app.jsx
+          grep -q '第 3 层' app.jsx
+          grep -q '第 4 层' app.jsx
+          grep -q 'app.js?v=55' index.html
+          grep -q 'stardew-tracker-v55' sw.js
+      - name: Verify critical wiki image keys
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import urllib.parse,urllib.request
+          names=['Ways Of The Wild','Horse The Book','Special order board','Frog Egg Colors','Fairy Box','Basilisk Paw','Parrot Egg']
+          for name in names:
+              url='https://stardewvalleywiki.com/Special:Redirect/file/'+urllib.parse.quote(name+'.png')
+              req=urllib.request.Request(url,headers={'User-Agent':'stardew-tracker-v55-check/1.0'})
+              try:
+                  with urllib.request.urlopen(req,timeout=30) as r:
+                      if r.status!=200: raise RuntimeError(f'{name}: HTTP {r.status}')
+                      print(name,'->',r.geturl())
+              except Exception as e:
+                  raise RuntimeError(f'wiki image key failed: {name}: {e}')
+          PY
+      - name: Build Safari 15 bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build /tmp/v55dist
+          printf '%s\n' "import React from 'react';" "import { createRoot } from 'react-dom/client';" "window.React = React;" "window.ReactDOM = { createRoot };" > build/entry.jsx
+          cat app.jsx >> build/entry.jsx
+          ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=/tmp/v55dist/app.js
+          test -s /tmp/v55dist/app.js
+      - name: Commit product files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.jsx index.html sw.js
+          git commit -m 'v55: improve pond data, hierarchy, collections and social cards'
+          git push origin HEAD:v55-data-ui-polish
