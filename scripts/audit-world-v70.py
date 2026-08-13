@@ -23,8 +23,9 @@ idx=Path('index.html').read_text()
 if './world-data-v70.js?v=' not in idx: fail('world lazy group missing')
 cloud=Path('build-cloudflare.sh').read_text()
 pages=Path('.github/workflows/pages.yml').read_text()
-if 'world-data-v70.js dist/' not in cloud or 'world-data-v70.js dist/' not in pages:
-    fail('world snapshot must ship in both builds')
+for name,text in [('Cloudflare',cloud),('Pages',pages)]:
+    if 'world-data-v70.js' not in text or 'dist/' not in text:
+        fail(name+' world snapshot must ship in build output')
 docs=Path('docs/DATA_SOURCES.md').read_text()
 if '`world-data-v70.js` | manual committed snapshot' not in docs:
     fail('world data source documentation missing')
