@@ -21,9 +21,9 @@ if 'shirt:"Shirt003",pants:"Farmer Pants"' not in t: fail('wardrobe neutral prev
 
 idx=Path('index.html').read_text()
 for src in ['wardrobe-data-v34.js','lookup-data-v46.js','lookup-extra-v49.js']:
-    if f'<script src="./{src}?v=69"' in idx: fail('heavy data still parser-blocking: '+src)
+    if f'<script src="./{src}?v=' in idx: fail('heavy data still parser-blocking: '+src)
 for src in ['cloud.js','social-data-v50.js','machine-data-v51.js','switch-names-v47.js']:
-    if f'<script src="./{src}?v=69"' not in idx: fail('required eager script missing: '+src)
+    if f'<script src="./{src}?v=' not in idx: fail('required eager script missing: '+src)
 
 for p in ['docs/ROADMAP.md','docs/DATA_SOURCES.md']:
     if not Path(p).is_file(): fail('required project doc missing: '+p)

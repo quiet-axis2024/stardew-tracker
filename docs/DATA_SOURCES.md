@@ -22,6 +22,7 @@
 | `wardrobe-data-v34.js` | committed snapshot | 檔頭標示 pinned localization＋Dressup metadata | generator 缺失前不整檔重生；衣櫥人工修正直接留在 snapshot |
 | `social-data-v50.js` | committed snapshot | 內含 `sourceCommit` | generator 未在 repo；後續 NPC 行程若新增，應使用新資料檔與可追溯來源，不把行程硬塞回舊 snapshot |
 | `machine-data-v51.js` | committed snapshot | 目前為正式設備資料 | generator 未確認；先視為 snapshot |
+| `world-data-v70.js` | manual committed snapshot | 2026-08-13 對照官方中文 Stardew Valley Wiki 的地點／商店／營業時間頁；UI 會優先重用 `social-data-v50.js` 已有商店資料 | 使用 stable region/place/person ID 與繁／簡／英 aliases；世界頁維持薄版，後續全域搜尋與 NPC 行程直接共用 |
 | `farmer-preview-v33.js` / `animal-preview-v33.js` | 手寫 runtime compositor | pinned Stardew decomp 圖像路徑 | 不是 generated data；修改以程式碼 review／實機預覽為主 |
 
 ## v67 之後新增資料
