@@ -2251,9 +2251,9 @@ function StardewTracker() {
   </>;
 
   const renderOverview = () => <div>
-    {renderTodayV69()}
     {renderProfileCard()}
     {renderCalendar()}
+    {renderTodayV69()}
   </div>;
 
   const renderSkills = () => {
