@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/v70-world-map-ia.yml'
       - 'scripts/apply-v70-world-map-ia.py'
+      - 'scripts/fix-v70-world-map-audit.py'
 
 permissions:
   contents: write
@@ -20,7 +21,10 @@ jobs:
           fetch-depth: 0
 
       - name: Apply information architecture
-        run: python3 scripts/apply-v70-world-map-ia.py
+        shell: bash
+        run: |
+          python3 scripts/apply-v70-world-map-ia.py
+          python3 scripts/fix-v70-world-map-audit.py
 
       - name: Validate
         shell: bash
