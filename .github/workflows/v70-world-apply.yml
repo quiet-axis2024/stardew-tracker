@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/v70-world-apply.yml'
       - 'scripts/apply-v70-world.py'
+      - 'scripts/fix-v70-foundation-audit.py'
 
 permissions:
   contents: write
@@ -24,6 +25,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/apply-v70-world.py
+          python3 scripts/fix-v70-foundation-audit.py
 
       - name: Validate v70
         shell: bash
@@ -79,6 +81,6 @@ jobs:
           set -euo pipefail
           git config user.name quiet-axis2024
           git config user.email jinx.lin0820@gmail.com
-          git add app.jsx index.html sw.js build-cloudflare.sh .github/workflows/pages.yml docs/DATA_SOURCES.md scripts/audit-today-v69.py scripts/audit-world-v70.py world-data-v70.js
+          git add app.jsx index.html sw.js build-cloudflare.sh .github/workflows/pages.yml docs/DATA_SOURCES.md scripts/audit-foundation-v67.py scripts/audit-today-v69.py scripts/audit-world-v70.py world-data-v70.js
           git commit -m "v70: add thin world data layer"
           git push origin v70-world
