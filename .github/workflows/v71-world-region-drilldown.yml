@@ -1,0 +1,63 @@
+name: Apply v71 World region drill-down
+
+on:
+  push:
+    branches: [v71-world-region-drilldown]
+    paths:
+      - '.github/workflows/v71-world-region-drilldown.yml'
+      - 'scripts/apply-v71-world-region-drilldown.py'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v71-world-region-drilldown
+          fetch-depth: 0
+
+      - name: Apply final World UX
+        run: python3 scripts/apply-v71-world-region-drilldown.py
+
+      - name: Validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/audit-foundation-v67.py
+          python3 scripts/audit-progress-link-v68.py
+          python3 scripts/audit-today-v69.py
+          python3 scripts/audit-world-v70.py
+          python3 scripts/audit-world-v71.py
+          node --check sw.js
+          node --check world-data-v70.js
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8 eslint@9
+          mkdir -p build
+          cat > build/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> build/entry.jsx
+          ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=build/app.js 2>build/esbuild.stderr
+          cat build/esbuild.stderr
+          if grep -q '\[WARNING\]' build/esbuild.stderr; then exit 1; fi
+          cat > build/eslint.config.mjs <<'EOF'
+          export default [{files:['entry.jsx'],languageOptions:{parserOptions:{ecmaVersion:'latest',sourceType:'module',ecmaFeatures:{jsx:true}},globals:{window:'readonly',document:'readonly',navigator:'readonly',localStorage:'readonly',URL:'readonly',Image:'readonly',FileReader:'readonly',Blob:'readonly',confirm:'readonly',alert:'readonly',prompt:'readonly',console:'readonly',requestAnimationFrame:'readonly',setTimeout:'readonly',clearTimeout:'readonly',fetch:'readonly',React:'readonly',ReactDOM:'readonly'}},rules:{'no-undef':'error'}}];
+          EOF
+          (cd build && ../node_modules/.bin/eslint --config eslint.config.mjs entry.jsx --no-ignore)
+          bash build-cloudflare.sh
+          test -s dist/app.js
+
+      - name: Commit product change
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name quiet-axis2024
+          git config user.email jinx.lin0820@gmail.com
+          git add app.jsx index.html sw.js scripts/audit-world-v70.py scripts/audit-world-v71.py build-cloudflare.sh .github/workflows/pages.yml docs/ROADMAP.md docs/WORLD_V70.md
+          git commit -m "v71: make World drill down to places and fishing spots"
+          git push origin v71-world-region-drilldown
