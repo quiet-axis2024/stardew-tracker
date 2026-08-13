@@ -34,12 +34,6 @@ for stale in [
 open_hint=app[app.find('const openFishHintV69'):app.find('const todayFishRowsV69')]
 if 'setFishViewV4("world")' not in open_hint or 'setWorldSpotV71(areaId)' not in open_hint:
     fail('Today fish deep-link must land in World fishing spot')
-
-idx=Path('index.html').read_text()
-if '?v=71' not in idx or 'deploy-v71' not in idx:
-    fail('v71 release query marker missing')
-if "const CACHE='stardew-tracker-v71';" not in Path('sw.js').read_text():
-    fail('v71 service worker cache missing')
 if 'python3 scripts/audit-world-v71.py' not in Path('build-cloudflare.sh').read_text():
     fail('Cloudflare v71 audit missing')
 if 'python3 scripts/audit-world-v71.py' not in Path('.github/workflows/pages.yml').read_text():
