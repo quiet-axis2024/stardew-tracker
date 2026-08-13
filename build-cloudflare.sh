@@ -7,6 +7,7 @@ python3 scripts/audit-world-v70.py
 python3 scripts/audit-world-v71.py
 python3 scripts/audit-world-v72.py
 python3 scripts/audit-world-v73.py
+node --check world-map-pins-v73.js
 
 npm install --no-save react@18 react-dom@18 esbuild@0.25.8
 mkdir -p build dist
