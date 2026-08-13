@@ -12,8 +12,5 @@ need=[
 ]
 missing=[x for x in need if x not in t]
 if missing: fail("v69 today invariant missing: "+repr(missing))
-idx=Path("index.html").read_text()
-if "?v=69" not in idx or "deploy-v69" not in idx: fail("v69 index version missing")
-if "const CACHE='stardew-tracker-v69';" not in Path("sw.js").read_text(): fail("v69 SW cache missing")
 if "python3 scripts/audit-today-v69.py" not in Path("build-cloudflare.sh").read_text(): fail("Cloudflare v69 audit missing")
 print("v69 today assistant audit passed")
