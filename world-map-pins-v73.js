@@ -1,7 +1,7 @@
 /* v73 — region-map pin labels.
-   The React World page keeps the full scene maps from v72; this small DOM layer adds
-   calibrated, clickable labels back on top of those maps without reverting to the
-   old world-map zoom coordinates. Coordinates are normalized to each detail image.
+   Keep the full scene maps from v72, then place clickable labels in each detail
+   image's own normalized coordinate system. These are not the old zoomed-world-map
+   percentages; each region owns its own calibration.
 */
 (()=>{
   'use strict';
@@ -34,8 +34,7 @@
         {label:'河流',match:['煤矿森林','河流'],x:55,y:60},
         {label:'南部小岛',match:['南部小岛'],x:44,y:70},
         {label:'南部瀑布',match:['南部瀑布'],x:51,y:91,dy:-8},
-        {label:'秘密森林池塘',match:['秘密森林','池塘'],x:4,y:14,dx:16,dy:12},
-        {label:'女巫沼泽 ↗',match:['女巫沼泽','沼泽'],x:59,y:3,dy:10,edge:true}
+        {label:'秘密森林池塘',match:['秘密森林','池塘'],x:4,y:14,dx:16,dy:12}
       ]
     },
     '海滩':{
@@ -100,7 +99,6 @@
     const buttons=[...card.querySelectorAll('button')].filter(b=>!b.classList.contains('sdv-world-pin-v73'));
     return buttons.find(b=>hasAll(b.textContent,pin.match||[pin.label]))||null;
   };
-
   const regionFromAlt=alt=>String(alt||'').replace(/區域地圖$/,'').trim();
 
   function enhanceImage(img){
@@ -111,9 +109,7 @@
     const card=mapBox&&mapBox.parentElement;
     if(!mapBox||!card)return;
 
-    const old=mapBox.querySelector(':scope > .sdv-world-pin-layer-v73');
-    if(old)old.remove();
-
+    mapBox.querySelector('.sdv-world-pin-layer-v73')?.remove();
     const candidateButtons=[...card.querySelectorAll('button')].filter(b=>!b.classList.contains('sdv-world-pin-v73'));
     const mode=candidateButtons.some(b=>norm(b.textContent).startsWith(norm('🎣')))?'spots':'places';
     const pins=(cfg[mode]||[]).map(pin=>({pin,target:findTarget(card,pin)})).filter(row=>row.target);
@@ -121,8 +117,6 @@
 
     const layer=document.createElement('div');
     layer.className='sdv-world-pin-layer-v73';
-    layer.setAttribute('aria-hidden','false');
-
     pins.forEach(({pin,target})=>{
       const button=document.createElement('button');
       button.type='button';
@@ -136,7 +130,7 @@
         event.preventDefault();
         event.stopPropagation();
         target.click();
-        requestAnimationFrame(()=>requestAnimationFrame(refresh));
+        setTimeout(refresh,0);
       });
       layer.appendChild(button);
     });
@@ -144,18 +138,28 @@
   }
 
   let scheduled=false;
+  let observer=null;
+  const observe=()=>observer?.observe(document.body,{childList:true,subtree:true});
   function refresh(){
     if(scheduled)return;
     scheduled=true;
     requestAnimationFrame(()=>{
       scheduled=false;
+      observer?.disconnect();
       document.querySelectorAll('img[alt$="區域地圖"]').forEach(enhanceImage);
+      observe();
     });
   }
 
-  const observer=new MutationObserver(refresh);
   const start=()=>{
-    observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style']});
+    observer=new MutationObserver(records=>{
+      const meaningful=records.some(record=>[...record.addedNodes,...record.removedNodes].some(node=>{
+        if(node.nodeType!==1)return false;
+        return !node.classList?.contains('sdv-world-pin-layer-v73')&&!node.closest?.('.sdv-world-pin-layer-v73');
+      }));
+      if(meaningful)refresh();
+    });
+    observe();
     document.addEventListener('click',event=>{
       const text=String(event.target?.closest?.('button')?.textContent||'');
       if(text.includes('地點')||text.includes('釣點'))setTimeout(refresh,0);
