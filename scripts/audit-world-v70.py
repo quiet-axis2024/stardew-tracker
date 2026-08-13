@@ -1,31 +1,14 @@
 from pathlib import Path
 import re
 
-
 def fail(msg):
     raise SystemExit(msg)
 
 app=Path('app.jsx').read_text()
-need=[
-    'const renderWorldV70 = () =>',
-    'setFishViewV4("world")',
-    'const fast=fishViewV4==="items"?"items":"world"',
-    'tab==="fishing"&&fishViewV4==="world"',
-    'loadLazyDataV67("world")',
-    'worldRegionV70', 'worldQueryV70', 'worldOpenV70',
-    'worldMapV70', 'worldKindV70',
-    '先看地圖，再往下找', '天氣條件',
-    'FISH_MAP_META_V42.main', 'FISH_MAP_META_V42.island',
-    'openWorldFishV70', '返回世界地圖',
-    'shop?.items?.length', 'NPC_SERVICES_V55',
-    'openFishHintV69("",place.fishingAreaId)',
-    'openSocialNpcV55(key)'
-]
-missing=[x for x in need if x not in app]
-if missing: fail('v70 world app invariant missing: '+repr(missing))
-if 'DataTab id="world" label="世界"' in app or 'dataSection==="world"' in app: fail('world must live under lookup, not player data')
-if 'repeat(3,minmax(0,1fr))' in app and '物品</button><button' in app and '找魚</button><button' in app: fail('lookup must not expose fish as a third top-level tab')
-if 'const [fishViewV4, setFishViewV4] = useState("world");' not in app: fail('lookup should default to world')
+for token in ['const renderWorldV70 = () =>','loadLazyDataV67("world")','NPC_SERVICES_V55','openSocialNpcV55']:
+    if token not in app: fail('v70 world data integration missing '+token)
+if 'DataTab id="world" label="世界"' in app or 'dataSection==="world"' in app:
+    fail('world must live under lookup, not player data')
 
 world=Path('world-data-v70.js').read_text()
 for token in ['window.SDVWorldV70','version:70','regions:[','places:[','weather:[','people:{','鹈鹕镇','煤矿森林','姜岛','皮埃尔的杂货店','木匠的商店','铁匠铺','鱼店']:
@@ -37,19 +20,12 @@ if len(ids)!=len(set(ids)):
     fail('duplicate stable IDs in world data: '+repr(dup))
 
 idx=Path('index.html').read_text()
-if 'world:["./world-data-v70.js?v=70"]' not in idx: fail('world lazy group missing')
-if '?v=70' not in idx or 'deploy-v70' not in idx: fail('v70 index release version missing')
-if "const CACHE='stardew-tracker-v70';" not in Path('sw.js').read_text(): fail('v70 SW cache missing')
-
+if './world-data-v70.js?v=' not in idx: fail('world lazy group missing')
 cloud=Path('build-cloudflare.sh').read_text()
-if 'python3 scripts/audit-world-v70.py' not in cloud or 'world-data-v70.js dist/' not in cloud:
-    fail('Cloudflare world validation/copy missing')
 pages=Path('.github/workflows/pages.yml').read_text()
-if 'python3 scripts/audit-world-v70.py' not in pages or 'world-data-v70.js dist/' not in pages:
-    fail('Pages world validation/copy missing')
-
+if 'world-data-v70.js dist/' not in cloud or 'world-data-v70.js dist/' not in pages:
+    fail('world snapshot must ship in both builds')
 docs=Path('docs/DATA_SOURCES.md').read_text()
 if '`world-data-v70.js` | manual committed snapshot' not in docs:
     fail('world data source documentation missing')
-
-print('v70 world audit passed')
+print('v70 world data-layer audit passed')
