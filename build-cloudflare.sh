@@ -8,6 +8,7 @@ python3 scripts/audit-world-v71.py
 python3 scripts/audit-world-v72.py
 python3 scripts/audit-world-v73.py
 node --check world-map-pins-v73.js
+node --check world-map-secret-v75.js
 
 npm install --no-save react@18 react-dom@18 esbuild@0.25.8
 mkdir -p build dist
@@ -20,5 +21,5 @@ EOF
 cat app.jsx >> build/entry.jsx
 ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=dist/app.js
 cp index.html manifest.webmanifest icon.svg sw.js cloud.js wardrobe-data-v34.js farmer-preview-v33.js animal-preview-v33.js lookup-data-v46.js lookup-extra-v49.js social-data-v50.js machine-data-v51.js switch-names-v47.js world-data-v70.js dist/
-cp world-map-pins-v73.js dist/
+cp world-map-pins-v73.js world-map-secret-v75.js dist/
 cp -R assets dist/
