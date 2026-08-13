@@ -1,0 +1,15 @@
+/* v78 world map data: calibrated pins + explicit submaps. */
+window.SDVWorldMapDataV78={
+  pins:{
+    '鹈鹕镇':{places:[{label:'社区中心',match:['社区中心'],x:25,y:17},{label:'哈维的诊所',match:['哈维的诊所'],x:29.5,y:43.5},{label:'皮埃尔的杂货店',match:['皮埃尔的杂货店'],x:39,y:43.5},{label:'星之果实酒吧',match:['星之果实酒吧'],x:34.5,y:57},{label:'Joja超市',match:['Joja超市'],x:82,y:40.5},{label:'铁匠铺',match:['铁匠铺'],x:74.5,y:64.5},{label:'博物馆',match:['博物馆'],x:83,y:71.5},{label:'巴士站',match:['巴士站'],x:7,y:49,dx:7}],spots:[{label:'河流',match:['鹈鹕镇','河流'],x:64,y:56}]},
+    '煤矿森林':{places:[{label:'秘密森林',match:['秘密森林'],x:4,y:13,dx:10,submap:'secret_woods'},{label:'旅行货车',match:['旅行货车'],x:43,y:8,dy:10},{label:'法师塔',match:['法师塔'],x:6,y:25,dx:11},{label:'玛妮的牧场',match:['玛妮的牧场'],x:80,y:11},{label:'莉亚的农舍',match:['莉亚的农舍'],x:89,y:26,dx:-10}],spots:[{label:'池塘',match:['煤矿森林','池塘'],x:34,y:29},{label:'河流',match:['煤矿森林','河流'],x:55,y:60},{label:'南部小岛',match:['南部小岛'],x:44,y:70},{label:'南部瀑布',match:['南部瀑布'],x:51,y:91,dy:-8}]},
+    '秘密森林':{places:[{label:'老坎诺利大师',custom:'cannoli',x:15,y:18}],spots:[{label:'池塘',match:['秘密森林','池塘'],x:22,y:66}]},
+    '海滩':{places:[{label:'鱼店',match:['鱼店'],x:29,y:57},{label:'艾利欧特小屋',match:['艾利欧特小屋'],x:52,y:18},{label:'潮汐池',match:['潮汐池'],x:84,y:39,dx:-8}],spots:[{label:'海洋',match:['海滩','海洋'],x:51,y:74},{label:'夜市码头',match:['夜市'],x:73,y:78,dy:-8}]},
+    '深山':{places:[{label:'铁路',match:['铁路'],x:15,y:25},{label:'木匠的商店',match:['木匠的商店'],x:13.5,y:58},{label:'矿井',match:['矿井'],x:60.5,y:20.5},{label:'探险家公会',match:['探险家公会'],x:69.5,y:25},{label:'采石场',match:['采石场'],x:90,y:39.5,dx:-8}],spots:[{label:'山湖',match:['深山','山湖'],x:44,y:56},{label:'矿井钓点',custom:'mines_route',submap:'mines_fishing',x:60.5,y:20.5}]},
+    '矿井钓点':{places:[],spots:[{label:'20 层',match:['矿井','20 层'],x:17,y:55},{label:'60 层',match:['矿井','60 层'],x:50,y:55},{label:'100 层',match:['矿井','100 层'],x:83,y:55}]},
+    '姜岛':{places:[{label:'火山',match:['火山'],x:53,y:17},{label:'岛屿办事处',match:['岛屿办事处'],x:52,y:34},{label:'姜岛商人',match:['姜岛商人'],x:42,y:56},{label:'齐先生的核桃房',match:['核桃房'],x:20,y:53,dx:12}],spots:[{label:'岛北',match:['岛北'],x:53,y:27},{label:'火山口',match:['火山口'],x:55,y:8,dy:10},{label:'岛西淡水',match:['岛西','淡水'],x:24,y:55},{label:'岛西海洋',match:['岛西','海洋'],x:18,y:72},{label:'岛南',match:['岛南'],x:55,y:84},{label:'海盗湾',match:['海盗湾'],x:79,y:78}]},
+    '卡利科沙漠':{places:[{label:'骷髅洞穴',match:['骷髅洞穴'],x:15,y:16},{label:'沙漠商人',match:['沙漠商人'],x:77,y:35,dx:-8},{label:'绿洲',match:['绿洲'],x:15,y:80},{label:'赌场',match:['赌场'],x:15,y:80,dx:23,dy:-12}],spots:[{label:'池塘',match:['沙漠','池塘'],x:19,y:27}]},
+    '下水道':{places:[{label:'下水道／科罗布斯',match:['下水道'],x:78,y:31},{label:'突变虫穴',match:['突变虫穴'],x:10,y:36}],spots:[{label:'下水道水域',match:['下水道','水域'],x:56,y:72},{label:'突变虫穴水域',match:['突变虫穴','水域'],x:18,y:25}]}
+  },
+  maps:{'卡利科沙漠':'https://stardewvalleywiki.com/Special:Redirect/file/DesertDistances.png','下水道':'https://stardewvalleywiki.com/Special:Redirect/file/SewerDistances.png','秘密森林':'https://stardewvalleywiki.com/Special:Redirect/file/SecretWoods.png','矿井钓点':'https://stardewvalleywiki.com/Special:Redirect/file/MinesDistances.png'}
+};
