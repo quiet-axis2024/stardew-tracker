@@ -9,11 +9,14 @@ app=Path('app.jsx').read_text()
 need=[
     'const renderWorldV70 = () =>',
     'setFishViewV4("world")',
-    'fast==="find"?renderFishFindV4():renderWorldV70()',
+    'const fast=fishViewV4==="items"?"items":"world"',
     'tab==="fishing"&&fishViewV4==="world"',
     'loadLazyDataV67("world")',
     'worldRegionV70', 'worldQueryV70', 'worldOpenV70',
-    '從「在哪裡」開始找', '天氣條件',
+    'worldMapV70', 'worldKindV70',
+    '先看地圖，再往下找', '天氣條件',
+    'FISH_MAP_META_V42.main', 'FISH_MAP_META_V42.island',
+    'openWorldFishV70', '返回世界地圖',
     'shop?.items?.length', 'NPC_SERVICES_V55',
     'openFishHintV69("",place.fishingAreaId)',
     'openSocialNpcV55(key)'
@@ -21,6 +24,8 @@ need=[
 missing=[x for x in need if x not in app]
 if missing: fail('v70 world app invariant missing: '+repr(missing))
 if 'DataTab id="world" label="世界"' in app or 'dataSection==="world"' in app: fail('world must live under lookup, not player data')
+if 'repeat(3,minmax(0,1fr))' in app and '物品</button><button' in app and '找魚</button><button' in app: fail('lookup must not expose fish as a third top-level tab')
+if 'const [fishViewV4, setFishViewV4] = useState("world");' not in app: fail('lookup should default to world')
 
 world=Path('world-data-v70.js').read_text()
 for token in ['window.SDVWorldV70','version:70','regions:[','places:[','weather:[','people:{','鹈鹕镇','煤矿森林','姜岛','皮埃尔的杂货店','木匠的商店','铁匠铺','鱼店']:
