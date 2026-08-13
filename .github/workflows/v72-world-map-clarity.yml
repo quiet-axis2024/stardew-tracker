@@ -1,4 +1,5 @@
 name: Apply v72 World map clarity
+# v71 audit is semantic-only so later release cache versions can reuse it.
 
 on:
   push:
