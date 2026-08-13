@@ -58,6 +58,6 @@ jobs:
           set -euo pipefail
           git config user.name quiet-axis2024
           git config user.email jinx.lin0820@gmail.com
-          git add app.jsx index.html sw.js scripts/audit-world-v70.py scripts/audit-world-v71.py build-cloudflare.sh .github/workflows/pages.yml docs/ROADMAP.md docs/WORLD_V70.md
+          git add app.jsx index.html sw.js scripts/audit-world-v70.py scripts/audit-world-v71.py build-cloudflare.sh docs/ROADMAP.md docs/WORLD_V70.md
           git commit -m "v71: make World drill down to places and fishing spots"
           git push origin v71-world-region-drilldown
