@@ -1,0 +1,1 @@
+window.SDVWorldMapDataV78={pins:{},maps:{'卡利科沙漠':'https://stardewvalleywiki.com/Special:Redirect/file/DesertDistances.png','下水道':'https://stardewvalleywiki.com/Special:Redirect/file/SewerDistances.png','秘密森林':'https://stardewvalleywiki.com/Special:Redirect/file/SecretWoods.png','矿井钓点':'https://stardewvalleywiki.com/Special:Redirect/file/MinesDistances.png'}};
