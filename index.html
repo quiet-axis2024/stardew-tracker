@@ -33,9 +33,10 @@
   <script src="./switch-names-v47.js?v=73"></script>
   <script src="./world-map-pins-v73.js?v=78"></script>
   <script src="./world-map-secret-v75.js?v=78"></script>
+  <script src="./world-route-fixes-v79.js?v=79"></script>
   <script>
     window.SDVLazyDataV67=(()=>{
-      const groups={lookup:["./lookup-data-v46.js?v=73","./lookup-extra-v49.js?v=73"],wardrobe:["./wardrobe-data-v34.js?v=73"],world:["./world-data-v70.js?v=73"]};
+      const groups={lookup:["./lookup-data-v46.js?v=73","./lookup-extra-v49.js?v=73"],wardrobe:["./wardrobe-data-v34.js?v=73"],world:["./world-data-v70.js?v=73","./world-extra-v79.js?v=79"]};
       const scripts=new Map(),loads=new Map();
       const one=src=>{if(scripts.has(src))return scripts.get(src);const p=new Promise((ok,no)=>{const s=document.createElement("script");s.src=src;s.async=true;s.onload=ok;s.onerror=()=>no(new Error(`無法載入 ${src}`));document.head.appendChild(s)});scripts.set(src,p);return p};
       const load=g=>{if(loads.has(g))return loads.get(g);const p=(groups[g]||[]).reduce((q,s)=>q.then(()=>one(s)),Promise.resolve());loads.set(g,p);return p};
@@ -45,41 +46,15 @@
       const root=document.getElementById('root');
       let failureShown=false;
       const esc=(value)=>String(value||'未知錯誤').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[ch]));
-      const fail=(message)=>{
-        if(failureShown)return;
-        failureShown=true;
-        root.innerHTML='<div id="boot-status">⚠️ 手帳執行失敗<small style="margin-top:8px;display:block;font-weight:600;max-width:560px;word-break:break-word">'+esc(message)+'</small><button onclick="location.reload()" style="margin-top:16px;padding:9px 14px;border:2px solid #e7bd67;border-radius:9px;background:#fff1c9;color:#4a2f20;font-weight:800">重新載入</button></div>';
-      };
-      const failIfBlank=(message)=>setTimeout(()=>{
-        if(!root || !String(root.textContent||'').trim())fail(message);
-      },0);
-      window.addEventListener('error',event=>{
-        if(event.message)failIfBlank(event.message);
-      });
-      window.addEventListener('unhandledrejection',event=>{
-        const reason=event.reason;
-        failIfBlank(reason?.message||reason||'未處理的執行錯誤');
-      });
-      try{ if(window.SDVCloud) await window.SDVCloud.init(); }
-      catch(error){ console.warn('Cloud init failed, falling back to local mode:',error); }
-      const script=document.createElement('script');
-      script.src='./app.js?v=73';
-      script.onload=()=>{
-        window.__SDV_APP_LOADED__=true;
-        setTimeout(()=>{
-          if(!String(root.textContent||'').trim())fail('app.js 已載入，但 React 主畫面沒有成功建立');
-        },1200);
-      };
-      script.onerror=()=>fail('app.js 無法載入');
-      document.body.appendChild(script);
+      const fail=(message)=>{if(failureShown)return;failureShown=true;root.innerHTML='<div id="boot-status">⚠️ 手帳執行失敗<small style="margin-top:8px;display:block;font-weight:600;max-width:560px;word-break:break-word">'+esc(message)+'</small><button onclick="location.reload()" style="margin-top:16px;padding:9px 14px;border:2px solid #e7bd67;border-radius:9px;background:#fff1c9;color:#4a2f20;font-weight:800">重新載入</button></div>'};
+      const failIfBlank=(message)=>setTimeout(()=>{if(!root||!String(root.textContent||'').trim())fail(message)},0);
+      window.addEventListener('error',event=>{if(event.message)failIfBlank(event.message)});
+      window.addEventListener('unhandledrejection',event=>{const reason=event.reason;failIfBlank(reason?.message||reason||'未處理的執行錯誤')});
+      try{if(window.SDVCloud)await window.SDVCloud.init()}catch(error){console.warn('Cloud init failed, falling back to local mode:',error)}
+      const script=document.createElement('script');script.src='./app.js?v=73';script.onload=()=>{window.__SDV_APP_LOADED__=true;setTimeout(()=>{if(!String(root.textContent||'').trim())fail('app.js 已載入，但 React 主畫面沒有成功建立')},1200)};script.onerror=()=>fail('app.js 無法載入');document.body.appendChild(script);
     })();
-    if('serviceWorker' in navigator){
-      window.addEventListener('load',async()=>{
-        try{ const registration=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}); await registration.update(); }
-        catch(error){console.warn('Service worker update failed:',error);}
-      });
-    }
+    if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const registration=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});await registration.update()}catch(error){console.warn('Service worker update failed:',error)}})}
   </script>
 </body>
 </html>
-<!-- deploy-v78 -->
+<!-- deploy-v79 -->
