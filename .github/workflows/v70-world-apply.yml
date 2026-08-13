@@ -1,0 +1,84 @@
+name: Apply v70 world layer
+
+on:
+  push:
+    branches: [v70-world]
+    paths:
+      - '.github/workflows/v70-world-apply.yml'
+      - 'scripts/apply-v70-world.py'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v70-world
+          fetch-depth: 0
+
+      - name: Apply v70 world layer
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/apply-v70-world.py
+
+      - name: Validate v70
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/audit-foundation-v67.py
+          python3 scripts/audit-progress-link-v68.py
+          python3 scripts/audit-today-v69.py
+          python3 scripts/audit-world-v70.py
+          node --check sw.js
+          node --check world-data-v70.js
+          node - <<'EOF'
+          global.window={};
+          require('./world-data-v70.js');
+          const w=window.SDVWorldV70;
+          if(!w||w.version!==70) throw new Error('world payload missing');
+          const regionIds=new Set(w.regions.map(x=>x.id));
+          const personIds=new Set(Object.keys(w.people));
+          if(regionIds.size!==w.regions.length) throw new Error('duplicate region IDs');
+          if(new Set(w.places.map(x=>x.id)).size!==w.places.length) throw new Error('duplicate place IDs');
+          for(const p of w.places){
+            if(!regionIds.has(p.regionId)) throw new Error(`bad region ${p.id}`);
+            for(const id of p.peopleIds||[]) if(!personIds.has(id)) throw new Error(`bad person ${p.id}:${id}`);
+            if(p.ownerId&&!personIds.has(p.ownerId)) throw new Error(`bad owner ${p.id}:${p.ownerId}`);
+          }
+          console.log(`world runtime validated: ${w.regions.length} regions / ${w.places.length} places / ${Object.keys(w.people).length} people`);
+          EOF
+          npm install --no-save react@18 react-dom@18 esbuild@0.25.8 eslint@9
+          mkdir -p build
+          cat > build/entry.jsx <<'EOF'
+          import React from 'react';
+          import { createRoot } from 'react-dom/client';
+          window.React = React;
+          window.ReactDOM = { createRoot };
+          EOF
+          cat app.jsx >> build/entry.jsx
+          ./node_modules/.bin/esbuild build/entry.jsx --bundle --minify --format=iife --target=safari15 --outfile=build/app.js 2>build/esbuild.stderr
+          cat build/esbuild.stderr
+          if grep -q '\[WARNING\]' build/esbuild.stderr; then echo 'Unexpected esbuild warning'; exit 1; fi
+          cat > build/eslint.config.mjs <<'EOF'
+          export default [{files:['entry.jsx'],languageOptions:{parserOptions:{ecmaVersion:'latest',sourceType:'module',ecmaFeatures:{jsx:true}},globals:{window:'readonly',document:'readonly',navigator:'readonly',localStorage:'readonly',URL:'readonly',Image:'readonly',FileReader:'readonly',Blob:'readonly',confirm:'readonly',alert:'readonly',prompt:'readonly',console:'readonly',requestAnimationFrame:'readonly',setTimeout:'readonly',clearTimeout:'readonly',fetch:'readonly',React:'readonly',ReactDOM:'readonly'}},rules:{'no-undef':'error'}}];
+          EOF
+          (cd build && ../node_modules/.bin/eslint --config eslint.config.mjs entry.jsx --no-ignore)
+          bash build-cloudflare.sh
+          test -s dist/app.js
+          test -s dist/world-data-v70.js
+          echo "APP_BYTES=$(wc -c < build/app.js)"
+          echo "WORLD_BYTES=$(wc -c < world-data-v70.js)"
+
+      - name: Commit validated v70 product
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name quiet-axis2024
+          git config user.email jinx.lin0820@gmail.com
+          git add app.jsx index.html sw.js build-cloudflare.sh .github/workflows/pages.yml docs/DATA_SOURCES.md scripts/audit-today-v69.py scripts/audit-world-v70.py world-data-v70.js
+          git commit -m "v70: add thin world data layer"
+          git push origin v70-world
