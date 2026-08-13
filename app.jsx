@@ -537,6 +537,15 @@ const WORLD_REGION_MAP_V71 = {
     spots:{island_n:[53,27],caldera:[55,8],island_w_fresh:[24,55],island_w_ocean:[18,72],island_s:[55,84],pirate:[79,78]}
   }
 };
+
+const WORLD_REGION_DETAIL_V72 = {
+  town:"Pelican Town",
+  mountain:"The Mountain",
+  forest:"CindersapForest",
+  beach:"BeachDistances",
+  island:"Ginger Island Map"
+};
+
 const WORLD_SPOT_REGION_V71 = (() => {
   const out={};
   Object.entries(WORLD_REGION_MAP_V71).forEach(([regionId,meta])=>Object.keys(meta.spots||{}).forEach(id=>{out[id]=regionId}));
@@ -2679,17 +2688,19 @@ function StardewTracker() {
     const markerPoints=worldKindV70==="spots"?(regionMeta?.spots||{}):(regionMeta?.places||{});
     const renderRegionMapV71=()=> {
       if(!region||!regionMeta)return null;
+      const detailFile=WORLD_REGION_DETAIL_V72[region.id]||regionMeta.file||region.icon||"Map";
       return <Card style={{padding:7,marginTop:6}}>
-        <div style={{position:"relative",height:205,overflow:"hidden",borderRadius:9,border:`1px solid ${C.line}`,background:regionMeta.file?"#DCE9C2":"linear-gradient(145deg,#E7D7AF,#C9B37B)",backgroundImage:regionMeta.file?`url(${GAME_FILE(regionMeta.file)})`:"linear-gradient(145deg,#E7D7AF,#C9B37B)",backgroundRepeat:"no-repeat",backgroundSize:regionMeta.file?regionMeta.zoom:"cover",backgroundPosition:regionMeta.file?regionMeta.position:"center"}}>
-          {!regionMeta.file&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",opacity:.23}}><GameIcon file={region.icon||"Map"} size={96}/></div>}
-          {markerRows.map((row,index)=>{
-            const id=row.id,point=markerPoints[id]||[18+(index%4)*22,28+Math.floor(index/4)*30];
-            const on=worldKindV70==="spots"?worldSpotV71===id:worldOpenV70===id;
-            const label=worldKindV70==="spots"?row.sub:row.name;
-            return <button key={id} onClick={()=>worldKindV70==="spots"?selectWorldSpotV71(id):selectWorldPlaceV71(id)} style={{position:"absolute",left:`${point[0]}%`,top:`${point[1]}%`,transform:"translate(-50%,-50%)",border:`1.5px solid ${on?C.orange:"#8B683C"}`,background:on?"#FFE1A0":"rgba(255,250,235,.96)",boxShadow:"0 1px 3px rgba(0,0,0,.25)",borderRadius:10,padding:"2px 5px",fontSize:6.8,fontWeight:950,color:C.darkBrown,whiteSpace:"nowrap",maxWidth:96,overflow:"hidden",textOverflow:"ellipsis"}}>{worldKindV70==="spots"?"🎣 ":""}{label}</button>
-          })}
+        <div style={{position:"relative",overflow:"hidden",borderRadius:9,border:`1px solid ${C.line}`,backgroundColor:"#DCE9C2",backgroundImage:regionMeta.file?`url(${GAME_FILE(regionMeta.file)})`:"none",backgroundSize:"cover",backgroundPosition:"center"}}>
+          <WikiImg src={GAME_FILE(detailFile)} alt={`${region.name}區域地圖`} style={{display:"block",width:"100%",height:"auto",maxHeight:330,objectFit:"contain",imageRendering:"pixelated",background:"#DCE9C2"}}/>
+          <span style={{position:"absolute",left:6,top:6,border:`1px solid ${C.line}`,background:"rgba(255,250,235,.94)",borderRadius:8,padding:"3px 6px",fontSize:7.2,fontWeight:950,color:C.darkBrown,boxShadow:"0 1px 3px rgba(0,0,0,.18)"}}>{region.name}</span>
         </div>
-        <div style={{fontSize:7.2,color:C.muted,textAlign:"center",marginTop:4}}>{worldKindV70==="spots"?"點地圖上的水域，下面直接看這個釣點的魚。":"點地圖上的地點，下面直接展開營業時間、服務與相關人物。"}</div>
+        <div style={{fontSize:7.5,color:C.muted,lineHeight:1.35,marginTop:5,textAlign:"center"}}>先看完整區域位置，再從下方選{worldKindV70==="spots"?"釣點":"地點"}；不再用放大世界地圖硬猜點位。</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:5,marginTop:7}}>{markerRows.map(row=>{
+          const id=row.id,on=worldKindV70==="spots"?worldSpotV71===id:worldOpenV70===id;
+          const label=worldKindV70==="spots"?row.sub:row.name;
+          const sub=worldKindV70==="spots"?row.name:(row.hours||row.requires||"");
+          return <button key={id} onClick={()=>worldKindV70==="spots"?selectWorldSpotV71(id):selectWorldPlaceV71(id)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFF0D2":C.paper,borderRadius:9,padding:6,display:"grid",gridTemplateColumns:"38px minmax(0,1fr)",gap:6,alignItems:"center",textAlign:"left",minWidth:0,minHeight:52}}><GameIcon file={row.icon||region.icon||"Map"} size={36}/><span style={{minWidth:0}}><b style={{display:"block",fontSize:8.7,color:on?C.orange:C.ink,lineHeight:1.12}}>{worldKindV70==="spots"?"🎣 ":""}{label}</b>{sub&&<span style={{display:"block",fontSize:6.7,color:C.muted,lineHeight:1.2,marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{sub}</span>}</span></button>
+        })}</div>
       </Card>;
     };
     const spotRows=selectedSpot?(selectedSpot.fish||[]).filter(i=>fishMatchesV71(selectedSpot,i)):[];
@@ -2723,12 +2734,8 @@ function StardewTracker() {
         </Card>}
       </>}
       {region&&worldQuickV71!=="fish"&&<>
-        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:5}}>
-          <button onClick={goWorldRootV71} style={{border:0,background:"transparent",padding:"2px 0",fontSize:8,color:C.blue,fontWeight:950}}>← 大世界地圖</button>
-          <span style={{fontSize:7,color:C.muted}}>›</span>
-          <b style={{fontSize:10.5,color:C.darkBrown}}>{region.name}</b>
-        </div>
-        <div style={{fontSize:7.7,color:C.muted,lineHeight:1.35,marginBottom:6}}>{region.summary}</div>
+        <button onClick={goWorldRootV71} style={{width:"100%",border:`1.5px solid ${C.orange}`,background:"#FFF4D8",borderRadius:10,padding:"8px 9px",display:"grid",gridTemplateColumns:"28px minmax(0,1fr) 18px",gap:7,alignItems:"center",textAlign:"left",marginBottom:7,boxShadow:"0 2px 5px rgba(96,67,33,.10)"}}><GameIcon file="Map" size={26}/><span style={{minWidth:0}}><b style={{display:"block",fontSize:10.5,color:C.darkBrown}}>← 返回大世界地圖</b><span style={{display:"block",fontSize:7,color:C.muted,marginTop:1}}>世界 › {worldMapV70==="island"?"姜岛":worldMapV70==="special"?"特殊區域":"本島"} › {region.name}</span></span><span style={{fontSize:15,color:C.orange,fontWeight:950}}>‹</span></button>
+        <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:5,padding:"1px 1px 0"}}><GameIcon file={region.icon||"Map"} size={29}/><div style={{minWidth:0}}><b style={{display:"block",fontSize:12,color:C.darkBrown}}>{region.name}</b><span style={{display:"block",fontSize:7.5,color:C.muted,lineHeight:1.3,marginTop:1}}>{region.summary}</span></div></div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
           <button onClick={()=>{setWorldKindV70("places");setWorldSpotV71("")}} style={{border:`1.5px solid ${worldKindV70==="places"?C.orange:C.line}`,background:worldKindV70==="places"?"#FFE2A8":C.paper,borderRadius:9,padding:6,fontSize:8.8,fontWeight:950,color:C.brown}}>📍 地點</button>
           <button onClick={()=>{setWorldKindV70("spots");setWorldOpenV70("")}} style={{border:`1.5px solid ${worldKindV70==="spots"?C.orange:C.line}`,background:worldKindV70==="spots"?"#DDECF7":C.paper,borderRadius:9,padding:6,fontSize:8.8,fontWeight:950,color:worldKindV70==="spots"?C.blue:C.brown}}>🎣 釣點</button>
