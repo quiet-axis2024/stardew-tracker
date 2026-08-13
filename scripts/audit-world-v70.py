@@ -8,8 +8,9 @@ def fail(msg):
 app=Path('app.jsx').read_text()
 need=[
     'const renderWorldV70 = () =>',
-    'DataTab id="world" label="世界"',
-    'dataSection==="world"&&renderWorldV70()',
+    'setFishViewV4("world")',
+    'fast==="find"?renderFishFindV4():renderWorldV70()',
+    'tab==="fishing"&&fishViewV4==="world"',
     'loadLazyDataV67("world")',
     'worldRegionV70', 'worldQueryV70', 'worldOpenV70',
     '從「在哪裡」開始找', '天氣條件',
@@ -19,6 +20,7 @@ need=[
 ]
 missing=[x for x in need if x not in app]
 if missing: fail('v70 world app invariant missing: '+repr(missing))
+if 'DataTab id="world" label="世界"' in app or 'dataSection==="world"' in app: fail('world must live under lookup, not player data')
 
 world=Path('world-data-v70.js').read_text()
 for token in ['window.SDVWorldV70','version:70','regions:[','places:[','weather:[','people:{','鹈鹕镇','煤矿森林','姜岛','皮埃尔的杂货店','木匠的商店','铁匠铺','鱼店']:

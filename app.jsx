@@ -1492,8 +1492,8 @@ function StardewTracker() {
   useEffect(()=>{
     if(tab==="wardrobe")loadLazyDataV67("wardrobe");
     if(tab==="fishing"||tab==="people")loadLazyDataV67("lookup");
-    if(tab==="data"&&dataSection==="world")loadLazyDataV67("world");
-  },[tab,dataSection]);
+    if(tab==="fishing"&&fishViewV4==="world")loadLazyDataV67("world");
+  },[tab,fishViewV4]);
 
   useEffect(()=>{
     let alive=true;
@@ -2583,7 +2583,7 @@ function StardewTracker() {
 
   const renderData = () => {
     const DataTab=({id,label,file})=>{const active=dataSection===id;return <button onClick={()=>setDataSection(id)} style={{border:`1.5px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.paper,borderRadius:9,padding:"5px 3px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",minWidth:0}}><GameIcon file={file} size={30}/><span style={{fontSize:8.8,fontWeight:950,color:active?C.darkBrown:C.muted}}>{label}</span></button>};
-    return <div><SectionTitle icon="game:Stardew Valley Almanac">資料</SectionTitle><div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:5,marginTop:7}}><DataTab id="skills" label="角色" file="Stardew Hero Trophy"/><DataTab id="farm" label="農場" file="Farm Computer"/><DataTab id="world" label="世界" file="Map"/><DataTab id="bundles" label="社區" file="Golden Scroll"/><DataTab id="collection" label="收藏" file="Treasure Chest"/></div>{dataSection==="skills"&&renderSkills()}{dataSection==="farm"&&renderFarm()}{dataSection==="world"&&renderWorldV70()}{dataSection==="bundles"&&renderBundles()}{dataSection==="collection"&&renderCollection()}</div>;
+    return <div><SectionTitle icon="game:Stardew Valley Almanac">資料</SectionTitle><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:6,marginTop:7}}><DataTab id="skills" label="角色" file="Stardew Hero Trophy"/><DataTab id="farm" label="農場" file="Farm Computer"/><DataTab id="bundles" label="社區" file="Golden Scroll"/><DataTab id="collection" label="收藏" file="Treasure Chest"/></div>{dataSection==="skills"&&renderSkills()}{dataSection==="farm"&&renderFarm()}{dataSection==="bundles"&&renderBundles()}{dataSection==="collection"&&renderCollection()}</div>;
   };
 
   const renderPeople = () => {
@@ -3047,8 +3047,8 @@ function StardewTracker() {
   };
 
   const renderFishingV30 = () => {
-    const fast=fishViewV4==="find"?"find":"items";
-    return <div><SectionTitle icon="game:Magnifying Glass">查找</SectionTitle><Card style={{padding:"6px 8px",background:"#FFF4D8"}}><div style={{fontSize:8.7,color:C.muted,lineHeight:1.4}}>查物品用途與取得方式，或依地點、季節、天氣與時間找魚。</div></Card><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginTop:7}}><button onClick={()=>setFishViewV4("items")} style={{border:`2px solid ${fast==="items"?C.orange:C.line}`,background:fast==="items"?"#FFE2A8":C.paper,borderRadius:10,padding:7,display:"flex",alignItems:"center",justifyContent:"center",gap:6,fontSize:10,fontWeight:950,color:C.brown}}><GameIcon file="Treasure Hunter" size={29}/>物品用途</button><button onClick={()=>setFishViewV4("find")} style={{border:`2px solid ${fast==="find"?C.orange:C.line}`,background:fast==="find"?"#FFE2A8":C.paper,borderRadius:10,padding:7,display:"flex",alignItems:"center",justifyContent:"center",gap:6,fontSize:10,fontWeight:950,color:C.brown}}><GameIcon file="Sonar Bobber" size={29}/>找魚</button></div>{fast==="items"?renderItemUsageV42():renderFishFindV4()}</div>;
+    const fast=["items","find","world"].includes(fishViewV4)?fishViewV4:"items";
+    return <div><SectionTitle icon="game:Magnifying Glass">查找</SectionTitle><Card style={{padding:"6px 8px",background:"#FFF4D8"}}><div style={{fontSize:8.7,color:C.muted,lineHeight:1.4}}>這裡放遊戲本身的查詢資料：查物品、找魚，或查世界地點、人物、營業時間與服務。</div></Card><div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:6,marginTop:7}}><button onClick={()=>setFishViewV4("items")} style={{border:`2px solid ${fast==="items"?C.orange:C.line}`,background:fast==="items"?"#FFE2A8":C.paper,borderRadius:10,padding:7,display:"flex",alignItems:"center",justifyContent:"center",gap:5,fontSize:9.3,fontWeight:950,color:C.brown,minWidth:0}}><GameIcon file="Treasure Hunter" size={27}/>物品</button><button onClick={()=>setFishViewV4("find")} style={{border:`2px solid ${fast==="find"?C.orange:C.line}`,background:fast==="find"?"#FFE2A8":C.paper,borderRadius:10,padding:7,display:"flex",alignItems:"center",justifyContent:"center",gap:5,fontSize:9.3,fontWeight:950,color:C.brown,minWidth:0}}><GameIcon file="Sonar Bobber" size={27}/>找魚</button><button onClick={()=>setFishViewV4("world")} style={{border:`2px solid ${fast==="world"?C.orange:C.line}`,background:fast==="world"?"#FFE2A8":C.paper,borderRadius:10,padding:7,display:"flex",alignItems:"center",justifyContent:"center",gap:5,fontSize:9.3,fontWeight:950,color:C.brown,minWidth:0}}><GameIcon file="Map" size={27}/>世界</button></div>{fast==="items"?renderItemUsageV42():fast==="find"?renderFishFindV4():renderWorldV70()}</div>;
   };
 
   const renderWardrobeV30 = () => {
