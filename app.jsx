@@ -2549,7 +2549,7 @@ function StardewTracker() {
     };
     const shown=(q?places.filter(x=>normalize(hay(x)).includes(q)):places.filter(x=>x.regionId===region?.id));
     const openPerson=p=>{const key=socialKey(p);if(key)openSocialNpcV55(key)};
-    const openItem=async raw=>{await loadLazyDataV67("lookup");const row=lookupRowV54(raw);openItemLookupV54(raw,row?.file||raw)};
+    const openItem=async raw=>{const item=String(raw||"").replace(/ Recipe$/,"" );await loadLazyDataV67("lookup");const row=lookupRowV54(item);openItemLookupV54(item,row?.file||item)};
     const PlaceCard=({place})=>{
       const open=worldOpenV70===place.id,r=regions.find(x=>x.id===place.regionId),owner=person(place.ownerId),shop=shopFor(place),services=serviceRows(place);
       const members=(place.peopleIds||[]).map(id=>person(id)).filter(Boolean);
