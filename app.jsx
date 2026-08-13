@@ -1448,6 +1448,7 @@ function StardewTracker() {
   const [recipeQuery, setRecipeQuery] = useState("");
   const [recipeFilter, setRecipeFilter] = useState("all");
   const [selectedPaper, setSelectedPaper] = useState(null);
+  const [todayExpandedV69, setTodayExpandedV69] = useState("");
   const [socialGroup, setSocialGroup] = useState("single");
   const [pondPicker, setPondPicker] = useState(null);
   const [pondFishQueryV55, setPondFishQueryV55] = useState("");
@@ -1775,26 +1776,26 @@ function StardewTracker() {
     const hints=[];let order=0;
     const add=h=>hints.push({...h,order:order++});
     dayCalendarItems(data.base.day).forEach(it=>{
-      if(it.type==="birthday")add({id:`birthday:${it.npc}`,priority:0,file:NPC_ICON_FILES[it.npc],reason:"今天限定",title:`今天是 ${it.npc} 的生日`,body:"生日當天送禮有額外好感加成；可直接打開社交速查看喜好。",action:"查看人物",run:()=>openSocialNpcV55(it.npc)});
-      else if(it.type==="festival"){const g=FESTIVAL_GUIDE_V26[it.key];add({id:`festival:${it.key}`,priority:0,file:"Calendar",reason:"今天限定",title:`今日：${it.text}`,body:g?.desc||"今天有節日活動，可到日曆查看當日資訊。",action:"看日曆",run:openCalendarV69});}
-      else add({id:`calendar:${it.text}`,priority:0,file:"Calendar",reason:"今天限定",title:it.text,body:"這是今天才需要注意的季節／城鎮事件。",action:"看日曆",run:openCalendarV69});
+      if(it.type==="birthday")add({id:`birthday:${it.npc}`,kind:"birthday",npc:it.npc,priority:0,file:NPC_ICON_FILES[it.npc],reason:"今天限定",title:`今天是 ${it.npc} 的生日`,body:"生日當天送禮有額外好感加成。點開可直接看喜愛禮物。",action:"前往社交速查",run:()=>openSocialNpcV55(it.npc)});
+      else if(it.type==="festival"){const g=FESTIVAL_GUIDE_V26[it.key];add({id:`festival:${it.key}`,kind:"festival",guide:g,priority:0,file:"Calendar",reason:"今天限定",title:`今日：${it.text}`,body:g?.desc||"今天有節日活動。點開可直接看重點。",action:"前往日曆",run:openCalendarV69});}
+      else add({id:`calendar:${it.text}`,kind:"calendar",detail:it.text,priority:0,file:"Calendar",reason:"今天限定",title:it.text,body:"這是今天才需要注意的季節／城鎮事件。",action:"前往日曆",run:openCalendarV69});
     });
     if(Number(data.base.day||1)<28){
       const tomorrow=dayCalendarItems(Number(data.base.day||1)+1).find(x=>x.type==="festival");
-      if(tomorrow){const g=FESTIVAL_GUIDE_V26[tomorrow.key];add({id:`tomorrow-festival:${tomorrow.key}`,priority:1,file:"Calendar",reason:"明天",title:`明天是 ${tomorrow.text}`,body:g?.items?.length?"今天可以先確認節日需要的物品或安排。":"明天有節日，今天可先留意行程安排。",action:"看日曆",run:openCalendarV69});}
+      if(tomorrow){const g=FESTIVAL_GUIDE_V26[tomorrow.key];add({id:`tomorrow-festival:${tomorrow.key}`,kind:"festival",guide:g,priority:1,file:"Calendar",reason:"明天",title:`明天是 ${tomorrow.text}`,body:g?.items?.length?"今天可以先確認節日需要的物品或安排。":"明天有節日，今天可先留意行程安排。",action:"前往日曆",run:openCalendarV69});}
     }
     const weatherBranches=todayWeatherV69?[todayWeatherV69]:["晴","雨"];
     weatherBranches.forEach(weather=>{
       const rows=todayFishRowsV69(weather);
       if(!rows.length)return;
       const icon=weather==="雨"?"🌧️":"☀️";
-      add({id:`fish-weather:${weather}`,priority:1,file:"Sonar Bobber",reason:todayWeatherV69?`今日${weather}天`:`天氣未記錄 · 如果${weather}天`,title:`${icon} ${weather}天可補 ${rows.length} 種未收集魚`,body:`例：${todayFishNamesV69(rows)}。可先從 ${rows[0].areaName} 查看。`,action:"打開找魚",run:()=>openFishHintV69(weather,rows[0].areaId)});
+      add({id:`fish-weather:${weather}`,kind:"fish",rows,weather,priority:1,file:"Sonar Bobber",reason:todayWeatherV69?`今日${weather}天`:`天氣未記錄 · 如果${weather}天`,title:`${icon} ${weather}天可補 ${rows.length} 種未收集魚`,body:`例：${todayFishNamesV69(rows)}。點開可直接看完整清單、地點與時段。`,action:"前往找魚篩選",run:()=>openFishHintV69(weather,rows[0].areaId)});
     });
     if(Number(data.base.day||1)>=25){
       const current=data.base.season;const next=SEASONS[(SEASONS.indexOf(current)+1)%SEASONS.length];
       const union=new Map([...todayFishRowsV69("晴"),...todayFishRowsV69("雨")].map(x=>[x.i,x]));
       const rows=[...union.values()].filter(x=>(x.rule?.s||[]).includes(current)&&!(x.rule?.s||[]).includes(next));
-      if(rows.length)add({id:`season-fish:${current}`,priority:2,file:"Calendar",reason:"本季快結束",title:`本季剩 ${29-Number(data.base.day||1)} 天，還有 ${rows.length} 種魚快換季`,body:`尚未收集：${todayFishNamesV69(rows)}`,action:"看當季魚",run:()=>openFishHintV69("",rows[0].areaId)});
+      if(rows.length)add({id:`season-fish:${current}`,kind:"fish",rows,weather:"",priority:2,file:"Calendar",reason:"本季快結束",title:`本季剩 ${29-Number(data.base.day||1)} 天，還有 ${rows.length} 種魚快換季`,body:`尚未收集：${todayFishNamesV69(rows)}。點開可直接看完整清單。`,action:"前往當季找魚",run:()=>openFishHintV69("",rows[0].areaId)});
     }
     const route=currentRouteFromStateV68(data);
     if(route==="cc"){
@@ -1811,14 +1812,35 @@ function StardewTracker() {
         });
       });
       gaps.sort((a,b)=>Number(b.seasonMatch)-Number(a.seasonMatch));
-      gaps.slice(0,2).forEach(g=>{const options=g.items.filter(x=>!g.got.includes(x));const name=data.bundleNameV28?.[g.bundle.id]||g.bundle.name;add({id:`bundle-gap:${g.bundle.id}`,priority:g.seasonMatch?2:3,file:"Golden Scroll",reason:"現在可推進 · 只差 1 格",title:`${g.room.name} · ${name}`,body:`還差 1 格${options.length?`；候選：${options.slice(0,3).map(x=>switchNameV47(x,itemFileZhV26(x))).join("、")}${options.length>3?"…":""}`:""}。`,action:"打開收集包",run:()=>openTownRepairV69(g.room.id)});});
+      gaps.slice(0,2).forEach(g=>{const options=g.items.filter(x=>!g.got.includes(x));const name=data.bundleNameV28?.[g.bundle.id]||g.bundle.name;add({id:`bundle-gap:${g.bundle.id}`,kind:"bundle",options,roomName:g.room.name,bundleName:name,gotCount:g.got.length,needCount:bundleNeedFromStateV68(data,g.bundle),priority:g.seasonMatch?2:3,file:"Golden Scroll",reason:"現在可推進 · 只差 1 格",title:`${g.room.name} · ${name}`,body:`還差 1 格${options.length?`；候選：${options.slice(0,3).map(x=>switchNameV47(x,itemFileZhV26(x))).join("、")}${options.length>3?"…":""}`:""}。點開可看完整候選。`,action:"前往收集包",run:()=>openTownRepairV69(g.room.id)});});
     }else if(route==="joja"&&data.jojaMemberV28){
       const done=new Set(data.jojaProjectsV28||[]);
       const project=JOJA_PROJECTS_V28.find(j=>!done.has(j.id)&&Number(data.base?.money||0)>=j.cost);
-      if(project)add({id:`joja-ready:${project.id}`,priority:3,file:"Joja Cola",reason:"現在可推進",title:`Joja：${project.name}工程`,body:`目前記錄的金錢足夠支付 ${project.cost.toLocaleString()}g；這是明確可完成的城鎮進度。`,action:"查看 Joja",run:()=>openTownRepairV69("")});
+      if(project)add({id:`joja-ready:${project.id}`,kind:"joja",project,priority:3,file:"Joja Cola",reason:"現在可推進",title:`Joja：${project.name}工程`,body:`目前記錄的金錢足夠支付 ${project.cost.toLocaleString()}g；點開可看目前金錢與完成後餘額。`,action:"前往 Joja",run:()=>openTownRepairV69("")});
     }
     const hidden=new Set(todayHiddenIdsV69),pinned=new Set(todayPinnedIdsV69);
     return hints.filter(h=>!hidden.has(h.id)).sort((a,b)=>a.priority-b.priority||Number(pinned.has(b.id))-Number(pinned.has(a.id))||a.order-b.order).slice(0,6);
+  };
+  const renderTodayDetailV69 = h => {
+    if(h.kind==="fish"){
+      return <div style={{display:"grid",gap:4}}>{(h.rows||[]).map(row=><div key={`${h.id}-${row.i}`} style={{display:"grid",gridTemplateColumns:"30px minmax(0,1fr) auto",gap:6,alignItems:"center",padding:"5px 6px",border:`1px solid ${C.line}`,borderRadius:8,background:"#FFFDF5"}}><GameIcon file={row.file} size={27}/><div style={{minWidth:0}}><b style={{display:"block",fontSize:9,color:C.ink}}>{switchNameV47(row.name,row.file)}</b><span style={{display:"block",fontSize:7.2,color:C.muted,lineHeight:1.25,marginTop:1}}>{row.areaName}</span></div><span style={{fontSize:7.2,color:C.brown,fontWeight:900,textAlign:"right",whiteSpace:"nowrap"}}>{formatFishTimeV4(row.rule)}</span></div>)}</div>;
+    }
+    if(h.kind==="birthday"){
+      const loves=NPC_GIFTS[h.npc]?.love||[];
+      return loves.length?<><div style={{fontSize:8,color:C.muted,fontWeight:900,marginBottom:5}}>喜愛禮物</div><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4}}>{loves.map(name=>{const file=itemFileZhV26(name)||name;return <div key={name} style={{border:`1px solid ${C.line}`,borderRadius:8,padding:"4px 2px",textAlign:"center",background:"#FFFDF5"}}><GameIcon file={file} size={27}/><div style={{fontSize:7,fontWeight:900,color:C.ink,lineHeight:1.05,marginTop:2}}>{switchNameV47(name,file)}</div></div>})}</div></>:<div style={{fontSize:8,color:C.muted}}>目前手帳沒有可直接顯示的喜愛禮物資料。</div>;
+    }
+    if(h.kind==="festival"){
+      const g=h.guide;
+      return <div style={{display:"grid",gap:5}}>{g?.desc&&<div style={{fontSize:8.4,color:C.ink,lineHeight:1.4}}>{g.desc}</div>}{g?.items?.length>0&&<><div style={{fontSize:8,color:C.muted,fontWeight:900}}>相關物品／準備</div><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4}}>{g.items.map(([file,name])=><div key={`${file}-${name}`} style={{border:`1px solid ${C.line}`,borderRadius:8,padding:"4px 2px",textAlign:"center",background:"#FFFDF5"}}><GameIcon file={file} size={27}/><div style={{fontSize:7,fontWeight:900,color:C.ink,lineHeight:1.05,marginTop:2}}>{name}</div></div>)}</div></>}</div>;
+    }
+    if(h.kind==="bundle"){
+      return <><div style={{fontSize:8.2,color:C.muted,marginBottom:5}}>完成 {h.gotCount}/{h.needCount}，目前只差 1 格；以下都是可補上的候選。</div><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4}}>{(h.options||[]).map(name=>{const file=itemFileZhV26(name)||name;return <div key={name} style={{border:`1px solid ${C.line}`,borderRadius:8,padding:"4px 2px",textAlign:"center",background:"#FFFDF5"}}><GameIcon file={file} size={27}/><div style={{fontSize:7,fontWeight:900,color:C.ink,lineHeight:1.05,marginTop:2}}>{switchNameV47(name,file)}</div></div>})}</div></>;
+    }
+    if(h.kind==="joja"){
+      const cost=Number(h.project?.cost||0),money=Number(data.base?.money||0);
+      return <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:5}}>{[["工程費用",`${cost.toLocaleString()}g`],["目前金錢",`${money.toLocaleString()}g`],["完成後餘額",`${Math.max(0,money-cost).toLocaleString()}g`]].map(([k,v])=><div key={k} style={{padding:"6px 4px",border:`1px solid ${C.line}`,borderRadius:8,background:"#FFFDF5",textAlign:"center"}}><div style={{fontSize:6.8,color:C.muted}}>{k}</div><b style={{display:"block",fontSize:8.5,color:C.brown,marginTop:1}}>{v}</b></div>)}</div>;
+    }
+    return <div style={{fontSize:8.3,color:C.ink,lineHeight:1.45}}>{h.detail||h.body}</div>;
   };
   const renderTodayV69 = () => {
     const hints=buildTodayHintsV69();const pinned=new Set(todayPinnedIdsV69);
@@ -1829,9 +1851,10 @@ function StardewTracker() {
         <div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap",marginTop:6}}><span style={{fontSize:8,color:C.muted,fontWeight:950}}>天氣</span>{[["","未記錄"],["晴","☀️ 晴"],["雨","🌧️ 雨"]].map(([v,label])=>{const on=todayWeatherV69===v;return <button key={v||"unknown"} onClick={()=>setTodayWeatherV69(v)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFE2A8":C.paper,borderRadius:13,padding:"3px 7px",fontSize:8,fontWeight:900,color:on?C.darkBrown:C.muted}}>{label}</button>})}</div>
         {!todayWeatherV69&&<div style={{fontSize:7.7,color:C.muted,lineHeight:1.35,marginTop:4}}>未記錄天氣時，會同時列出晴天／雨天兩套天氣限定提示，不會把內容藏掉。</div>}
       </Card>
-      <div style={{display:"grid",gap:6,marginTop:7}}>{hints.map(h=>{const isPinned=pinned.has(h.id);return <Card key={h.id} style={{padding:8,borderColor:isPinned?C.gold:C.line,background:isPinned?"#FFF8DA":C.paper}}>
-        <div style={{display:"grid",gridTemplateColumns:"36px minmax(0,1fr)",gap:7,alignItems:"start"}}><GameIcon file={h.file} size={34}/><div style={{minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}><span style={{fontSize:6.8,fontWeight:950,color:C.orange,background:"#FFF0C8",borderRadius:7,padding:"2px 5px"}}>{h.reason}</span>{isPinned&&<span style={{fontSize:6.8,fontWeight:950,color:C.gold}}>★ 已固定</span>}</div><b style={{display:"block",fontSize:10.8,color:C.darkBrown,lineHeight:1.25,marginTop:3}}>{h.title}</b><div style={{fontSize:8.2,color:C.muted,lineHeight:1.4,marginTop:2}}>{h.body}</div></div></div>
-        <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center",marginTop:6,paddingTop:5,borderTop:`1px dashed ${C.line}`}}><button onClick={h.run} style={{border:`1.5px solid ${C.orange}`,background:"#FFE4C5",borderRadius:8,padding:"4px 7px",fontSize:8,fontWeight:950,color:C.brown}}>{h.action} ›</button><button onClick={()=>toggleTodayPinV69(h.id)} aria-label={isPinned?"取消固定":"固定追蹤"} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"4px 7px",fontSize:8,fontWeight:950,color:isPinned?C.gold:C.muted}}>{isPinned?"★ 固定":"☆ 固定"}</button><button onClick={()=>hideTodayHintV69(h.id)} style={{marginLeft:"auto",border:0,background:"transparent",padding:"4px 2px",fontSize:7.7,fontWeight:900,color:C.muted}}>今天先不管</button></div>
+      <div style={{display:"grid",gap:6,marginTop:7}}>{hints.map(h=>{const isPinned=pinned.has(h.id),expanded=todayExpandedV69===h.id;return <Card key={h.id} style={{padding:8,borderColor:isPinned?C.gold:C.line,background:isPinned?"#FFF8DA":C.paper}}>
+        <button type="button" aria-expanded={expanded} onClick={()=>setTodayExpandedV69(expanded?"":h.id)} style={{width:"100%",border:0,background:"transparent",padding:0,textAlign:"left",cursor:"pointer",color:"inherit"}}><div style={{display:"grid",gridTemplateColumns:"36px minmax(0,1fr) 20px",gap:7,alignItems:"start"}}><GameIcon file={h.file} size={34}/><div style={{minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}><span style={{fontSize:6.8,fontWeight:950,color:C.orange,background:"#FFF0C8",borderRadius:7,padding:"2px 5px"}}>{h.reason}</span>{isPinned&&<span style={{fontSize:6.8,fontWeight:950,color:C.gold}}>★ 已固定</span>}</div><b style={{display:"block",fontSize:10.8,color:C.darkBrown,lineHeight:1.25,marginTop:3}}>{h.title}</b><div style={{fontSize:8.2,color:C.muted,lineHeight:1.4,marginTop:2}}>{h.body}</div><div style={{fontSize:7.2,color:C.orange,fontWeight:900,marginTop:3}}>{expanded?"收起詳細內容":"點開看詳細內容"}</div></div><span style={{fontSize:15,color:C.muted,fontWeight:950,lineHeight:1.2,textAlign:"center",transform:expanded?"rotate(180deg)":"none"}}>⌄</span></div></button>
+        {expanded&&<div style={{marginTop:7,paddingTop:7,borderTop:`1px dashed ${C.line}`}}>{renderTodayDetailV69(h)}<div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center",marginTop:7}}><button onClick={h.run} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"4px 7px",fontSize:7.7,fontWeight:900,color:C.brown}}>{h.action} ›</button><span style={{fontSize:7,color:C.muted}}>需要完整頁面時再前往</span></div></div>}
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center",marginTop:6,paddingTop:5,borderTop:`1px dashed ${C.line}`}}><button onClick={()=>toggleTodayPinV69(h.id)} aria-label={isPinned?"取消固定":"固定追蹤"} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"4px 7px",fontSize:8,fontWeight:950,color:isPinned?C.gold:C.muted}}>{isPinned?"★ 固定":"☆ 固定"}</button><button onClick={()=>hideTodayHintV69(h.id)} style={{marginLeft:"auto",border:0,background:"transparent",padding:"4px 2px",fontSize:7.7,fontWeight:900,color:C.muted}}>今天先不管</button></div>
       </Card>})}</div>
       {!hints.length&&<Card style={{marginTop:7,padding:9,textAlign:"center",fontSize:9.5,color:C.muted}}>目前沒有需要特別提醒的當日事項。</Card>}
       {todayHiddenIdsV69.length>0&&<button onClick={restoreTodayHintsV69} style={{marginTop:5,border:0,background:"transparent",padding:"3px 0",fontSize:7.8,fontWeight:900,color:C.blue}}>恢復今天隱藏的 {todayHiddenIdsV69.length} 項</button>}
