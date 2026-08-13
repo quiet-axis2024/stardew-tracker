@@ -170,3 +170,13 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
   else start();
 })();
+
+/* v74 is loaded by the v73 entry so existing PWA markup can update without adding a second top-level loader. */
+(()=>{
+  const src='./world-map-layout-v74.js?v=74';
+  if(document.querySelector(`script[src="${src}"]`))return;
+  const script=document.createElement('script');
+  script.src=src;
+  script.async=false;
+  document.head.appendChild(script);
+})();
