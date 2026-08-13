@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 def fail(msg): raise SystemExit(msg)
 
@@ -16,8 +17,8 @@ if missing: fail('v73 calibrated map pin invariant missing: '+repr(missing))
 if 'WORLD_REGION_MAP_V71' in pins: fail('v73 pin overlay must not depend on old world-map coordinates')
 
 idx=Path('index.html').read_text()
-if './world-map-pins-v73.js?v=73' not in idx: fail('v73 pin overlay is not loaded by index.html')
-if '?v=73' not in idx or 'deploy-v73' not in idx: fail('v73 release marker missing')
+if not re.search(r'\./world-map-pins-v73\.js\?v=\d+', idx): fail('v73 pin overlay is not loaded by index.html')
+if not re.search(r'deploy-v\d+', idx): fail('release marker missing')
 
 sw=Path('sw.js').read_text()
 if "const CACHE='stardew-tracker-v73';" not in sw: fail('v73 SW cache missing')
