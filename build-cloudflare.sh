@@ -7,6 +7,7 @@ python3 scripts/audit-world-v70.py
 python3 scripts/audit-world-v71.py
 python3 scripts/audit-world-v72.py
 python3 scripts/audit-world-v73.py
+python3 scripts/audit-world-v78.py
 node --check world-map-pins-v73.js
 node --check world-map-secret-v75.js
 
