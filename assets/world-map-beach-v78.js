@@ -1,0 +1,1 @@
+window.SDVWorldMapDataV78.pins['海滩']={places:[{label:'鱼店',match:['鱼店'],x:29,y:57},{label:'艾利欧特小屋',match:['艾利欧特小屋'],x:52,y:18},{label:'潮汐池',match:['潮汐池'],x:84,y:39,dx:-8}],spots:[{label:'海洋',match:['海滩','海洋'],x:51,y:74}]};
