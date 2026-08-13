@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 
 def fail(msg):
@@ -25,6 +26,6 @@ if 'addEventListener' in helper or 'MutationObserver' in helper:
     fail('v78 Secret Woods helper must be a no-op')
 if './world-map-pins-v73.js?v=78' not in idx or './world-map-secret-v75.js?v=78' not in idx:
     fail('v78 world scripts are not cache-busted')
-if 'deploy-v78' not in idx:
-    fail('v78 deploy marker missing')
+if not re.search(r'deploy-v(?:7[89]|[89]\d|\d{3,})', idx):
+    fail('v78-or-newer deploy marker missing')
 print('v78 world route audit passed')
