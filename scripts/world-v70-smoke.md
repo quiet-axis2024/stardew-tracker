@@ -1,1 +1,0 @@
-v70 validation snapshot: foundation/progress/today/world audits, world runtime ID integrity, Safari 15 esbuild, ESLint no-undef and Cloudflare build passed in GitHub Actions run 31667302025 on 2026-08-13. This note is intentionally small and can be removed during later maintenance if CI history is sufficient.
