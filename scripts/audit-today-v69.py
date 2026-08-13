@@ -6,7 +6,7 @@ need=[
  "todayV69:{weatherByDate:{},hiddenByDate:{},pinnedIds:[]}",
  "const buildTodayHintsV69 = () =>", "const renderTodayV69 = () =>",
  "天氣未記錄 · 如果", "未記錄天氣時，會同時列出晴天／雨天",
- "今天先不管", "toggleTodayPinV69", "restoreTodayHintsV69",
+ "今天先不管", "toggleTodayPinV69", "restoreTodayHintsV69", "點開看詳細內容", "renderTodayDetailV69",
  "fish-weather:${weather}", "bundle-gap:${g.bundle.id}", ".slice(0,6)",
  "{renderProfileCard()}\n    {renderCalendar()}\n    {renderTodayV69()}", "game-calendar-v69"
 ]
