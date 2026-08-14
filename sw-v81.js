@@ -1,4 +1,4 @@
-const CACHE='stardew-tracker-v81';
+const CACHE='stardew-tracker-v82';
 const CORE=['./index.html','./app.js','./cloud.js','./farmer-preview-v33.js','./animal-preview-v33.js','./social-data-v50.js','./machine-data-v51.js','./switch-names-v47.js','./world-data-v70.js','./world-extra-v79.js','./world-nav-data-v81.js','./world-nav-island-v81.js','./world-nav-v81.js','./manifest.webmanifest','./icon.svg','./assets/game/local-assets-v67.js','./assets/game/main-logo-zh.png'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
