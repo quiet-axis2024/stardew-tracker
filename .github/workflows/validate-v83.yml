@@ -15,3 +15,4 @@ jobs:
       - name: Run full Cloudflare build validation
         shell: bash
         run: bash build-cloudflare.sh
+      # Final pre-merge validation includes the World re-entry reset bridge.
