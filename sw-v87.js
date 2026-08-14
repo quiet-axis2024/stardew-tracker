@@ -6,7 +6,7 @@
    - 只有「導覽請求」失敗才回退 index.html，避免 JS/圖片請求拿到 HTML 內容。
    - 跨域圖片（僅剩零星 wiki 後備）→ stale-while-revalidate，失敗不擋。 */
 const CACHE='stardew-tracker-v87';
-const CORE=['./index.html','./app.js','./cloud.js','./farmer-preview-v33.js','./animal-preview-v33.js','./social-data-v50.js','./machine-data-v51.js','./switch-names-v47.js','./world-data-v70.js','./world-nav-data-v87.js','./manifest.webmanifest','./icon.svg','./assets/game/local-assets-v67.js','./assets/game/local-assets-v87.js','./assets/game/main-logo-zh.png'];
+const CORE=['./index.html','./app.js','./cloud.js','./farmer-preview-v33.js','./animal-preview-v33.js','./social-data-v50.js','./machine-data-v51.js','./switch-names-v47.js','./world-data-v70.js','./world-nav-data-v87.js','./npc-schedule-data-v91.js','./manifest.webmanifest','./icon.svg','./assets/game/local-assets-v67.js','./assets/game/local-assets-v87.js','./assets/game/main-logo-zh.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(c=>Promise.allSettled(CORE.map(u=>c.add(u)))).then(()=>self.skipWaiting()));
 });
