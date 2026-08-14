@@ -5,7 +5,7 @@ def fail(msg):
     raise SystemExit(msg)
 
 app=Path('app.jsx').read_text()
-for token in ['const renderWorldV70 = () =>','loadLazyDataV67("world")','NPC_SERVICES_V55','openSocialNpcV55']:
+for token in ['const renderWorldV87 = () =>','loadLazyDataV67("world")','NPC_SERVICES_V55','openSocialNpcV55']:
     if token not in app: fail('v70 world data integration missing '+token)
 if 'DataTab id="world" label="世界"' in app or 'dataSection==="world"' in app:
     fail('world must live under lookup, not player data')
@@ -22,10 +22,10 @@ if len(ids)!=len(set(ids)):
 idx=Path('index.html').read_text()
 if './world-data-v70.js?v=' not in idx: fail('world lazy group missing')
 cloud=Path('build-cloudflare.sh').read_text()
+if 'world-data-v70.js' not in cloud or 'dist/' not in cloud:
+    fail('world snapshot must ship in build output')
 pages=Path('.github/workflows/pages.yml').read_text()
-for name,text in [('Cloudflare',cloud),('Pages',pages)]:
-    if 'world-data-v70.js' not in text or 'dist/' not in text:
-        fail(name+' world snapshot must ship in build output')
+if './build-cloudflare.sh' not in pages: fail('pages.yml must invoke build-cloudflare.sh')
 docs=Path('docs/DATA_SOURCES.md').read_text()
 if '`world-data-v70.js` | manual committed snapshot' not in docs:
     fail('world data source documentation missing')

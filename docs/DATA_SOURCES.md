@@ -36,3 +36,10 @@
 - 若由腳本產生，generator 與輸入版本一併進 repo
 
 若資料量小到適合手工維護，可直接 committed data，但要明確標示「manual snapshot」，不要假裝 generated。
+
+## v87 世界導航（2026-08-14）
+| 檔案 | 來源 | 說明 |
+| --- | --- | --- |
+| `world-nav-data-v87.js` | manual committed snapshot | 世界導航圖單一來源：節點／pin／areaNode。座標依實際地圖渲染逐點校正。 |
+| `assets/game/local-assets-v87.js` | Stardew Valley Wiki（一次性下載，本地快照） | 地圖、全部魚類與世界圖示改為本地資產，執行期不再熱鏈 wiki。檔名＝sha1(key)[:14]。 |
+| （移除） | — | world-nav-v81/83、world-nav-island-v81、world-fish-data-v83、world-lifecycle-v84–86、world-map-pins-v73、world-map-secret-v75、world-route-fixes-v79、world-extra-v79、sw.js／sw-v81–86：v83 覆蓋層架構整批退役，改為 app.jsx 內建 `renderWorldV87`。 |

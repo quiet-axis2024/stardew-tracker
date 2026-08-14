@@ -47,7 +47,7 @@ window.SDVWorldV70={
     {id:"guild",regionId:"mountain",name:"探险家公会",aliases:["探險家公會","Adventurer's Guild"],icon:"Galaxy Sword",peopleIds:["marlon"],ownerId:"marlon",hours:"14:00–02:00",requires:"完成初期矿井討伐要求後加入",services:["購買武器／鞋／戒指","怪物討伐目標與獎勵","找回昏迷時遺失物品"]},
     {id:"railroad",regionId:"mountain",name:"铁路",aliases:["鐵路","Railroad"],icon:"Railroad",peopleIds:[],requires:"第一年夏季 3 日地震後開放",services:["溫泉入口","火車經過事件","女巫相關後期入口"]},
     {id:"quarry",regionId:"mountain",name:"采石场",aliases:["採石場","Quarry"],icon:"Stone",peopleIds:[],requires:"修復采石场橋後進入",services:["週期生成石頭、礦點與晶球","通往采石场礦洞"]},
-    {id:"ranch",regionId:"forest",name:"玛妮的牧场",aliases:["瑪妮的牧場","Marnie's Ranch"],icon:"Cow",peopleIds:["marnie"],ownerId:"marnie",hours:"09:00–16:00；週一、週二不提供商店服務",services:["購買農場動物","購買乾草與動物照護用品"]},
+    {id:"ranch",regionId:"forest",name:"玛妮的牧场",aliases:["瑪妮的牧場","Marnie's Ranch"],icon:"White Cow",peopleIds:["marnie"],ownerId:"marnie",hours:"09:00–16:00；週一、週二不提供商店服務",services:["購買農場動物","購買乾草與動物照護用品"]},
     {id:"wizard_tower",regionId:"forest",name:"法师塔",aliases:["法師塔","Wizard's Tower"],icon:"Magic Ink",peopleIds:["wizard"],ownerId:"wizard",hours:"06:00–23:00",services:["與法师互動","後期購買魔法建築","幻象神龛相關功能"]},
     {id:"traveling_cart",regionId:"forest",name:"旅行货车",aliases:["旅行貨車","Traveling Cart"],icon:"Traveling Cart",peopleIds:[],hours:"週五、週日 06:00–20:00",services:["隨機商品","可能提前取得非當季物品"]},
     {id:"leah_house",regionId:"forest",name:"莉亚的农舍",aliases:["莉亞的農舍","Leah's Cottage"],icon:"Leah Icon",peopleIds:["leah"],services:["莉亚的住處"]},

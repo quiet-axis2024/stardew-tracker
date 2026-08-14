@@ -1,1 +1,0 @@
-(()=>{const db=window.SDVWorldV70;if(!db||!Array.isArray(db.places)||db.places.some(x=>x?.id==='bus_stop'))return;db.places.push({id:'bus_stop',regionId:'town',name:'公交车站',aliases:['巴士站','Bus Stop'],icon:'Map',peopleIds:[],hours:'10:00–17:00',requires:'巴士修复后可使用',services:['前往卡利科沙漠','矿车快速移动','连接农场与鹈鹕镇']});})();
