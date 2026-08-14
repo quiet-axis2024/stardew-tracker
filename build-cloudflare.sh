@@ -9,6 +9,7 @@ python3 scripts/audit-search-v88.py
 python3 scripts/audit-gifts-v89.py
 python3 scripts/audit-sweep-v90.py
 python3 scripts/audit-schedule-v91.py
+python3 scripts/audit-find-v92.py
 node --check world-data-v70.js
 node --check world-nav-data-v87.js
 node --check npc-schedule-data-v91.js

@@ -1,0 +1,45 @@
+import { JSDOM } from 'jsdom';
+import fs from 'fs';
+const dom=new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>',{url:'https://localhost/',pretendToBeVisual:true,runScripts:'outside-only'});
+const {window}=dom;
+for(const k of ['window','document','localStorage','HTMLElement','HTMLInputElement','Node','Event','CustomEvent','getComputedStyle','requestAnimationFrame','cancelAnimationFrame']){try{globalThis[k]=window[k]??globalThis[k]}catch{}}
+window.matchMedia=window.matchMedia||(()=>({matches:false,addListener(){},removeListener(){},addEventListener(){},removeEventListener(){}}));
+window.scrollTo=()=>{};window.HTMLElement.prototype.scrollIntoView=window.HTMLElement.prototype.scrollIntoView||function(){};
+const load=f=>window.eval(fs.readFileSync(f,'utf8'));
+['assets/game/local-assets-v67.js','assets/game/local-assets-v87.js','social-data-v50.js','machine-data-v51.js','switch-names-v47.js','world-nav-data-v87.js','npc-schedule-data-v91.js','world-data-v70.js','lookup-data-v46.js','lookup-extra-v49.js','dist/app.js'].forEach(load);
+const doc=window.document;
+const raf=(n=2)=>new Promise(r=>{let i=0;const t=()=>{i++<n?setTimeout(t,25):r()};t()});
+const fail=m=>{console.log('SMOKE FAIL:',m);process.exit(1)};
+const btn=p=>[...doc.querySelectorAll('button')].find(x=>p((x.textContent||'').trim(),x));
+const setVal=(el,v)=>{const d=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value');d.set.call(el,v);el.dispatchEvent(new window.Event('input',{bubbles:true}))};
+
+const R=window.SDVNpcScheduleV91.resolve;
+const zhs=r=>r.entries.map(e=>e[1].zh).join('|');
+if(!zhs(R('謝恩',{season:'夏',day:10,rain:false,ccDone:false})).includes('Joja超市'))fail('resolver joja 路線');
+if(!zhs(R('謝恩',{season:'夏',day:10,rain:false,ccDone:true})).includes('玛妮的牧场'))fail('resolver cc 路線');
+console.log('resolver：CC↔Joja 雙路線 OK');
+
+await raf(3);
+btn(t=>t==='查找').click(); await raf(2);
+const wEntry=[...doc.querySelectorAll('button')].find(x=>(x.textContent||'').includes('世界')&&x.querySelector('img'));
+if(!wEntry)fail('查找頁找不到世界入口'); wEntry.click(); await raf(2);
+btn(t=>t==='👤 找人').click(); await raf(2);
+if(!doc.body.textContent.includes('按條件找人'))fail('找人面板未開');
+const inp=[...doc.querySelectorAll('input')].find(i=>/人名可選填/.test(i.placeholder||''));
+if(!inp)fail('找人輸入框缺');
+setVal(inp,'罗宾'); await raf(2);
+if(!doc.body.textContent.includes('羅賓'))fail('簡體查詢未命中羅賓');
+const chip=btn((t)=>t.includes('木匠的商店'));
+if(!chip)fail('羅賓行程 chip 缺');
+chip.click(); await raf(3);
+if(!doc.body.textContent.includes('山岭'))fail('chip 未跳到山岭');
+console.log('找人：簡體過濾＋行程 chip → 世界 OK');
+btn(t=>t==='按地點').click(); await raf(2);
+if(!doc.body.textContent.includes('📍')||!doc.body.textContent.includes('人'))fail('按地點聚合未出現');
+const rb=btn(t=>t==='羅賓 ›');
+if(!rb)fail('地點群缺羅賓 chip');
+rb.click(); await raf(2);
+if(!doc.getElementById('npc-card-羅賓'))fail('未跳到社交卡');
+console.log('按地點聚合 → 社交卡 OK');
+if(doc.body.textContent.includes('餐吧'))fail('畫面仍出現餐吧');
+console.log('SMOKE OK');

@@ -46,7 +46,7 @@ town:{id:'town',name:'鹈鹕镇',summary:'居民、商店與城鎮設施最集�
   {id:'cc',label:'社区中心',worldPlaceId:'community_center',x:43,y:17},
   {id:'clinic',label:'哈维的诊所',worldPlaceId:'clinic',x:30,y:44},
   {id:'pierre',label:'皮埃尔的杂货店',worldPlaceId:'pierre_store',x:39,y:44},
-  {id:'saloon',label:'星之果实餐吧',worldPlaceId:'saloon',x:35,y:57},
+  {id:'saloon',label:'星之果实酒吧',worldPlaceId:'saloon',x:35,y:57},
   {id:'joja',label:'Joja超市',worldPlaceId:'joja',x:82,y:41},
   {id:'smith',label:'铁匠铺',worldPlaceId:'blacksmith',x:78,y:67},
   {id:'museum',label:'博物馆',worldPlaceId:'museum',x:83,y:72}],portals:[
