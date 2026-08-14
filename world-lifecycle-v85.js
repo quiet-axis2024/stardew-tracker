@@ -1,4 +1,4 @@
-/* v86 — lifecycle owner for the standalone World UI. Keeps it inside 查找 → 世界, decorates region titles, and focuses cross-page NPC targets. */
+/* v85 — lifecycle owner for the standalone World UI. Keeps it inside 查找 → 世界 and decorates every region title. */
 (()=>{
 'use strict';
 const n=v=>String(v||'').normalize('NFKC').toLowerCase().replace(/[\s·・_'’\-／/（）()：:]+/g,'');
@@ -50,18 +50,6 @@ function decorateRegionTitle(){
     title.prepend(img);
   }
 }
-function focusNpcCard(raw,attempt=0){
-  const key=n(raw);if(!key)return;
-  const main=document.querySelector('main');if(!main){if(attempt<6)setTimeout(()=>focusNpcCard(raw,attempt+1),180);return;}
-  const candidates=[...main.querySelectorAll('button')].filter(b=>!b.closest('#sdv-world-v83')&&n(b.textContent).includes(key));
-  candidates.sort((a,b)=>String(a.textContent||'').length-String(b.textContent||'').length);
-  const target=candidates[0];
-  if(target){
-    target.scrollIntoView({block:'center',inline:'nearest',behavior:'auto'});
-    return;
-  }
-  if(attempt<6)setTimeout(()=>focusNpcCard(raw,attempt+1),180);
-}
 function isBottomNav(button){
   if(!button)return false;const label=n(button.textContent);
   return ['總覽','总览','資料','资料','社交','查找','衣櫥','衣橱','備註','备注'].some(x=>label===n(x))&&button.getBoundingClientRect().top>window.innerHeight*.5;
@@ -73,11 +61,7 @@ function audit(){
   hideDuplicateLegacyTitle();decorateRegionTitle();
 }
 document.addEventListener('click',event=>{
-  const b=event.target?.closest?.('button');if(!b)return;
-  if(b.closest('#sdv-world-v83')){
-    if(b.dataset.linkNpc){const raw=b.dataset.linkNpc;setTimeout(()=>focusNpcCard(raw),360);}
-    return;
-  }
+  const b=event.target?.closest?.('button');if(!b||b.closest('#sdv-world-v83'))return;
   const pair=lookupPair();
   if(pair&&b===pair.item){cleanupWorld();return;}
   if(isBottomNav(b)&&n(b.textContent)!==n('查找')){cleanupWorld();return;}
