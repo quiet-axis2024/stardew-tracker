@@ -46,7 +46,7 @@ for k,must in [('marnie','皮埃尔的杂货店'),('abby','博物馆'),('harvey'
     if must not in o['sent'][k]: fail(f'哨兵不符 {k}: {o["sent"][k]}')
 
 app=Path('app.jsx').read_text()
-for token in ['SDVNpcScheduleV91','📍 今天','節日日以會場為準','goToWorldV88(loc.node','好感 {hearts}/{cap}','<CompactLovesV50 items={likes}/>','aria-label={`好感 ${hearts}/${cap}`}']:
+for token in ['SDVNpcScheduleV91','📍 今天','join(" › ")','節日日以會場為準','goToWorldV88(loc.node','好感 {hearts}/{cap}','<CompactLovesV50 items={likes}/>','aria-label={`好感 ${hearts}/${cap}`}']:
     if token not in app: fail('app.jsx missing '+token)
 idx=Path('index.html').read_text()
 if './npc-schedule-data-v91.js?v=91' not in idx: fail('index.html missing schedule script')

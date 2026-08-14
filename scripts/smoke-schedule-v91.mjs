@@ -26,6 +26,7 @@ const card=doc.getElementById('npc-card-哈維');
 if(!card)fail('哈維卡不存在');
 if(!card.textContent.includes('♡')&&!card.textContent.includes('♥'))fail('收合卡缺愛心排');
 if(!card.textContent.includes('喜歡'))fail('收合卡缺喜歡列');
+if(!card.textContent.includes('📍'))fail('收合卡缺行程速覽列');
 card.querySelector('button').click(); await raf(2);
 if(!card.textContent.includes('📍 今天'))fail('展開卡缺今天行程');
 if(!card.textContent.includes('哈维的诊所'))fail('今天行程缺診所');
