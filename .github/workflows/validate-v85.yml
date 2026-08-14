@@ -1,0 +1,17 @@
+name: Validate v85 World
+
+on:
+  push:
+    branches: [v85-title-icons-npc-scroll]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run full Cloudflare build validation
+        shell: bash
+        run: bash build-cloudflare.sh
