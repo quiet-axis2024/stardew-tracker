@@ -5,6 +5,7 @@ python3 scripts/audit-progress-link-v68.py
 python3 scripts/audit-today-v69.py
 python3 scripts/audit-world-v70.py
 python3 scripts/audit-world-v87.py
+python3 scripts/audit-search-v88.py
 node --check world-data-v70.js
 node --check world-nav-data-v87.js
 node --check sw-v87.js

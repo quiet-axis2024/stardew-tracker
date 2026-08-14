@@ -1026,6 +1026,21 @@ function switchNameV47(name,file=""){
   return String(name||"").split("").map(ch=>SWITCH_T2S_V47[ch]||ch).join("");
 }
 
+/* ================= v88 全域搜尋：正規化與進度別名 ================= */
+const normalizeSearchV88 = s => String(s||"").normalize("NFKC").toLowerCase()
+  .replace(/[\s·・．.，,、_'’\-—／/()（）「」【】]+/g,"")
+  .split("").map(ch=>SWITCH_T2S_V47[ch]||ch).join("");
+const SEARCH_ALIAS_TABLE_V88 = [
+  {id:"cc",names:["社區中心","社区中心","community center","bundles","收集包"],label:"社区中心進度",sub:"收集包與修復狀態",icon:"Golden Scroll",act:"bundles"},
+  {id:"greenhouse",names:["溫室","温室","greenhouse"],label:"溫室",sub:"茶水間收集包獎勵 → 社區進度",icon:"Greenhouse",act:"bundles"},
+  {id:"collection",names:["收藏","圖鑑","图鉴","出貨","出货","collection","shipping"],label:"收藏圖鑑",sub:"魚類／文物／礦物／出貨",icon:"Treasure Chest",act:"collection"},
+  {id:"skills",names:["技能","職業","职业","skills","精通"],label:"角色與技能",sub:"等級、職業與精通",icon:"Stardew Hero Trophy",act:"skills"},
+  {id:"farmdata",names:["農場資料","农场资料","農舍","农舍","工具","動物","动物","礦井進度","矿井进度"],label:"農場資料",sub:"工具、房屋、動物與礦井進度",icon:"Farm Computer",act:"farm"},
+  {id:"wardrobe",names:["衣櫥","衣橱","服裝","服装","wardrobe","搭配"],label:"衣櫥搭配",sub:"服飾與染色預覽",icon:"Deluxe Cowboy Hat",act:"wardrobe"},
+  {id:"notes",names:["備註","备注","筆記","笔记","notes"],label:"備註",sub:"自由記事",icon:"Journal Scrap",act:"notes"},
+  {id:"today",names:["今天","今日","today","日曆","日历","節日","节日"],label:"總覽／今天",sub:"今日提醒與日曆",icon:"Calendar",act:"overview"},
+];
+
 const STARDROP_SOURCES_V26 = [
   {id:"fair",name:"星露谷展覽會",desc:"用 2,000 星幣購買。"},
   {id:"mine100",name:"礦井 100 層",desc:"開啟第 100 層寶箱取得。"},
@@ -1468,6 +1483,10 @@ function StardewTracker() {
   const [todayExpandedV69, setTodayExpandedV69] = useState("");
   const [worldStackV87, setWorldStackV87] = useState(["world"]);
   const [worldSelV87, setWorldSelV87] = useState(null);
+  const [searchOpenV88, setSearchOpenV88] = useState(false);
+  const [searchQueryV88, setSearchQueryV88] = useState("");
+  const [searchIndexV88, setSearchIndexV88] = useState(null);
+  const [favEditV88, setFavEditV88] = useState(false);
   const [worldQuickV71, setWorldQuickV71] = useState("");
   const [worldFishQueryV71, setWorldFishQueryV71] = useState("");
   const [socialGroup, setSocialGroup] = useState("single");
@@ -1714,6 +1733,123 @@ function StardewTracker() {
     pushNavV62();
     if(group)setSocialGroup(group.id); setExpandedNPC(npc); setTab("people");
     requestAnimationFrame(()=>requestAnimationFrame(()=>{const target=document.getElementById(`npc-card-${npc}`); if(target)target.scrollIntoView({block:"start",behavior:"auto"}); else window.scrollTo({top:0,left:0,behavior:"auto"});}));
+  };
+
+  /* ================= v88 全域搜尋＋收藏 ================= */
+  const favListV88 = Array.isArray(extrasState.favV88) ? extrasState.favV88 : [];
+  const isFavV88 = (k,id) => favListV88.some(f => f.k===k && f.id===id);
+  const toggleFavV88 = e => updateExtras({ favV88: isFavV88(e.k,e.id) ? favListV88.filter(f=>!(f.k===e.k&&f.id===e.id)) : [...favListV88,{k:e.k,id:e.id,label:e.label,sub:e.sub,icon:e.icon,go:e.go}] });
+  const goToWorldV88 = (nodeId, sel=null) => {
+    if(!WORLD_NAV_V87().nodes[nodeId])return;
+    pushNavV62();
+    setFishViewV4("world");
+    setWorldStackV87(worldPathToV87(nodeId));
+    setWorldSelV87(sel?{kind:sel.kind,id:sel.id}:null);
+    if(sel?.kind==="spot"&&sel.areaId)setFishAreaV4(sel.areaId);
+    setTab("fishing");
+    requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:"auto"}));
+  };
+  const runJumpV88 = go => {
+    setSearchOpenV88(false);
+    if(!go)return;
+    if(go.t==="item"){openItemLookupV54(go.n,go.f);return}
+    if(go.t==="npc"){openSocialNpcV55(go.n);return}
+    if(go.t==="world"){goToWorldV88(go.node,go.sel||null);return}
+    if(go.t==="act"){
+      if(go.act==="bundles"){openTownRepairV69("");return}
+      pushNavV62();
+      if(go.act==="overview")setTab("overview");
+      else if(go.act==="wardrobe")setTab("wardrobe");
+      else if(go.act==="notes")setTab("notes");
+      else {setTab("data");setDataSection(go.act)}
+      window.scrollTo({top:0,left:0,behavior:"auto"});
+    }
+  };
+  const buildSearchIndexV88 = async () => {
+    if(!window.SDVLookupV46) await loadLazyDataV67("lookup");
+    if(!window.SDVWorldV70) await loadLazyDataV67("world");
+    const idx=[];
+    const push=(k,id,label,sub,icon,go,keys,extra)=>idx.push({k,id,label,sub,icon,go,keys:[...new Set(keys.filter(Boolean).map(normalizeSearchV88).filter(x=>x.length))],...(extra||{})});
+    SEARCH_ALIAS_TABLE_V88.forEach(a=>push("alias",a.id,a.label,a.sub,a.icon,{t:"act",act:a.act},[...a.names,a.label]));
+    const social=window.SDVSocialV50?.byZh||{};
+    NPC_GROUPS.forEach(g=>g.list.forEach(n=>{const en=social[n]?.english||"";push("npc",n,n,g.name,en||"Friendship 101",{t:"npc",n},[n,NPC_WIKI[n],en])}));
+    const NAV=WORLD_NAV_V87();
+    const worldDb=window.SDVWorldV70;
+    const areas=(typeof FISH_AREAS_V4!=="undefined"?FISH_AREAS_V4:[]);
+    const fishSpots={};
+    areas.forEach(a=>{
+      const nodeId=NAV.areaNode[a.id]; const node=NAV.nodes[nodeId]; if(!node)return;
+      const spot=(node.spots||[]).find(s=>s.fishAreaId===a.id); if(!spot)return;
+      (a.fish||[]).forEach(i=>{const f=FISH_ICON_FILES[i];if(!f)return;(fishSpots[f]=fishSpots[f]||[]).push({label:`${node.name}·${a.sub}`,go:{t:"world",node:nodeId,sel:{kind:"spot",id:spot.id,areaId:a.id}}})});
+    });
+    const fishSet=new Set(FISH_ICON_FILES.filter(Boolean));
+    COLLECTIONS.fish.items.forEach((n,i)=>{const f=FISH_ICON_FILES[i];if(!n||!f)return;push("fish",f,switchNameV47(n,f),"魚類",f,{t:"item",n,f},[n,f,switchNameV47(n,f)],{spots:(fishSpots[f]||[]).slice(0,2)})});
+    (window.SDVLookupV46?.items||[]).forEach(r=>{if(!r?.file||fishSet.has(r.file))return;push("item",r.file,switchNameV47(r.name,r.file),r.category||"物品",r.file,{t:"item",n:r.name,f:r.file},[r.name,r.zh,r.file,switchNameV47(r.name,r.file),...(r.aliases||[])])});
+    Object.values(NAV.nodes||{}).forEach(node=>{
+      push("place",node.id,node.name,"區域地圖",node.mapKey||"Map",{t:"world",node:node.id},[node.name,node.id]);
+      (node.places||[]).forEach(p=>{
+        const dbp=p.worldPlaceId?(worldDb?.places||[]).find(x=>x.id===p.worldPlaceId):null;
+        push("place",`${node.id}:${p.id}`,p.label,node.name,dbp?.icon||"Map",{t:"world",node:node.id,sel:{kind:"place",id:p.id}},[p.label,...(dbp?.aliases||[])]);
+      });
+      (node.spots||[]).forEach(s=>{
+        const area=areas.find(a=>a.id===s.fishAreaId);
+        push("place",`${node.id}:${s.id}`,`${s.label}（釣點）`,node.name,area?.icon||"Bait",{t:"world",node:node.id,sel:{kind:"spot",id:s.id,areaId:s.fishAreaId}},[s.label,area?.sub]);
+      });
+    });
+    setSearchIndexV88(idx);
+  };
+  const openSearchV88 = () => { setSearchOpenV88(true); setSearchQueryV88(""); if(!searchIndexV88) buildSearchIndexV88(); };
+  const searchResultsV88 = q => {
+    const nq=normalizeSearchV88(q);
+    if(!nq||!searchIndexV88)return [];
+    const scored=[];
+    searchIndexV88.forEach(e=>{let best=99;for(const key of e.keys){if(key===nq){best=0;break}if(key.startsWith(nq))best=Math.min(best,1);else if(key.includes(nq))best=Math.min(best,2)}if(best<99)scored.push([best,e])});
+    scored.sort((a,b)=>a[0]-b[0]);
+    const cap={alias:8,npc:6,fish:6,item:10,place:8},cnt={},out=[];
+    for(const [,e] of scored){cnt[e.k]=(cnt[e.k]||0)+1;if(cnt[e.k]<=cap[e.k])out.push(e);if(out.length>=28)break}
+    return out;
+  };
+  const SEARCH_KIND_TAG_V88={alias:"進度",npc:"人物",fish:"魚",item:"物品",place:"地點"};
+  const renderSearchRowV88 = e => <div key={`${e.k}-${e.id}`} style={{border:`1px solid ${C.line}`,background:C.paper,borderRadius:9,padding:"6px 7px"}}>
+    <div style={{display:"grid",gridTemplateColumns:"34px minmax(0,1fr) 30px",gap:7,alignItems:"center"}}>
+      <GameIcon file={e.icon} size={32}/>
+      <button onClick={()=>runJumpV88(e.go)} style={{textAlign:"left",background:"transparent",border:0,padding:0,minWidth:0,cursor:"pointer"}}>
+        <b style={{display:"block",fontSize:10.5,color:C.ink,lineHeight:1.2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.label}</b>
+        <span style={{display:"block",fontSize:7.4,color:C.muted,marginTop:2}}>{SEARCH_KIND_TAG_V88[e.k]||""}{e.sub?` · ${e.sub}`:""}</span>
+      </button>
+      <button aria-label={isFavV88(e.k,e.id)?"取消收藏":"加入收藏"} onClick={()=>toggleFavV88(e)} style={{border:0,background:"transparent",fontSize:16,lineHeight:1,color:isFavV88(e.k,e.id)?"#E8A814":C.line,cursor:"pointer",padding:"4px 2px"}}>{isFavV88(e.k,e.id)?"★":"☆"}</button>
+    </div>
+    {e.spots?.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:5,paddingLeft:41}}>{e.spots.map((s,i)=><button key={i} onClick={()=>runJumpV88(s.go)} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"3px 6px",fontSize:7,fontWeight:900,color:C.brown,cursor:"pointer"}}>🎣 {s.label}</button>)}</div>}
+  </div>;
+  const renderSearchOverlayV88 = () => {
+    const results=searchResultsV88(searchQueryV88);
+    return <div id="search-overlay-v88" style={{position:"fixed",inset:0,zIndex:60,background:C.bg,display:"flex",flexDirection:"column"}}>
+      <div style={{background:C.darkBrown,padding:"calc(8px + env(safe-area-inset-top)) 12px 8px",display:"flex",alignItems:"center",gap:8}}>
+        <input autoFocus value={searchQueryV88} onChange={e=>setSearchQueryV88(e.target.value)} onKeyDown={e=>{if(e.key==="Escape")setSearchOpenV88(false)}} placeholder="搜人物、物品、魚、地點、進度…" style={{flex:1,minWidth:0,border:0,borderRadius:9,padding:"9px 11px",fontSize:12,background:"#FFF8E2",color:C.ink,outline:"none"}}/>
+        <button onClick={()=>setSearchOpenV88(false)} style={{border:0,background:"transparent",color:"#FFE39A",fontSize:11,fontWeight:950,cursor:"pointer",whiteSpace:"nowrap"}}>關閉</button>
+      </div>
+      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"9px 12px calc(16px + env(safe-area-inset-bottom))",maxWidth:680,width:"100%",margin:"0 auto"}}>
+        {!searchIndexV88&&<div style={{textAlign:"center",fontSize:9.5,color:C.muted,padding:22}}>搜尋索引載入中…</div>}
+        {searchIndexV88&&!searchQueryV88.trim()&&<div>
+          {favListV88.length>0&&<div style={{marginBottom:9}}><div style={{fontSize:8.5,fontWeight:950,color:C.muted,marginBottom:5}}>⭐ 常用／正在追</div><div style={{display:"grid",gap:5}}>{favListV88.map(f=>renderSearchRowV88({...f,spots:null}))}</div></div>}
+          <div style={{textAlign:"center",fontSize:8.6,color:C.muted,padding:"14px 8px",lineHeight:1.6}}>直接輸入：繁／簡／英文、Switch 官方名都可以。<br/>例如「鲶鱼」「鯰魚」「catfish」「海莉」「溫室」。</div>
+        </div>}
+        {searchIndexV88&&searchQueryV88.trim()&&<div style={{display:"grid",gap:5}}>
+          {results.map(renderSearchRowV88)}
+          {!results.length&&<div style={{textAlign:"center",fontSize:9.5,color:C.muted,padding:22}}>沒有符合的結果。</div>}
+        </div>}
+      </div>
+    </div>;
+  };
+  const renderFavStripV88 = () => {
+    if(!favListV88.length)return null;
+    return <Card style={{padding:8,marginTop:7}}>
+      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+        <b style={{fontSize:10.5,color:C.darkBrown,flex:1}}>⭐ 常用／正在追</b>
+        <button onClick={()=>setFavEditV88(!favEditV88)} style={{border:0,background:"transparent",fontSize:8.2,color:favEditV88?C.red:C.blue,fontWeight:950,cursor:"pointer"}}>{favEditV88?"完成":"編輯"}</button>
+      </div>
+      <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{favListV88.map(f=><button key={`${f.k}-${f.id}`} onClick={()=>favEditV88?toggleFavV88(f):runJumpV88(f.go)} style={{border:`1.5px solid ${favEditV88?C.red:C.line}`,background:favEditV88?"#FBE4DE":C.cream,borderRadius:9,padding:"4px 8px 4px 4px",display:"inline-flex",alignItems:"center",gap:4,fontSize:8.4,fontWeight:950,color:favEditV88?C.red:C.brown,cursor:"pointer"}}><GameIcon file={f.icon} size={22}/>{f.label}{favEditV88?" ×":""}</button>)}</div>
+    </Card>;
   };
 
   const SimpleItemInfoV62 = ({name,file="",info=""}) => {
@@ -2293,7 +2429,8 @@ function StardewTracker() {
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <GameIcon file="Junimo Icon" size={34}/>
         <div style={{minWidth:0}}><div style={{fontSize:16,fontWeight:950,letterSpacing:.3,lineHeight:1.1}}>星露谷農場手帳</div></div>
-        <div style={{marginLeft:"auto",textAlign:"right",minWidth:0}}>
+        <button aria-label="全域搜尋" onClick={openSearchV88} style={{marginLeft:"auto",border:"1.5px solid rgba(255,227,154,.5)",background:"rgba(255,255,255,.08)",borderRadius:9,padding:"5px 9px",display:"flex",alignItems:"center",gap:4,color:"#FFE39A",fontSize:9.5,fontWeight:950,cursor:"pointer",flex:"0 0 auto"}}>🔍 搜尋</button>
+        <div style={{textAlign:"right",minWidth:0}}>
           <div style={{fontWeight:950,fontSize:12.5,lineHeight:1.15}}>{SEASON_ICON[data.base.season]} 第 {data.base.year} 年 {data.base.season} {data.base.day} 日</div>
           <div style={{fontSize:10.5,color:"#E8C88F",marginTop:2}}>{(data.profilePortrait||data.base.profileDataVerifiedV47)?`${Number(data.base.money||0).toLocaleString()}g`:""}</div>
         </div>
@@ -2305,6 +2442,7 @@ function StardewTracker() {
     {renderProfileCard()}
     {renderCalendar()}
     {renderTodayV69()}
+    {renderFavStripV88()}
   </div>;
 
   const renderSkills = () => {
@@ -3312,6 +3450,7 @@ function StardewTracker() {
   return <div style={{minHeight:"100vh",background:C.bg,fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC',sans-serif",color:C.ink,paddingBottom:72}}>
     {renderHeader()}
     <main style={{width:"100%",maxWidth:680,minWidth:0,margin:"0 auto",padding:"8px 12px 24px",overflowX:"hidden"}}>{content()}</main>
+    {searchOpenV88&&renderSearchOverlayV88()}
     {navStackV62.length>0&&<button aria-label="返回上一頁" onClick={goBackV62} style={{position:"fixed",left:10,bottom:"calc(67px + env(safe-area-inset-bottom))",zIndex:49,border:`1.5px solid ${C.orange}`,background:"rgba(255,248,226,.97)",color:C.brown,borderRadius:18,padding:"7px 11px",fontSize:9.5,fontWeight:950,boxShadow:"0 3px 10px rgba(65,40,20,.24)",cursor:"pointer"}}>← 返回</button>}
     <span aria-label="smoke-title-compat" style={{display:"none"}}>星露谷進度手帳</span>
     <button aria-label="smoke-farm-compat" onClick={()=>{setTab("data");setDataSection("farm")}} style={{display:"none"}}>農場</button>

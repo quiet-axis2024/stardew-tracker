@@ -43,4 +43,6 @@ broken=[k for k,v in asset_map.items() if not Path(v.lstrip('./')).is_file()]
 if broken: fail(f'local asset entries point at missing files: {broken[:6]} ({len(broken)} total)')
 sw=Path('sw-v87.js').read_text()
 if "/assets/game/" not in sw or 'cacheFirst' not in sw: fail('sw-v87 must serve /assets/game/ cache-first')
+total=sum(f.stat().st_size for f in Path('assets/game').glob('*.png'))
+if total>8_000_000: fail(f'assets/game total {total/1e6:.1f}MB exceeds 8MB budget — 圖片被未量化版本覆蓋？')
 print(f'v67 foundation audit passed; local assets={len(asset_map)}')
