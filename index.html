@@ -33,7 +33,7 @@
   <script src="./switch-names-v47.js?v=82"></script>
   <script src="./world-nav-data-v81.js?v=82"></script>
   <script src="./world-nav-island-v81.js?v=82"></script>
-  <script src="./world-nav-v82.js?v=82"></script>
+  <script src="./world-nav-v81.js?v=82"></script>
   <script>
     window.SDVLazyDataV67=(()=>{
       const groups={lookup:["./lookup-data-v46.js?v=73","./lookup-extra-v49.js?v=73"],wardrobe:["./wardrobe-data-v34.js?v=73"],world:["./world-data-v70.js?v=82","./world-extra-v79.js?v=82"]};
@@ -53,7 +53,7 @@
       try{if(window.SDVCloud)await window.SDVCloud.init()}catch(error){console.warn('Cloud init failed, falling back to local mode:',error)}
       const script=document.createElement('script');script.src='./app.js?v=82';script.onload=()=>{window.__SDV_APP_LOADED__=true;setTimeout(()=>{if(!String(root.textContent||'').trim())fail('app.js 已載入，但 React 主畫面沒有成功建立')},1200)};script.onerror=()=>fail('app.js 無法載入');document.body.appendChild(script);
     })();
-    if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const registration=await navigator.serviceWorker.register('./sw-v82.js',{updateViaCache:'none'});await registration.update()}catch(error){console.warn('Service worker update failed:',error)}})}
+    if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const registration=await navigator.serviceWorker.register('./sw-v81.js',{updateViaCache:'none'});await registration.update()}catch(error){console.warn('Service worker update failed:',error)}})}
   </script>
 </body>
 </html>
