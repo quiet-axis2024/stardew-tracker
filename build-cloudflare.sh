@@ -6,6 +6,7 @@ python3 scripts/audit-today-v69.py
 python3 scripts/audit-world-v70.py
 python3 scripts/audit-world-v87.py
 python3 scripts/audit-search-v88.py
+python3 scripts/audit-gifts-v89.py
 node --check world-data-v70.js
 node --check world-nav-data-v87.js
 node --check sw-v87.js

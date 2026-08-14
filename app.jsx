@@ -1736,6 +1736,13 @@ function StardewTracker() {
   };
 
   /* ================= v88 全域搜尋＋收藏 ================= */
+  /* v89: 物品 → 誰最愛／喜歡（反查社交送禮資料，單一來源不複製清單） */
+  const giftFansV89 = file => {
+    const social=window.SDVSocialV50?.byZh||{};
+    const loves=[],likes=[];
+    NPC_GROUPS.forEach(g=>g.list.forEach(n=>{const e=social[n];if(!e)return;if((e.loves||[]).includes(file))loves.push(n);else if((e.likes||[]).includes(file))likes.push(n)}));
+    return {loves,likes};
+  };
   const favListV88 = Array.isArray(extrasState.favV88) ? extrasState.favV88 : [];
   const isFavV88 = (k,id) => favListV88.some(f => f.k===k && f.id===id);
   const toggleFavV88 = e => updateExtras({ favV88: isFavV88(e.k,e.id) ? favListV88.filter(f=>!(f.k===e.k&&f.id===e.id)) : [...favListV88,{k:e.k,id:e.id,label:e.label,sub:e.sub,icon:e.icon,go:e.go}] });
@@ -3302,6 +3309,11 @@ function StardewTracker() {
         </div>}
         <div style={{fontSize:12,fontWeight:950,color:C.darkBrown,marginTop:9}}>用途</div>
         <div style={{display:"grid",gap:5,marginTop:5}}>{usageRowsV44.map(([icon,text],i)=><div key={i} style={{display:"grid",gridTemplateColumns:"18px 1fr",gap:4,alignItems:"start",fontSize:9.4,color:C.ink,lineHeight:1.45}}><span>{icon}</span><span>{text}</span></div>)}</div>
+        {(()=>{const gf=giftFansV89(selected.file);if(!gf.loves.length&&!gf.likes.length)return null;const npcChip=n=><button key={n} onClick={()=>openSocialNpcV55(n)} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"3px 6px 3px 3px",display:"inline-flex",alignItems:"center",gap:3,fontSize:8,fontWeight:900,color:C.brown,cursor:"pointer"}}><GameIcon file={(window.SDVSocialV50?.byZh?.[n]?.english)||"Friendship 101"} size={20}/>{n} ›</button>;return <div style={{marginTop:9}}>
+          <div style={{fontSize:12,fontWeight:950,color:C.darkBrown}}>送禮</div>
+          {gf.loves.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center",marginTop:5}}><span style={{fontSize:8.5,fontWeight:950,color:C.red,flex:"0 0 auto"}}>💗 最愛</span>{gf.loves.map(npcChip)}</div>}
+          {gf.likes.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center",marginTop:5}}><span style={{fontSize:8.5,fontWeight:950,color:C.green,flex:"0 0 auto"}}>👍 喜歡</span>{gf.likes.map(npcChip)}</div>}
+        </div>})()}
         <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8,alignItems:"center",marginTop:9,paddingTop:7,borderTop:`1px dashed ${C.line}`}}>
           <div style={{minWidth:0}}><span style={{fontSize:8,color:C.muted,fontWeight:950}}>來源／取得方式</span><div style={{fontSize:9.4,color:C.ink,lineHeight:1.4,marginTop:2,fontWeight:750}}>{sourceTextV45}</div></div>
         </div>
