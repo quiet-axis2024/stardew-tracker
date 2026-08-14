@@ -1487,6 +1487,7 @@ function StardewTracker() {
   const [searchQueryV88, setSearchQueryV88] = useState("");
   const [searchIndexV88, setSearchIndexV88] = useState(null);
   const [favEditV88, setFavEditV88] = useState(false);
+  const [worldQuickAllV90, setWorldQuickAllV90] = useState(true);
   const [worldQuickV71, setWorldQuickV71] = useState("");
   const [worldFishQueryV71, setWorldFishQueryV71] = useState("");
   const [socialGroup, setSocialGroup] = useState("single");
@@ -1792,6 +1793,25 @@ function StardewTracker() {
     const fishSet=new Set(FISH_ICON_FILES.filter(Boolean));
     COLLECTIONS.fish.items.forEach((n,i)=>{const f=FISH_ICON_FILES[i];if(!n||!f)return;push("fish",f,switchNameV47(n,f),"魚類",f,{t:"item",n,f},[n,f,switchNameV47(n,f)],{spots:(fishSpots[f]||[]).slice(0,2)})});
     (window.SDVLookupV46?.items||[]).forEach(r=>{if(!r?.file||fishSet.has(r.file))return;push("item",r.file,switchNameV47(r.name,r.file),r.category||"物品",r.file,{t:"item",n:r.name,f:r.file},[r.name,r.zh,r.file,switchNameV47(r.name,r.file),...(r.aliases||[])])});
+    /* v90: 商店販售但沒有物品卡的東西（動物、釣竿、方尖碑等 39 項）→ 可搜、跳到販售地點 */
+    const lookupFileSetV90=new Set((window.SDVLookupV46?.items||[]).map(r=>r.file));
+    const shopPinV90={};
+    Object.values(NAV.nodes||{}).forEach(node=>(node.places||[]).forEach(p=>{
+      const dbp=p.worldPlaceId?(worldDb?.places||[]).find(x=>x.id===p.worldPlaceId):null;
+      const ownerPerson=dbp?.ownerId?(worldDb?.people||{})[dbp.ownerId]:null;
+      [...(ownerPerson?.socialKeys||[]),...(p.npcs||[])].forEach(k=>{if(!shopPinV90[k])shopPinV90[k]={node:node.id,pin:p.id,label:p.label}});
+    }));
+    const SHOP_ITEM_ALIAS_V90={"Duck":["鸭子"],"Rabbit":["兔子"],"Goat":["山羊"],"Sheep":["绵羊"],"Pig":["猪"]};
+    const seenShopV90=new Set();
+    Object.entries(social).forEach(([n,e])=>{
+      const pin=shopPinV90[n];if(!pin)return;
+      (e.shop?.items||[]).forEach(it=>{
+        const raw=String(it.name||"").replace(/ Recipe$/,"");
+        if(!raw||lookupFileSetV90.has(raw)||fishSet.has(raw)||seenShopV90.has(raw))return;
+        seenShopV90.add(raw);
+        push("item",`shop:${raw}`,switchNameV47(raw,raw),`${pin.label} 販售`,raw,{t:"world",node:pin.node,sel:{kind:"place",id:pin.pin}},[raw,switchNameV47(raw,raw),...(SHOP_ITEM_ALIAS_V90[raw]||[])]);
+      });
+    });
     Object.values(NAV.nodes||{}).forEach(node=>{
       push("place",node.id,node.name,"區域地圖",node.mapKey||"Map",{t:"world",node:node.id},[node.name,node.id]);
       (node.places||[]).forEach(p=>{
@@ -2729,6 +2749,7 @@ function StardewTracker() {
     const selRow=worldSelV87?pinRows.find(x=>x.kind===worldSelV87.kind&&x.p.id===worldSelV87.id)||null:null;
     const tapPin=(kind,p)=>{
       if(kind==="portal"&&p.to){pushNode(p.to);return}
+      if(kind==="place"&&!window.SDVLookupV46)loadLazyDataV67("lookup");
       const same=worldSelV87&&worldSelV87.kind===kind&&worldSelV87.id===p.id;
       setWorldSelV87(same?null:{kind,id:p.id});
       if(kind==="spot"&&!same)setFishAreaV4(p.fishAreaId);
@@ -2766,7 +2787,8 @@ function StardewTracker() {
       if(fishTimesV42.length){const windows=area.timeOverride||rule.t||[[6,26]];if(!fishTimesV42.some(id=>matchesTimeV71(windows,id)))return false}
       return true;
     };
-    const quickSpotScope=(node.spots||[]).length?FISH_AREAS_V4.filter(a=>(node.spots||[]).some(s=>s.fishAreaId===a.id)):FISH_AREAS_V4;
+    const quickLocalAreasV90=FISH_AREAS_V4.filter(a=>(node.spots||[]).some(s=>s.fishAreaId===a.id));
+    const quickSpotScope=(!worldQuickAllV90&&quickLocalAreasV90.length)?quickLocalAreasV90:FISH_AREAS_V4;
     const quickFishRows=(()=>{
       const rows=new Map(),q=normalize(worldFishQueryV71);
       quickSpotScope.forEach(area=>(area.fish||[]).forEach(i=>{
@@ -2788,13 +2810,22 @@ function StardewTracker() {
       </div>
       {(fishSeasonsV42.length||fishWeathersV42.length||fishTimesV42.length)?<button onClick={clearFishFiltersV71} style={{border:0,background:"transparent",fontSize:7.6,color:C.blue,fontWeight:900,marginTop:5,padding:0}}>清除條件</button>:null}
     </Card>;
-    const openQuickFishV71=()=>{setWorldQuickV71(worldQuickV71==="fish"?"":"fish");setWorldFishQueryV71("");if(!fishSeasonsV42.length)setFishSeasonsV42([data.base.season]);if(todayWeatherV69&&!fishWeathersV42.length)setFishWeathersV42([todayWeatherV69])};
+    const openQuickFishV71=()=>{setWorldQuickV71(worldQuickV71==="fish"?"":"fish");setWorldQuickAllV90(true);setWorldFishQueryV71("");if(!fishSeasonsV42.length)setFishSeasonsV42([data.base.season]);if(todayWeatherV69&&!fishWeathersV42.length)setFishWeathersV42([todayWeatherV69])};
     const PlaceDetailV87=({row})=>{
       const p=row.p,place=dbPlace(p);
       const owner=place?person(place.ownerId):null;
-      const shop=owner?social(owner)?.shop||null:null;
+      const navNpcKeysV90=(p.npcs||[]).filter(k=>socialByZh[k]);
+      const ownerKeyV90=owner?socialKey(owner):null;
+      const shopKeyV90=(ownerKeyV90&&socialByZh[ownerKeyV90]?.shop)?ownerKeyV90:(navNpcKeysV90.find(k=>socialByZh[k]?.shop)||null);
+      const shop=shopKeyV90?socialByZh[shopKeyV90]?.shop||null:null;
       const members=place?(place.peopleIds||[]).map(id=>person(id)).filter(Boolean):[];
-      const extraServices=(()=>{const key=socialKey(owner);return key&&NPC_SERVICES_V55[key]?(NPC_SERVICES_V55[key]||[]).map(x=>x[1]):[]})();
+      const npcChipsV90=[
+        ...members.map(m=>({key:socialKey(m),name:m.name,icon:m.icon})),
+        ...navNpcKeysV90.filter(k=>!members.some(m=>socialKey(m)===k)).map(k=>({key:k,name:k,icon:socialByZh[k]?.english||"Friendship 101"}))
+      ];
+      const serviceKeyV90=ownerKeyV90||navNpcKeysV90[0]||null;
+      const extraServices=serviceKeyV90&&NPC_SERVICES_V55[serviceKeyV90]?(NPC_SERVICES_V55[serviceKeyV90]||[]).map(x=>x[1]):[];
+      const footerNpcV90=ownerKeyV90?{key:ownerKeyV90,name:owner.name}:(navNpcKeysV90[0]?{key:navNpcKeysV90[0],name:navNpcKeysV90[0]}:null);
       const services=[...new Set([...(place?.services||[]),...extraServices].filter(Boolean))];
       const hours=shop?.hours||place?.hours||"";
       const requires=p.requires||place?.requires||"";
@@ -2804,11 +2835,11 @@ function StardewTracker() {
         {requires&&<div style={{marginTop:6,padding:"5px 7px",borderRadius:7,background:"#FFF0C8",fontSize:8,color:C.brown,lineHeight:1.35}}><b>解鎖：</b>{requires}</div>}
         {description&&<div style={{fontSize:8,color:C.ink,lineHeight:1.4,marginTop:6}}>{description}</div>}
         {services.length>0&&<div style={{marginTop:7}}><div style={{fontSize:7.5,color:C.muted,fontWeight:950,marginBottom:3}}>可以做什麼</div><div style={{display:"grid",gap:3}}>{services.map(x=><div key={x} style={{display:"grid",gridTemplateColumns:"10px 1fr",gap:3,fontSize:8.4,color:C.ink,lineHeight:1.35}}><span>•</span><span>{x}</span></div>)}</div></div>}
-        {members.length>0&&<div style={{marginTop:7}}><div style={{fontSize:7.5,color:C.muted,fontWeight:950,marginBottom:4}}>相關人物</div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{members.map(m=>{const can=Boolean(socialKey(m));return <button key={m.id} disabled={!can} onClick={()=>can&&openSocialNpcV55(socialKey(m))} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"3px 6px 3px 3px",display:"inline-flex",alignItems:"center",gap:3,fontSize:7.8,fontWeight:900,color:C.brown,opacity:can?1:.7}}><GameIcon file={m.icon} size={22}/>{m.name}{can?" ›":""}</button>})}</div></div>}
-        {shop?.items?.length>0&&<div style={{marginTop:7}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:6}}><span style={{fontSize:7.5,color:C.muted,fontWeight:950}}>商店內容節選</span><span style={{fontSize:6.8,color:C.muted}}>{shop.hours||""}</span></div><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4,marginTop:4}}>{shop.items.slice(0,8).map((it,i)=>{const raw=String(it.name||"").replace(/ Recipe$/,'');const recipe=/ Recipe$/.test(String(it.name||""));return <button key={`${p.id}-${it.name}-${i}`} onClick={()=>openItem(it.name)} style={{border:`1px solid ${C.line}`,background:"#FFFDF5",borderRadius:7,padding:"4px 2px",minWidth:0}}><GameIcon file={raw||"Chest"} size={25}/><div style={{fontSize:6.8,fontWeight:900,color:C.ink,lineHeight:1.08,marginTop:2,overflow:"hidden",textOverflow:"ellipsis"}}>{switchNameV47(raw,raw)}{recipe?"配方":""}</div>{it.price!=null&&<div style={{fontSize:6.3,color:C.muted,marginTop:1}}>{Number(it.price).toLocaleString()}g</div>}</button>})}</div></div>}
+        {npcChipsV90.length>0&&<div style={{marginTop:7}}><div style={{fontSize:7.5,color:C.muted,fontWeight:950,marginBottom:4}}>相關人物</div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{npcChipsV90.map(m=>{const can=Boolean(m.key);return <button key={m.name} disabled={!can} onClick={()=>can&&openSocialNpcV55(m.key)} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"3px 6px 3px 3px",display:"inline-flex",alignItems:"center",gap:3,fontSize:7.8,fontWeight:900,color:C.brown,opacity:can?1:.7}}><GameIcon file={m.icon} size={22}/>{m.name}{can?" ›":""}</button>})}</div></div>}
+        {shop?.items?.length>0&&<div style={{marginTop:7}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:6}}><span style={{fontSize:7.5,color:C.muted,fontWeight:950}}>商店內容節選</span><span style={{fontSize:6.8,color:C.muted}}>{shop.hours||""}</span></div><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4,marginTop:4}}>{shop.items.slice(0,8).map((it,i)=>{const raw=String(it.name||"").replace(/ Recipe$/,'');const recipe=/ Recipe$/.test(String(it.name||""));const cardOkV90=!window.SDVLookupV46||Boolean(lookupRowV54(raw));return <button key={`${p.id}-${it.name}-${i}`} disabled={!cardOkV90} title={cardOkV90?"":"此物品暫無詳細卡"} onClick={()=>cardOkV90&&openItem(it.name)} style={{border:`1px solid ${C.line}`,background:"#FFFDF5",borderRadius:7,padding:"4px 2px",minWidth:0}}><GameIcon file={raw||"Chest"} size={25}/><div style={{fontSize:6.8,fontWeight:900,color:C.ink,lineHeight:1.08,marginTop:2,overflow:"hidden",textOverflow:"ellipsis"}}>{switchNameV47(raw,raw)}{recipe?"配方":""}</div>{it.price!=null&&<div style={{fontSize:6.3,color:C.muted,marginTop:1}}>{Number(it.price).toLocaleString()}g</div>}</button>})}</div></div>}
         <div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:7,paddingTop:6,borderTop:`1px dashed ${C.line}`}}>
           {p.worldPlaceId==="community_center"&&<button onClick={()=>openTownRepairV69("")} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:7,padding:"4px 7px",fontSize:7.7,fontWeight:900,color:C.brown}}>打開城鎮修復 ›</button>}
-          {owner&&socialKey(owner)&&<button onClick={()=>openSocialNpcV55(socialKey(owner))} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:7,padding:"4px 7px",fontSize:7.7,fontWeight:900,color:C.brown}}>查看 {owner.name} ›</button>}
+          {footerNpcV90&&<button onClick={()=>openSocialNpcV55(footerNpcV90.key)} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:7,padding:"4px 7px",fontSize:7.7,fontWeight:900,color:C.brown}}>查看 {footerNpcV90.name} ›</button>}
         </div>
       </Card>;
     };
@@ -2819,7 +2850,7 @@ function StardewTracker() {
       return <div style={{marginTop:7}}>
         <Card style={{padding:8,background:"#FFF8E2"}}><div style={{display:"flex",alignItems:"center",gap:7}}><GameIcon file={area.icon} size={34}/><div style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:12,color:C.darkBrown}}>{node.name} · {area.sub}</b>{area.tip&&<div style={{fontSize:7.5,color:C.brown,lineHeight:1.35,marginTop:2}}>{area.tip}</div>}</div><span style={{fontSize:8,color:C.muted,fontWeight:900}}>{spotRows.length} 種</span></div></Card>
         {renderFishFiltersV71()}
-        <div style={{display:"grid",gap:5,marginTop:7}}>{spotRows.map(i=>renderFishCardV4(i,area,true,false))}</div>
+        <div style={{display:"grid",gap:5,marginTop:7}}>{spotRows.map(i=>renderFishCardV4(i,area,true,false,true))}</div>
         {!spotRows.length&&<Card style={{marginTop:7,padding:10,textAlign:"center",fontSize:9,color:C.muted}}>這個釣點目前沒有符合條件的魚。</Card>}
       </div>;
     };
@@ -2832,7 +2863,7 @@ function StardewTracker() {
         <button onClick={openQuickFishV71} style={{border:`1px solid ${worldQuickV71==="fish"?C.orange:C.line}`,background:worldQuickV71==="fish"?"#FFF0C8":C.cream,borderRadius:8,padding:"5px 8px",fontSize:7.6,fontWeight:950,color:C.blue,whiteSpace:"nowrap",flex:"0 0 auto"}}>🎣 按條件找魚</button>
       </div>
       {worldQuickV71==="fish"&&<Card style={{padding:8,background:"#FFF8E2",marginBottom:7}}>
-        <div style={{display:"flex",alignItems:"center",gap:6}}><b style={{fontSize:10.5,color:C.darkBrown,flex:1}}>按條件找魚 · {(node.spots||[]).length?node.name:"全世界"}</b><button onClick={()=>setWorldQuickV71("")} style={{border:0,background:"transparent",fontSize:12,color:C.brown,fontWeight:950}}>×</button></div>
+        <div style={{display:"flex",alignItems:"center",gap:6}}><b style={{fontSize:10.5,color:C.darkBrown,flex:1}}>按條件找魚 · {(!worldQuickAllV90&&quickLocalAreasV90.length)?node.name:"全世界"}</b>{quickLocalAreasV90.length>0&&<button onClick={()=>setWorldQuickAllV90(!worldQuickAllV90)} style={{border:`1.5px solid ${worldQuickAllV90?C.line:C.orange}`,background:worldQuickAllV90?C.paper:"#FFE2A8",borderRadius:9,padding:"3px 7px",fontSize:7.4,fontWeight:950,color:C.brown,flex:"0 0 auto"}}>{worldQuickAllV90?`只看${node.name}`:"看全世界"}</button>}<button onClick={()=>setWorldQuickV71("")} style={{border:0,background:"transparent",fontSize:12,color:C.brown,fontWeight:950}}>×</button></div>
         <input value={worldFishQueryV71} onChange={e=>setWorldFishQueryV71(e.target.value)} placeholder="魚名可選填，例如：鲶鱼、Catfish…" style={{width:"100%",border:`1.5px solid ${C.line}`,background:C.paper,borderRadius:8,padding:"7px 9px",fontSize:9.2,color:C.ink,outline:"none",marginTop:6}}/>
         {renderFishFiltersV71()}
         <div style={{fontSize:7.4,color:C.muted,fontWeight:900,marginTop:6}}>找到 {quickFishRows.length} 種魚</div>
@@ -2975,13 +3006,13 @@ function StardewTracker() {
     </div>;
   };
 
-  const renderFishCardV4 = (i, area=null, compact=false, showCollection=true) => {
+  const renderFishCardV4 = (i, area=null, compact=false, showCollection=true, openCard=false) => {
     const name=COLLECTIONS.fish.items[i]; const displayName=switchNameV47(name,FISH_ICON_FILES[i]); const got=(data.collections.fish||[]).includes(i); const rule=fishRuleV4(i);
     const seasons=area?.forceSeasons||area?.seasonOverride?.[i]||rule.s;
     const seasonText=seasons.length===4?"四季":seasons.join("／");
     const timeText=formatFishTimeV4(rule,area?.timeOverride);
     const currentSeasonFishV49=seasons.includes(data.base.season);
-    return <button key={`${area?.id||"fish"}-${i}`} onClick={()=>setSelectedItem(i)} style={{position:"relative",border:`2px solid ${showCollection?(!got?C.orange:C.line):currentSeasonFishV49?C.green:C.line}`,background:showCollection?(got?"#F5F0DF":"#FFF2CF"):currentSeasonFishV49?"#EAF4D8":C.paper,borderRadius:9,padding:compact?"6px":"8px",display:"flex",alignItems:"center",gap:8,textAlign:"left",cursor:"pointer",width:"100%",opacity:showCollection&&got?0.78:1}}>
+    return <button key={`${area?.id||"fish"}-${i}`} onClick={()=>openCard?openItemLookupV54(name,FISH_ICON_FILES[i]):setSelectedItem(i)} style={{position:"relative",border:`2px solid ${showCollection?(!got?C.orange:C.line):currentSeasonFishV49?C.green:C.line}`,background:showCollection?(got?"#F5F0DF":"#FFF2CF"):currentSeasonFishV49?"#EAF4D8":C.paper,borderRadius:9,padding:compact?"6px":"8px",display:"flex",alignItems:"center",gap:8,textAlign:"left",cursor:"pointer",width:"100%",opacity:showCollection&&got?0.78:1}}>
       <img src={ICON_URLS.fish[i]} alt="" loading="lazy" style={{width:compact?34:40,height:compact?34:40,imageRendering:"pixelated",objectFit:"contain",flex:"0 0 auto"}}/>
       <span style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:compact?11:12.5,color:C.ink}}>{displayName}{rule.legend?" · 傳說":""}</b><span style={{display:"flex",gap:3,flexWrap:"wrap",marginTop:3}}>
         <span style={{fontSize:8.5,fontWeight:900,padding:"1px 4px",borderRadius:7,background:"#F0E2C5",color:C.brown}}>{seasonText}</span>{currentSeasonFishV49&&<span style={{fontSize:8.5,fontWeight:950,padding:"1px 4px",borderRadius:7,background:"#DFF0CD",color:C.green}}>當季</span>}
@@ -2989,6 +3020,7 @@ function StardewTracker() {
         <span style={{fontSize:8.5,fontWeight:900,padding:"1px 4px",borderRadius:7,background:"#E5EDF2",color:C.blue}}>{timeText}</span>
       </span></span>
       {showCollection&&<span style={{fontSize:11,fontWeight:950,color:got?C.green:C.orange}}>{got?"✓ 已收集":"未收集"}</span>}
+      {openCard&&<span style={{fontSize:13,color:C.orange,fontWeight:950,flex:"0 0 auto"}}>›</span>}
     </button>;
   };
 
@@ -3020,7 +3052,7 @@ function StardewTracker() {
       <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:4}}>{[["auto",autoHour!=null?`目前 ${data.base.gameTime}`:"目前時間未記錄"],["all","不限時間"],[6,"06:00"],[9,"09:00"],[12,"12:00"],[15,"15:00"],[18,"18:00"],[22,"22:00"],[24,"00:00"]].map(([v,n])=><Pill key={String(v)} small active={String(fishHourV4)===String(v)} onClick={()=>{setFishHourV4(v);setFishTodayOpenV4(null)}}>{n}</Pill>)}</div>
       <label style={{display:"flex",alignItems:"center",gap:6,marginTop:8,fontSize:10.5,fontWeight:900,color:C.brown}}><input type="checkbox" checked={fishMissingV4} onChange={e=>{setFishMissingV4(e.target.checked);setFishTodayOpenV4(null)}}/>只看未收集</label>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",margin:"7px 0 5px"}}><span style={{fontSize:10,color:C.muted}}>找到 {total} 筆可釣結果。</span>{fishTodayOpenV4&&<button onClick={()=>setFishTodayOpenV4(null)} style={{border:0,background:"transparent",fontSize:10,color:C.blue,fontWeight:900}}>全部收起</button>}</div>
-      <div style={{display:"grid",gap:6}}>{areaRows.map(({area,fish})=>{const open=fishTodayOpenV4===area.id;return <Card key={area.id} style={{padding:0,overflow:"hidden"}}><button onClick={()=>setFishTodayOpenV4(open?null:area.id)} style={{width:"100%",border:0,background:"transparent",padding:"8px 9px",display:"flex",alignItems:"center",gap:7,textAlign:"left",cursor:"pointer"}}><GameIcon file={area.icon} size={30}/><span style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:12.5,color:C.darkBrown}}>{area.name} · {area.sub}</b><span style={{display:"flex",gap:2,marginTop:3,overflow:"hidden"}}>{fish.slice(0,5).map(i=><img key={i} src={ICON_URLS.fish[i]} alt="" style={{width:20,height:20,imageRendering:"pixelated",objectFit:"contain"}}/>)}{fish.length>5&&<span style={{fontSize:9,color:C.muted,fontWeight:900,alignSelf:"center"}}>+{fish.length-5}</span>}</span></span><span style={{fontSize:10,color:C.muted,fontWeight:900}}>{fish.length} 項</span><span style={{fontSize:12,color:C.brown,fontWeight:950}}>{open?"▲":"▼"}</span></button>{open&&<div style={{padding:"0 9px 9px",borderTop:`1px dashed ${C.line}`}}><div style={{display:"grid",gap:5,marginTop:7}}>{fish.map(i=>renderFishCardV4(i,area,true))}</div>{area.tip&&<div style={{fontSize:9.5,color:C.muted,lineHeight:1.4,marginTop:6}}>{area.tip}</div>}</div>}</Card>})}</div>
+      <div style={{display:"grid",gap:6}}>{areaRows.map(({area,fish})=>{const open=fishTodayOpenV4===area.id;return <Card key={area.id} style={{padding:0,overflow:"hidden"}}><button onClick={()=>setFishTodayOpenV4(open?null:area.id)} style={{width:"100%",border:0,background:"transparent",padding:"8px 9px",display:"flex",alignItems:"center",gap:7,textAlign:"left",cursor:"pointer"}}><GameIcon file={area.icon} size={30}/><span style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:12.5,color:C.darkBrown}}>{area.name} · {area.sub}</b><span style={{display:"flex",gap:2,marginTop:3,overflow:"hidden"}}>{fish.slice(0,5).map(i=><img key={i} src={ICON_URLS.fish[i]} alt="" style={{width:20,height:20,imageRendering:"pixelated",objectFit:"contain"}}/>)}{fish.length>5&&<span style={{fontSize:9,color:C.muted,fontWeight:900,alignSelf:"center"}}>+{fish.length-5}</span>}</span></span><span style={{fontSize:10,color:C.muted,fontWeight:900}}>{fish.length} 項</span><span style={{fontSize:12,color:C.brown,fontWeight:950}}>{open?"▲":"▼"}</span></button>{open&&<div style={{padding:"0 9px 9px",borderTop:`1px dashed ${C.line}`}}><div style={{display:"grid",gap:5,marginTop:7}}>{fish.map(i=>renderFishCardV4(i,area,true,true,true))}</div>{area.tip&&<div style={{fontSize:9.5,color:C.muted,lineHeight:1.4,marginTop:6}}>{area.tip}</div>}</div>}</Card>})}</div>
       {!areaRows.length&&<Card style={{marginTop:8,textAlign:"center",color:C.muted,fontSize:11}}>目前沒有符合條件的魚；可調整季節、天氣、時間或關閉「只看未收集」。</Card>}
     </div>;
   };
@@ -3172,7 +3204,7 @@ function StardewTracker() {
         {(fishSeasonsV42.length||fishWeathersV42.length||fishTimesV42.length)?<button onClick={clearFilters} style={{border:0,background:"transparent",fontSize:7.8,color:C.blue,fontWeight:900,marginTop:6,padding:0}}>清除全部條件</button>:null}
       </Card>
 
-      <div style={{display:"grid",gap:5,marginTop:7}}>{rows.map(i=>renderFishCardV4(i,area,true,false))}</div>
+      <div style={{display:"grid",gap:5,marginTop:7}}>{rows.map(i=>renderFishCardV4(i,area,true,false,true))}</div>
       {!rows.length&&<Card style={{marginTop:8,textAlign:"center",fontSize:10.5,color:C.muted}}>這個釣點目前沒有符合條件的魚。</Card>}
     </div>;
   };

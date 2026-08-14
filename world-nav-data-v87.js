@@ -37,7 +37,7 @@ secret_woods:{id:'secret_woods',name:'秘密森林',summary:'煤礦森林西北�
   {id:'sp',label:'池塘',fishAreaId:'secret',x:18,y:68}]},
 
 bus_stop:{id:'bus_stop',name:'公交站',summary:'農場與鵜鶘鎮之間的交通節點；修好公交後由售票机搭車去沙漠。',mapKey:'Bus stop',places:[
-  {id:'bus',label:'公交车／潘姆',x:42,y:24,description:'公交修復後由潘姆駕駛前往卡利科沙漠。'},
+  {id:'bus',label:'公交车／潘姆',x:42,y:24,npcs:['潘姆'],description:'公交修復後由潘姆駕駛前往卡利科沙漠。'},
   {id:'minecart',label:'矿车',x:13,y:11,description:'修復後可快速往返矿井、鹈鹕镇与采石场。'},
   {id:'tunnel',label:'隧道',x:3,y:52,description:'公路西端的隧道；齐先生任務的暗箱在隧道深處。'}],portals:[
   {id:'desert',label:'售票机 → 卡利科沙漠',to:'desert',x:21,y:36,transport:true,requires:'修复公交（500 木材由社區包裹或 Joja 完成）'}]},
@@ -56,14 +56,14 @@ town:{id:'town',name:'鹈鹕镇',summary:'居民、商店與城鎮設施最集�
 mountain:{id:'mountain',name:'山岭',summary:'山中湖泊、木匠的商店、矿井、冒险家公会、铁路與采石场。',mapKey:'The Mountain',places:[
   {id:'carpenter',label:'木匠的商店',worldPlaceId:'carpenter',x:12,y:55},
   {id:'guild',label:'冒险家公会',worldPlaceId:'guild',x:91,y:22},
-  {id:'linus',label:'莱纳斯的帐篷',x:21,y:9,description:'莱纳斯的住處。'}],portals:[
+  {id:'linus',label:'莱纳斯的帐篷',x:21,y:9,npcs:['萊納斯'],description:'莱纳斯的住處。'}],portals:[
   {id:'mines',label:'矿井',to:'mines',x:57,y:12},
   {id:'rail',label:'铁路',to:'railroad',x:16,y:10,requires:'第一年夏 3 日地震後開放'},
   {id:'quarry',label:'采石场',to:'quarry',x:74,y:58,requires:'修復采石场吊桥'}],spots:[
   {id:'lake',label:'山中湖泊',fishAreaId:'mountain',x:50,y:60}]},
 
 mines:{id:'mines',name:'矿井',summary:'20、60、100 層各有獨立可釣水域。',mapKey:'MinesDistances',places:[
-  {id:'dwarf',label:'矮人商店',x:8,y:23,description:'矿井入口層右側，需可與矮人溝通（集齊 4 卷矮人卷轴）。'}],spots:[
+  {id:'dwarf',label:'矮人商店',x:8,y:23,npcs:['矮人'],description:'矿井入口層右側，需可與矮人溝通（集齊 4 卷矮人卷轴）。'}],spots:[
   {id:'m20',label:'20 层水域',fishAreaId:'mine20',x:17,y:58},
   {id:'m60',label:'60 层水域',fishAreaId:'mine60',x:50,y:58},
   {id:'m100',label:'100 层岩浆',fishAreaId:'mine100',x:83,y:58}]},
@@ -106,7 +106,7 @@ skull_cavern:{id:'skull_cavern',name:'骷髅洞穴',summary:'沙漠西北角的�
   {id:'entry',label:'骷髅洞穴',x:43,y:18,description:'使用矿井 120 層取得的骷髅钥匙進入。'}]},
 
 sewer:{id:'sewer',name:'下水道',summary:'鎮南與煤礦森林南方兩個入口進入同一張地圖。',mapKey:'SewerDistances',places:[
-  {id:'krobus',label:'科罗布斯',x:76,y:38,description:'科罗布斯的商店。'},
+  {id:'krobus',label:'科罗布斯',x:76,y:38,npcs:['克羅巴斯'],description:'科罗布斯的商店。'},
   {id:'statue',label:'不确定性雕像',x:20,y:41,description:'花 10,000g 重置職業選擇。'}],portals:[
   {id:'bug',label:'突变虫穴',to:'mutant_bug_lair',x:7,y:35,requires:'黑暗护身符（暗影人任務線）'}],spots:[
   {id:'sw',label:'下水道水域',fishAreaId:'sewer',x:52,y:74}]},
