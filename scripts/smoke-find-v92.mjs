@@ -168,4 +168,13 @@ if(!bt2.includes('🌱 種植'))fail('物品卡缺種植段');
 if(!bt2.includes('生長 8 天'))fail('草莓生長天數錯');
 if(!bt2.includes('最後可種日 春20'))fail('最後可種日計算錯');
 console.log('種植：倒數→物品卡→計算 OK');
+// ---- v96.2 助手：貨車日＋明日生日 ----
+btn(t=>t==='總覽').click(); await raf(2);
+const d5b=[...doc.querySelectorAll('button[aria-label]')].find(b=>b.getAttribute('aria-label')==='切換到 5 日');
+d5b.click(); await raf(2);
+if(!doc.body.textContent.includes('旅行貨車營業中'))fail('週五無貨車卡');
+const d6b=[...doc.querySelectorAll('button[aria-label]')].find(b=>b.getAttribute('aria-label')==='切換到 6 日');
+d6b.click(); await raf(2);
+if(!doc.body.textContent.includes('明天是')||!doc.body.textContent.includes('生日'))fail('春6 無明日生日卡');
+console.log('助手：貨車日＋明日生日 OK');
 console.log('SMOKE OK');

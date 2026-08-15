@@ -2002,12 +2002,7 @@ function StardewTracker() {
   const buildTodayHintsV69 = () => {
     const hints=[];let order=0;
     const add=h=>hints.push({...h,order:order++});
-    (()=>{const CD=window.SDVCropsV96;if(!CD)return;const season=data.base.season,day=Number(data.base.day||1);
-      if(season==="冬")return;
-      const list=Object.entries(CD.crops).filter(([en,c])=>!c.exclude&&c.seasons.includes(season)).map(([en,c])=>({en,zh:c.zh,plan:cropPlanV96(c,{season,day})})).filter(x=>x.plan.kind==="ok"&&x.plan.okToday).sort((a,b)=>a.plan.daysLeft-b.plan.daysLeft);
-      if(!list.length)return;
-      add({id:"crops-deadline",kind:"crops",priority:0,file:"Parsnip",reason:"今天限定",title:`還來得及種（${season}${day}）`,list:list.slice(0,10).map(x=>({en:x.en,zh:x.zh,last:x.plan.lastPlant})),more:Math.max(0,list.length-10)});
-    })();
+    
     dayCalendarItems(data.base.day).forEach(it=>{
       if(it.type==="birthday")add({id:`birthday:${it.npc}`,kind:"birthday",npc:it.npc,priority:0,file:NPC_ICON_FILES[it.npc],reason:"今天限定",title:`今天是 ${it.npc} 的生日`,body:"生日當天送禮有額外好感加成。點開可直接看喜愛禮物。",action:"前往社交速查",run:()=>openSocialNpcV55(it.npc)});
       else if(it.type==="festival"){const g=FESTIVAL_GUIDE_V26[it.key];add({id:`festival:${it.key}`,kind:"festival",guide:g,priority:0,file:"Calendar",reason:"今天限定",title:`今日：${it.text}`,body:g?.desc||"今天有節日活動。點開可直接看重點。",action:"前往日曆",run:openCalendarV69});}
@@ -2015,8 +2010,19 @@ function StardewTracker() {
     });
     if(Number(data.base.day||1)<28){
       const tomorrow=dayCalendarItems(Number(data.base.day||1)+1).find(x=>x.type==="festival");
+      const tb=dayCalendarItems(Number(data.base.day||1)+1).find(x=>x.type==="birthday");
+      if(tb)add({id:`tomorrow-birthday:${tb.npc}`,kind:"birthday",npc:tb.npc,priority:1,file:NPC_ICON_FILES[tb.npc]||"Friendship 101",reason:"明天",title:`明天是 ${tb.npc} 生日`,body:"今天可以先備禮，點開看喜愛禮物。",action:"查看人物",run:()=>openSocialNpcV55(tb.npc)});
       if(tomorrow){const g=FESTIVAL_GUIDE_V26[tomorrow.key];add({id:`tomorrow-festival:${tomorrow.key}`,kind:"festival",guide:g,priority:1,file:"Calendar",reason:"明天",title:`明天是 ${tomorrow.text}`,body:g?.items?.length?"今天可以先確認節日需要的物品或安排。":"明天有節日，今天可先留意行程安排。",action:"前往日曆",run:openCalendarV69});}
     }
+    (()=>{const CD=window.SDVCropsV96;if(!CD)return;const season=data.base.season,day=Number(data.base.day||1);
+      if(season==="冬")return;
+      const list=Object.entries(CD.crops).filter(([en,c])=>!c.exclude&&c.seasons.includes(season)).map(([en,c])=>({en,zh:c.zh,plan:cropPlanV96(c,{season,day})})).filter(x=>x.plan.kind==="ok"&&x.plan.okToday).sort((a,b)=>a.plan.daysLeft-b.plan.daysLeft);
+      if(!list.length)return;
+      add({id:"crops-deadline",kind:"crops",priority:1,file:"Parsnip",reason:"今天限定",title:`還來得及種（${season}${day}）`,list:list.slice(0,10).map(x=>({en:x.en,zh:x.zh,last:x.plan.lastPlant})),more:Math.max(0,list.length-10)});
+    })();
+    (()=>{const wd=(Number(data.base.day||1)-1)%7;if(wd!==4&&wd!==6)return;
+      add({id:"travel-cart",kind:"calendar",detail:"",priority:1,file:"Calendar",reason:"今天限定",title:"🛒 旅行貨車營業中（煤礦森林）",body:"週五、週日限定，隨機販售稀有商品與外地種子。",action:"前往旅行貨車",run:()=>goToWorldV88("forest",{kind:"place",id:"cart"})});
+    })();
     const weatherBranches=todayWeatherV69?[todayWeatherV69]:["晴","雨"];
     weatherBranches.forEach(weather=>{
       const rows=todayFishRowsV69(weather);
