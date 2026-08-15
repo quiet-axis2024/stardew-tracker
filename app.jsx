@@ -3,6 +3,8 @@ const { useState, useEffect, useRef } = React;
 /* ================= 星露谷 1.6 資料 ================= */
 const SEASONS = ["春", "夏", "秋", "冬"];
 const SEASON_ICON = { 春: "🌸", 夏: "☀️", 秋: "🍁", 冬: "❄️" };
+const SEASON_FILE_V97={春:"Spring",夏:"Summer",秋:"Fall",冬:"Winter"};
+const WEATHER_FILE_V97={晴:"Sunny",雨:"Rain"};
 
 const SKILLS = [
   { id: "farming", name: "耕種", icon: "🌾" },
@@ -2083,7 +2085,7 @@ function StardewTracker() {
   const renderTodayV69 = () => {
     const hints=buildTodayHintsV69();const pinned=new Set(todayPinnedIdsV69);
     return <>
-      <SectionTitle icon="game:Calendar">今天可以做什麼</SectionTitle>
+      <SectionTitle icon="game:Budget TV">今天可以做什麼</SectionTitle>
       <Card style={{padding:8,background:"#FFF4D8"}}>
         <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><b style={{fontSize:10.5,color:C.darkBrown}}>第 {data.base.year} 年 · {data.base.season} {data.base.day} 日</b><span style={{fontSize:7.5,color:C.muted}}>只提醒會錯過或有明確理由現在可推進的事</span></div>
         
@@ -2424,7 +2426,7 @@ function StardewTracker() {
           <div style={{fontSize:10.5,color:C.muted,marginTop:1}}>累計 {(data.profilePortrait||data.base.profileDataVerifiedV47)?`${Number(data.base.totalIncome||0).toLocaleString()}g`:"—"}</div></div><div style={{display:"flex",alignItems:"center",gap:4}}><button onClick={()=>updateBase({year:Math.max(1,Number(data.base.year||1)-1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,width:26,height:25,fontWeight:950,color:C.brown,padding:0}}>−</button>
             <div style={{fontSize:10.5,fontWeight:950,color:C.darkBrown,textAlign:"center",minWidth:50}}>第 {data.base.year} 年</div>
             <button onClick={()=>updateBase({year:Math.min(99,Number(data.base.year||1)+1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,width:26,height:25,fontWeight:950,color:C.brown,padding:0}}>＋</button></div></div>
-          <div style={{display:"flex",gap:4,marginTop:7,flexWrap:"wrap",alignItems:"center"}}>{SEASONS.map(season=>{const active=data.base.season===season;return <button key={season} onClick={()=>updateBase({season})} style={{border:`1.5px solid ${active?C.green:C.line}`,background:active?C.lightGreen:C.cream,borderRadius:14,padding:"4px 6px",fontSize:9.5,fontWeight:900,color:active?C.green:C.ink,whiteSpace:"nowrap"}}>{SEASON_ICON[season]} {season}</button>})}<span style={{width:1,height:14,background:C.line,margin:"0 3px"}}/>{/* weatherRowMovedV94 */}{[["晴","☀️ 晴"],["雨","🌧️ 雨"]].map(([v,label])=>{const on=todayWeatherV69===v;return <button key={v} onClick={()=>setTodayWeatherV69(on?"":v)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFE2A8":C.paper,borderRadius:13,padding:"3px 8px",fontSize:8.4,fontWeight:900,color:on?C.darkBrown:C.muted}}>{label}</button>})}</div>
+          <div style={{display:"flex",gap:4,marginTop:7,flexWrap:"wrap",alignItems:"center"}}>{SEASONS.map(season=>{const active=data.base.season===season;return <button key={season} onClick={()=>updateBase({season})} style={{display:"inline-flex",alignItems:"center",gap:3,border:`1.5px solid ${active?C.green:C.line}`,background:active?C.lightGreen:C.cream,borderRadius:14,padding:"4px 6px",fontSize:9.5,fontWeight:900,color:active?C.green:C.ink,whiteSpace:"nowrap"}}><GameIcon file={SEASON_FILE_V97[season]} size={11}/><span>{season}</span></button>})}<span style={{width:1,height:14,background:C.line,margin:"0 3px"}}/>{/* weatherRowMovedV94 */}{[["晴","晴"],["雨","雨"]].map(([v,label])=>{const on=todayWeatherV69===v;return <button key={v} onClick={()=>setTodayWeatherV69(on?"":v)} style={{display:"inline-flex",alignItems:"center",gap:3,border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFE2A8":C.paper,borderRadius:13,padding:"3px 8px",fontSize:8.4,fontWeight:900,color:on?C.darkBrown:C.muted}}><GameIcon file={WEATHER_FILE_V97[v]} size={11}/><span>{label}</span></button>})}</div>
           <div style={{display:"flex",gap:3,marginTop:6,flexWrap:"wrap",alignItems:"center"}}>{TIME_SLOTS_V93.map(x=>{const active=(data.base.timeSlotV93||null)===x.id;return <button key={x.id} onClick={()=>updateBase({timeSlotV93:active?null:x.id})} style={{border:`1.5px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.cream,borderRadius:12,padding:"3px 8px",fontSize:8.2,fontWeight:900,color:active?C.brown:C.ink}}>{x.label}</button>})}</div>
           <div style={{marginTop:7}}><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:3,marginTop:6}}>{[["技能",`${skillTotal}/50`],["社區",`${rp.done}/30`],(Number(data.mine?.skullBest||0)>0?["骷髏洞",`${Number(data.mine.skullBest)}層`]:["礦井",`${Math.min(120,Number(data.mine?.normal||0))}/120`]),["動物",`${totalAnimals}`]].map(([k,v])=><div key={k} style={{background:"#FFF4D8",border:`1px solid ${C.line}`,borderRadius:7,padding:"3px 2px",textAlign:"center",minWidth:0}}><div style={{fontSize:6.5,color:C.muted,fontWeight:900}}>{k}</div><b style={{display:"block",fontSize:8.5,color:C.brown,lineHeight:1.15,marginTop:1}}>{v}</b></div>)}</div></div>
           <div style={{fontSize:6.5,color:C.muted,marginTop:4,lineHeight:1.5}}>☀ 晴含雪／風天；🌧 雨含雷雨。已選的天氣或時段再按一次即取消。</div>
@@ -2511,7 +2513,7 @@ function StardewTracker() {
         <div style={{minWidth:0}}><div style={{fontSize:16,fontWeight:950,letterSpacing:.3,lineHeight:1.1}}>星露谷農場手帳</div></div>
         <button aria-label="全域搜尋" onClick={openSearchV88} style={{marginLeft:"auto",border:"1.5px solid rgba(255,227,154,.5)",background:"rgba(255,255,255,.08)",borderRadius:9,padding:"5px 9px",display:"flex",alignItems:"center",gap:4,color:"#FFE39A",fontSize:9.5,fontWeight:950,cursor:"pointer",flex:"0 0 auto"}}>🔍 搜尋</button>
         <div style={{textAlign:"right",minWidth:0}}>
-          <div style={{fontWeight:950,fontSize:12.5,lineHeight:1.15}}>{SEASON_ICON[data.base.season]} 第 {data.base.year} 年 {data.base.season} {data.base.day} 日</div>
+          <div style={{fontWeight:950,fontSize:12.5,lineHeight:1.15,display:"flex",alignItems:"center",gap:4,justifyContent:"flex-end"}}><GameIcon file={SEASON_FILE_V97[data.base.season]} size={12}/> 第 {data.base.year} 年 {data.base.season} {data.base.day} 日</div>
           <div style={{fontSize:10.5,color:"#E8C88F",marginTop:2}}>{(data.profilePortrait||data.base.profileDataVerifiedV47)?`${Number(data.base.money||0).toLocaleString()}g`:""}</div>
         </div>
       </div>
