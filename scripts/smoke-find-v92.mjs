@@ -175,4 +175,11 @@ const d6b=[...doc.querySelectorAll('button[aria-label]')].find(b=>b.getAttribute
 d6b.click(); await raf(2);
 if(!doc.body.textContent.includes('明天是')||!doc.body.textContent.includes('生日'))fail('春6 無明日生日卡');
 console.log('助手：貨車日＋明日生日 OK');
+// ---- v97 分類補齊：搜尋副標帶新類 ----
+const sB2=[...doc.querySelectorAll('button')].find(b=>b.getAttribute&&b.getAttribute('aria-label')==='全域搜尋');
+sB2.click(); await raf(2);
+const sI2=[...doc.querySelectorAll('input')].find(i=>i.closest('#search-overlay-v88'));
+setVal(sI2,'Amphora'); await raf(2);
+if(!doc.getElementById('search-overlay-v88').textContent.includes('古物'))fail('搜尋副標缺古物分類');
+console.log('分類補齊：古物副標 OK');
 console.log('SMOKE OK');

@@ -2016,7 +2016,7 @@ function StardewTracker() {
       add({id:"crops-deadline",kind:"crops",inline:true,priority:1,file:"Parsnip",reason:"今天限定",title:`還來得及種（${season}${day}）`,list:list.slice(0,10).map(x=>({en:x.en,zh:x.zh,last:x.plan.lastPlant})),more:Math.max(0,list.length-10)});
     })();
     (()=>{const wd=(Number(data.base.day||1)-1)%7;if(wd!==4&&wd!==6)return;
-      add({id:"travel-cart",kind:"calendar",detail:"",priority:1,file:"Calendar",reason:"今天限定",title:"🛒 旅行貨車營業中（煤礦森林）",body:"週五、週日限定，隨機販售稀有商品與外地種子。",action:"前往旅行貨車",run:()=>goToWorldV88("forest",{kind:"place",id:"cart"})});
+      add({id:"travel-cart",kind:"calendar",detail:"",priority:1,file:"Traveling Cart",reason:"今天限定",title:"🛒 旅行貨車營業中（煤礦森林）",body:"週五、週日限定，隨機販售稀有商品與外地種子。",action:"前往旅行貨車",run:()=>goToWorldV88("forest",{kind:"place",id:"cart"})});
     })();
     const weatherBranches=todayWeatherV69?[todayWeatherV69]:["晴","雨"];
     weatherBranches.forEach(weather=>{
