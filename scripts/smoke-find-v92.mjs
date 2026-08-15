@@ -59,4 +59,48 @@ btn(t=>t.includes('8:10–12:00')&&t.includes('瑪妮')).click(); await raf(2);
 if(!doc.getElementById('npc-card-瑪妮'))fail('到訪 chip 未跳社交卡');
 console.log('地點卡今天誰會來 → 社交卡 OK');
 if(doc.body.textContent.includes('餐吧'))fail('畫面仍出現餐吧');
+// ---- v92.2 地點卡頁尾去重（皮埃爾卡不應再有「查看」尾鈕） ----
+if(doc.body.textContent.includes('查看 皮埃尔'))fail('地點卡重複跳轉未去除');
+console.log('頁尾去重 OK');
+// ---- v93 時段：總覽點中午 → 全手帳連動 ----
+btn(t=>t==='總覽').click(); await raf(2);
+const noonBtn=btn(t=>t==='中午');
+if(!noonBtn)fail('總覽缺時段列');
+noonBtn.click(); await raf(2);
+btn(t=>t==='社交').click(); await raf(2);
+const grp=btn(t=>t==='可交往對象'); if(grp){grp.click(); await raf(2);}
+const hv=doc.getElementById('npc-card-哈維');
+if(!hv)fail('社交頁無哈維卡');
+hv.querySelector('button').click(); await raf(2);
+if(!hv.textContent.includes('・中午'))fail('人物卡未帶時段');
+if(!hv.textContent.includes('● '))fail('人物卡當前段未高亮');
+console.log('人物卡時段高亮 OK');
+btn(t=>t==='查找').click(); await raf(2);
+const wE3=[...doc.querySelectorAll('button')].find(x=>(x.textContent||'').includes('世界')&&x.querySelector('img'));
+wE3.click(); await raf(2);
+if(!btn(t=>t.startsWith('👤')))fail('世界缺找人鈕');
+if(!doc.body.textContent.includes('按條件找人'))btn(t=>t.startsWith('👤')).click(), await raf(2);
+if(!doc.body.textContent.includes('・中午'))fail('找人未預設吃時段');
+console.log('找人吃時段 OK');
+// ---- v93 換日自動清 ----
+btn(t=>t==='總覽').click(); await raf(2);
+const dayBtn=[...doc.querySelectorAll('button[aria-label]')].find(b=>b.getAttribute('aria-label')==='切換到 5 日');
+if(!dayBtn)fail('日曆格缺');
+dayBtn.click(); await raf(2);
+btn(t=>t==='查找').click(); await raf(2);
+const wE4=[...doc.querySelectorAll('button')].find(x=>(x.textContent||'').includes('世界')&&x.querySelector('img'));
+wE4.click(); await raf(2);
+if(doc.body.textContent.includes('按條件找人')&&doc.body.textContent.includes('・中午'))fail('換日未清時段');
+console.log('換日自動清時段 OK');
+// ---- v92.2 生日卡「去哪找」（資料驅動找最近生日日） ----
+btn(t=>t==='總覽').click(); await raf(2);
+let bdayDay=0;
+for(let d=1;d<=28;d++){const items=window.SDVSocialV50?null:null;} // 由 UI 驗：逐日點找含生日者
+for(const d of [1,4,7,10,13,18,24,26,27]){
+  const bb=[...doc.querySelectorAll('button[aria-label]')].find(b=>b.getAttribute('aria-label')===`切換到 ${d} 日`);
+  if(!bb)continue; bb.click(); await raf(2);
+  if(doc.body.textContent.includes('生日')&&doc.body.textContent.includes('去哪找')){bdayDay=d;break}
+}
+if(!bdayDay)fail('生日卡未見「去哪找」');
+console.log('生日卡去哪找 OK（日='+bdayDay+'）');
 console.log('SMOKE OK');
