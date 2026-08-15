@@ -159,9 +159,7 @@ console.log('搜尋列帶行程＋新舊名 OK');
 // ---- v96 種植：總覽倒數＋物品卡 🌱（手帳春1） ----
 btn(t=>t==='總覽').click(); await raf(2);
 if(!doc.body.textContent.includes('還來得及種'))fail('總覽缺倒數提示');
-const hintHit=[...doc.querySelectorAll('button')].find(b=>(b.textContent||'').includes('還來得及種'))||[...doc.querySelectorAll('div')].filter(d=>d.textContent.includes('還來得及種')).pop();
-hintHit.click(); await raf(2);
-if(!doc.body.textContent.includes('草莓 至春20'))fail('展開後缺草莓 至春20');
+if(!doc.body.textContent.includes('草莓 至春20'))fail('倒數 chips 未直接攤開');
 btn(t=>t.includes('草莓 至春20')).click(); await raf(3);
 const bt2=doc.body.textContent;
 if(!bt2.includes('🌱 種植'))fail('物品卡缺種植段');
