@@ -2383,8 +2383,8 @@ function StardewTracker() {
     <Card style={{padding:10}}>
       <div style={{display:"grid",gridTemplateColumns:"104px minmax(0,1fr)",gap:11,alignItems:"start"}}>
         <div style={{minWidth:0,textAlign:"center"}}>
-          <button onClick={()=>profileInputRef.current?.click()} style={{width:96,height:126,border:`2px solid ${C.line}`,borderRadius:9,overflow:"hidden",background:"#EFE4C4",padding:0,cursor:"pointer"}}>
-            {data.profilePortrait ? <img src={data.profilePortrait} alt="農夫角色" style={{width:"100%",height:"100%",objectFit:"cover",imageRendering:"pixelated"}}/> : <div style={{fontSize:10,color:C.muted,fontWeight:900,lineHeight:1.45}}>上傳玩家<br/>資料畫面<br/><span style={{fontSize:21}}>＋</span></div>}
+          <button onClick={()=>profileInputRef.current?.click()} style={{width:96,minHeight:120,maxHeight:170,height:"auto",display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${C.line}`,borderRadius:9,overflow:"hidden",background:"#EFE4C4",padding:0,cursor:"pointer"}}>
+            {data.profilePortrait ? <img src={data.profilePortrait} alt="農夫角色" style={{width:"100%",height:"auto",maxHeight:166,objectFit:"contain",imageRendering:"pixelated"}}/> : <div style={{fontSize:10,color:C.muted,fontWeight:900,lineHeight:1.45}}>上傳玩家<br/>資料畫面<br/><span style={{fontSize:21}}>＋</span></div>}
           </button>
           <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4,marginTop:4}}>
             <button onClick={()=>profileInputRef.current?.click()} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:6,padding:"3px 6px",fontWeight:900,color:C.brown,fontSize:8.5}}>{data.profilePortrait?"更換":"上傳"}</button>
@@ -2395,22 +2395,18 @@ function StardewTracker() {
         <div style={{minWidth:0}}>
           <div style={{fontSize:15,fontWeight:950,color:C.darkBrown,lineHeight:1.15}}>{data.base.name || "未記錄農夫名"}</div>
           <div style={{fontSize:17,fontWeight:950,color:C.darkBrown,marginTop:2,lineHeight:1.15}}>{(data.profilePortrait||data.base.profileDataVerifiedV47)?`${String(data.base.farm||"").replace(/(?:農場|农场)$/u,"")||"未記錄"}農場`:"未記錄農場"}</div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginTop:7,flexWrap:"wrap"}}><div style={{minWidth:0}}><div style={{fontSize:11.5,color:C.brown,marginTop:8,fontWeight:850}}>持有 {(data.profilePortrait||data.base.profileDataVerifiedV47)?`${Number(data.base.money||0).toLocaleString()}g`:"—"}</div>
+          <div style={{fontSize:10.5,color:C.muted,marginTop:1}}>累計 {(data.profilePortrait||data.base.profileDataVerifiedV47)?`${Number(data.base.totalIncome||0).toLocaleString()}g`:"—"}</div></div><div style={{display:"flex",alignItems:"center",gap:4}}><button onClick={()=>updateBase({year:Math.max(1,Number(data.base.year||1)-1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,width:26,height:25,fontWeight:950,color:C.brown,padding:0}}>−</button>
+            <div style={{fontSize:10.5,fontWeight:950,color:C.darkBrown,textAlign:"center",minWidth:50}}>第 {data.base.year} 年</div>
+            <button onClick={()=>updateBase({year:Math.min(99,Number(data.base.year||1)+1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,width:26,height:25,fontWeight:950,color:C.brown,padding:0}}>＋</button></div></div>
+          <div style={{display:"flex",gap:4,marginTop:7,flexWrap:"wrap",alignItems:"center"}}>{SEASONS.map(season=>{const active=data.base.season===season;return <button key={season} onClick={()=>updateBase({season})} style={{border:`1.5px solid ${active?C.green:C.line}`,background:active?C.lightGreen:C.cream,borderRadius:14,padding:"4px 6px",fontSize:9.5,fontWeight:900,color:active?C.green:C.ink,whiteSpace:"nowrap"}}>{SEASON_ICON[season]} {season}</button>})}<span style={{width:1,height:14,background:C.line,margin:"0 3px"}}/>{/* weatherRowMovedV94 */}{[["晴","☀️ 晴"],["雨","🌧️ 雨"]].map(([v,label])=>{const on=todayWeatherV69===v;return <button key={v} onClick={()=>setTodayWeatherV69(on?"":v)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFE2A8":C.paper,borderRadius:13,padding:"3px 8px",fontSize:8.4,fontWeight:900,color:on?C.darkBrown:C.muted}}>{label}</button>})}</div>
+          <div style={{display:"flex",gap:3,marginTop:6,flexWrap:"wrap",alignItems:"center"}}>{TIME_SLOTS_V93.map(x=>{const active=(data.base.timeSlotV93||null)===x.id;return <button key={x.id} onClick={()=>updateBase({timeSlotV93:active?null:x.id})} style={{border:`1.5px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.cream,borderRadius:12,padding:"3px 8px",fontSize:8.2,fontWeight:900,color:active?C.brown:C.ink}}>{x.label}</button>})}</div>
           
           
           
           
           {/* weatherRowMovedV94 merged */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:3,marginTop:6}}>{[["技能",`${skillTotal}/50`],["社區",`${rp.done}/30`],(Number(data.mine?.skullBest||0)>0?["骷髏洞",`${Number(data.mine.skullBest)}層`]:["礦井",`${Math.min(120,Number(data.mine?.normal||0))}/120`]),["動物",`${totalAnimals}`]].map(([k,v])=><div key={k} style={{background:"#FFF4D8",border:`1px solid ${C.line}`,borderRadius:7,padding:"3px 2px",textAlign:"center",minWidth:0}}><div style={{fontSize:6.5,color:C.muted,fontWeight:900}}>{k}</div><b style={{display:"block",fontSize:8.5,color:C.brown,lineHeight:1.15,marginTop:1}}>{v}</b></div>)}</div>
-        </div>
-        <div style={{gridColumn:"1 / -1",minWidth:0}}>
-          <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",gap:8,marginTop:2,flexWrap:"wrap"}}><div><div style={{fontSize:11.5,color:C.brown,marginTop:8,fontWeight:850}}>持有 {(data.profilePortrait||data.base.profileDataVerifiedV47)?`${Number(data.base.money||0).toLocaleString()}g`:"—"}</div>
-          <div style={{fontSize:10.5,color:C.muted,marginTop:1}}>累計 {(data.profilePortrait||data.base.profileDataVerifiedV47)?`${Number(data.base.totalIncome||0).toLocaleString()}g`:"—"}</div></div><div style={{display:"flex",alignItems:"center",gap:4}}>
-            <button onClick={()=>updateBase({year:Math.max(1,Number(data.base.year||1)-1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,width:26,height:25,fontWeight:950,color:C.brown,padding:0}}>−</button>
-            <div style={{fontSize:10.5,fontWeight:950,color:C.darkBrown,textAlign:"center",minWidth:50}}>第 {data.base.year} 年</div>
-            <button onClick={()=>updateBase({year:Math.min(99,Number(data.base.year||1)+1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,width:26,height:25,fontWeight:950,color:C.brown,padding:0}}>＋</button>
-            </div></div>
-          <div style={{display:"flex",gap:4,marginTop:7,flexWrap:"wrap",alignItems:"center"}}>{SEASONS.map(season=>{const active=data.base.season===season;return <button key={season} onClick={()=>updateBase({season})} style={{border:`1.5px solid ${active?C.green:C.line}`,background:active?C.lightGreen:C.cream,borderRadius:14,padding:"4px 9px",fontSize:9.5,fontWeight:900,color:active?C.green:C.ink,whiteSpace:"nowrap"}}>{SEASON_ICON[season]} {season}</button>})}<span style={{width:1,height:14,background:C.line,margin:"0 3px"}}/><span style={{fontSize:8,color:C.muted,fontWeight:950}}>天氣</span>{[["","未記錄"],["晴","☀️ 晴"],["雨","🌧️ 雨"]].map(([v,label])=>{const on=todayWeatherV69===v;return <button key={v||"unknown"} onClick={()=>setTodayWeatherV69(v)} style={{border:`1.5px solid ${on?C.orange:C.line}`,background:on?"#FFE2A8":C.paper,borderRadius:13,padding:"3px 7px",fontSize:8,fontWeight:900,color:on?C.darkBrown:C.muted}}>{label}</button>})}</div>
-          <div style={{display:"flex",gap:3,marginTop:6,flexWrap:"wrap",alignItems:"center"}}><span style={{fontSize:8,fontWeight:950,color:C.muted}}>🕒</span>{[[null,"未記錄"],...TIME_SLOTS_V93.map(x=>[x.id,x.label])].map(([v,l])=>{const active=(data.base.timeSlotV93||null)===v;return <button key={l} onClick={()=>updateBase({timeSlotV93:v})} style={{border:`1.5px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.cream,borderRadius:12,padding:"3px 7px",fontSize:8.2,fontWeight:900,color:active?C.brown:C.ink}}>{l}</button>})}</div>
+          
         </div>
         <details style={{gridColumn:"1 / -1",borderTop:`1px dashed ${C.line}`,paddingTop:5,marginTop:0}}>
           <summary style={{fontSize:9.5,color:C.muted,fontWeight:900,cursor:"pointer",width:"fit-content"}}>✎ 編輯資料</summary>
@@ -2425,7 +2421,7 @@ function StardewTracker() {
             </div>
           </div>
         </details>
-      </div>
+      <div style={{gridColumn:"1 / -1",marginTop:4}}><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:3,marginTop:6}}>{[["技能",`${skillTotal}/50`],["社區",`${rp.done}/30`],(Number(data.mine?.skullBest||0)>0?["骷髏洞",`${Number(data.mine.skullBest)}層`]:["礦井",`${Math.min(120,Number(data.mine?.normal||0))}/120`]),["動物",`${totalAnimals}`]].map(([k,v])=><div key={k} style={{background:"#FFF4D8",border:`1px solid ${C.line}`,borderRadius:7,padding:"3px 2px",textAlign:"center",minWidth:0}}><div style={{fontSize:6.5,color:C.muted,fontWeight:900}}>{k}</div><b style={{display:"block",fontSize:8.5,color:C.brown,lineHeight:1.15,marginTop:1}}>{v}</b></div>)}</div></div><div style={{gridColumn:"1 / -1",fontSize:6.8,color:C.muted,marginTop:2}}>☀ 晴含雪／風天；🌧 雨含雷雨。已選的天氣或時段再按一次即取消。</div></div>
       <input ref={profileInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{handleProfileUpload(e.target.files?.[0]);e.target.value=""}}/>
     </Card>
   </>;
