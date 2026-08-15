@@ -2003,11 +2003,6 @@ function StardewTracker() {
     const hints=[];let order=0;
     const add=h=>hints.push({...h,order:order++});
     
-    dayCalendarItems(data.base.day).forEach(it=>{
-      if(it.type==="birthday")add({id:`birthday:${it.npc}`,kind:"birthday",inline:true,npc:it.npc,priority:0,file:NPC_ICON_FILES[it.npc],reason:"今天限定",title:`今天是 ${it.npc} 的生日`,body:"生日當天送禮有額外好感加成。點開可直接看喜愛禮物。",action:"前往社交速查",run:()=>openSocialNpcV55(it.npc)});
-      else if(it.type==="festival"){const g=FESTIVAL_GUIDE_V26[it.key];add({id:`festival:${it.key}`,kind:"festival",guide:g,priority:0,file:"Calendar",reason:"今天限定",title:`今日：${it.text}`,body:g?.desc||"今天有節日活動。點開可直接看重點。",action:"前往日曆",run:openCalendarV69});}
-      else add({id:`calendar:${it.text}`,kind:"calendar",detail:it.text,priority:0,file:"Calendar",reason:"今天限定",title:it.text,body:"這是今天才需要注意的季節／城鎮事件。",action:"前往日曆",run:openCalendarV69});
-    });
     if(Number(data.base.day||1)<28){
       const tomorrow=dayCalendarItems(Number(data.base.day||1)+1).find(x=>x.type==="festival");
       const tb=dayCalendarItems(Number(data.base.day||1)+1).find(x=>x.type==="birthday");
