@@ -2002,6 +2002,12 @@ function StardewTracker() {
   const buildTodayHintsV69 = () => {
     const hints=[];let order=0;
     const add=h=>hints.push({...h,order:order++});
+    (()=>{const CD=window.SDVCropsV96;if(!CD)return;const season=data.base.season,day=Number(data.base.day||1);
+      if(season==="冬")return;
+      const list=Object.entries(CD.crops).filter(([en,c])=>!c.exclude&&c.seasons.includes(season)).map(([en,c])=>({en,zh:c.zh,plan:cropPlanV96(c,{season,day})})).filter(x=>x.plan.kind==="ok"&&x.plan.okToday).sort((a,b)=>a.plan.daysLeft-b.plan.daysLeft);
+      if(!list.length)return;
+      add({id:"crops-deadline",kind:"crops",priority:0,file:"Parsnip",reason:"今天限定",title:`還來得及種（${season}${day}）`,list:list.slice(0,10).map(x=>({en:x.en,zh:x.zh,last:x.plan.lastPlant})),more:Math.max(0,list.length-10)});
+    })();
     dayCalendarItems(data.base.day).forEach(it=>{
       if(it.type==="birthday")add({id:`birthday:${it.npc}`,kind:"birthday",npc:it.npc,priority:0,file:NPC_ICON_FILES[it.npc],reason:"今天限定",title:`今天是 ${it.npc} 的生日`,body:"生日當天送禮有額外好感加成。點開可直接看喜愛禮物。",action:"前往社交速查",run:()=>openSocialNpcV55(it.npc)});
       else if(it.type==="festival"){const g=FESTIVAL_GUIDE_V26[it.key];add({id:`festival:${it.key}`,kind:"festival",guide:g,priority:0,file:"Calendar",reason:"今天限定",title:`今日：${it.text}`,body:g?.desc||"今天有節日活動。點開可直接看重點。",action:"前往日曆",run:openCalendarV69});}
@@ -2055,6 +2061,9 @@ function StardewTracker() {
     if(h.kind==="birthday"){
       const loves=NPC_GIFTS[h.npc]?.love||[];
       return loves.length?<><div style={{fontSize:8,color:C.muted,fontWeight:900,marginBottom:5}}>喜愛禮物</div><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4}}>{loves.map(name=>{const file=itemFileZhV26(name)||name;return <div key={name} style={{border:`1px solid ${C.line}`,borderRadius:8,padding:"4px 2px",textAlign:"center",background:"#FFFDF5"}}><GameIcon file={file} size={27}/><div style={{fontSize:7,fontWeight:900,color:C.ink,lineHeight:1.05,marginTop:2}}>{switchNameV47(name,file)}</div></div>})}</div></>:<div style={{fontSize:8,color:C.muted}}>目前手帳沒有可直接顯示的喜愛禮物資料。</div>;
+    }
+    if(h.kind==="crops"){
+      return <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{h.list.map(x=><button key={x.en} onClick={()=>openItemLookupV54(x.zh,x.en)} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"2px 7px",fontSize:7.4,fontWeight:900,color:C.brown}}>{x.zh} 至{x.last} ›</button>)}{h.more>0&&<span style={{fontSize:7,color:C.muted,alignSelf:"center"}}>＋{h.more}</span>}<span style={{flexBasis:"100%",fontSize:6.8,color:C.muted}}>無肥料基準；溫室不受季節限制。</span></div>;
     }
     if(h.kind==="festival"){
       const g=h.guide;
@@ -2471,14 +2480,7 @@ function StardewTracker() {
       .filter(x=>x.items.length)
       .slice(0,4);
     return <>
-      {(()=>{const CD=window.SDVCropsV96;if(!CD)return null;const season=data.base.season,day=Number(data.base.day||1);
-        if(season==="冬")return <Card style={{padding:"7px 9px",marginBottom:8,fontSize:8.4,color:C.muted,fontWeight:900}}>⏳ 冬季無露天作物（溫室不受季節限制）。</Card>;
-        const list=Object.entries(CD.crops).filter(([en,c])=>!c.exclude&&c.seasons.includes(season)).map(([en,c])=>({en,c,plan:cropPlanV96(c,{season,day})})).filter(x=>x.plan.kind==="ok"&&x.plan.okToday).sort((a,b)=>a.plan.daysLeft-b.plan.daysLeft);
-        if(!list.length)return <Card style={{padding:"7px 9px",marginBottom:8,fontSize:8.4,color:C.muted,fontWeight:900}}>⏳ 本季（{season}{day}）已無來得及收成的露天作物。</Card>;
-        return <Card style={{padding:"7px 9px",marginBottom:8}}>
-          <div style={{fontSize:8.6,color:C.darkBrown,fontWeight:950,marginBottom:4}}>⏳ 還來得及種（{season}{day}）</div>
-          <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{list.slice(0,10).map(x=><button key={x.en} onClick={()=>openItemLookupV54(x.c.zh,x.en)} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"2px 7px",fontSize:7.4,fontWeight:900,color:C.brown}}>{x.c.zh} 至{x.plan.lastPlant} ›</button>)}{list.length>10&&<span style={{fontSize:7,color:C.muted,alignSelf:"center"}}>＋{list.length-10}</span>}</div>
-        </Card>})()}
+      
       <SectionTitle icon="📅" right={`第 ${data.base.year} 年・${data.base.season}季`}>遊戲日曆</SectionTitle>
       <Card id="game-calendar-v69" style={{padding:7,overflow:"hidden",scrollMarginTop:"calc(70px + env(safe-area-inset-top))"}}>
         <div style={{position:"relative",width:"100%",borderRadius:8,overflow:"hidden",background:"#E7C58A"}}>

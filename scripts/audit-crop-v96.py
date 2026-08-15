@@ -25,7 +25,7 @@ for k,v in EXP.items():
     got=o['sent'][k]
     if sorted(got)!=sorted(v):fail(f'哨兵 {k}: {got} ≠ {v}')
 app=Path('app.jsx').read_text()
-for t in ['cropPlanV96','cropOfV96','🌱 種植','還來得及種','無肥料基準','冬季無露天作物']:
+for t in ['cropPlanV96','cropOfV96','🌱 種植','crops-deadline','h.kind==="crops"','還來得及種','無肥料基準']:
     if t not in app:fail('app missing '+t)
 if './crop-data-v96.js?v=96' not in Path('index.html').read_text():fail('index 未載入')
 if 'crop-data-v96.js' not in Path('sw-v87.js').read_text():fail('sw 未快取')
