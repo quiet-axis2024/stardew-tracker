@@ -103,4 +103,40 @@ for(const d of [1,4,7,10,13,18,24,26,27]){
 }
 if(!bdayDay)fail('生日卡未見「去哪找」');
 console.log('生日卡去哪找 OK（日='+bdayDay+'）');
+// ---- v94 公交站潘姆（節點層本區到訪） ----
+btn(t=>t==='總覽').click(); await raf(2);
+const d1=[...doc.querySelectorAll('button[aria-label]')].find(b=>b.getAttribute('aria-label')==='切換到 1 日');
+d1.click(); await raf(2);
+btn(t=>t==='查找').click(); await raf(2);
+const wE5=[...doc.querySelectorAll('button')].find(x=>(x.textContent||'').includes('世界')&&x.querySelector('img'));
+wE5.click(); await raf(2);
+let g2=0;
+while(!([...doc.querySelectorAll('button[aria-label]')].find(b=>b.getAttribute('aria-label')==='公交站'))&&g2++<8){const back=[...doc.querySelectorAll('button')].find(b=>b.style.position!=='fixed'&&(b.textContent||'').includes('返回'));if(!back)break;back.click();await raf(2);}
+const busPin=[...doc.querySelectorAll('button[aria-label]')].find(b=>b.getAttribute('aria-label')==='公交站');
+if(!busPin)fail('根圖無公交站');
+busPin.click(); await raf(2);
+if(!doc.body.textContent.includes('本區今天誰會來'))fail('公交站缺本區到訪');
+if(!doc.body.textContent.includes('潘姆')||!doc.body.textContent.includes('10:00'))fail('公交站未列潘姆 10:00');
+console.log('公交站潘姆 OK');
+// ---- v94 找魚六段＋預設吃手帳 ----
+const fishBtn=btn(t=>t.includes('按條件找魚'));
+fishBtn.click(); await raf(2);
+if(!btn(t=>t==='深夜')||!btn(t=>t==='上午'))fail('找魚時段未統一為六段');
+console.log('找魚六段 OK');
+// ---- v94 節日會場（春13 彩蛋節） ----
+btn(t=>t==='總覽').click(); await raf(2);
+const d10=[...doc.querySelectorAll('button[aria-label]')].find(b=>b.getAttribute('aria-label')==='切換到 10 日');
+d10.click(); await raf(2);
+if(!doc.body.textContent.includes('彩蛋節（鹈鹕镇）'))fail('接下來 chip 缺會場');
+const d13=[...doc.querySelectorAll('button[aria-label]')].find(b=>b.getAttribute('aria-label')==='切換到 13 日');
+d13.click(); await raf(2);
+if(!doc.body.textContent.includes('會場：鹈鹕镇'))fail('節日卡缺會場文字');
+btn(t=>t.includes('會場：')).click(); await raf(3);
+if(!doc.body.textContent.includes('鹈鹕镇'))fail('會場跳轉未到鎮上');
+console.log('節日會場跳轉 OK');
+// ---- v94 天氣 pills 在日期卡 ----
+btn(t=>t==='總覽').click(); await raf(2);
+const rainPill=btn(t=>t==='🌧️ 雨');
+if(!rainPill)fail('日期卡缺天氣列');
+console.log('設定卡集中 OK');
 console.log('SMOKE OK');

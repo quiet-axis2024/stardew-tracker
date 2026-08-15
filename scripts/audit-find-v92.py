@@ -13,6 +13,8 @@ out.shaneJoja=zhs(sj);out.shaneJojaNote=sj.notes.join(';');
 out.shaneCC=zhs(R('謝恩',{season:'夏',day:10,rain:false,ccDone:true}));
 out.shaneDefault=zhs(R('謝恩',{season:'夏',day:10,rain:false}));
 out.pamNote=R('潘姆',{season:'夏',day:10,rain:false,busFixed:false}).notes.join(';');
+const D=window.SDVNpcScheduleV91;
+out.badCoverage=Object.entries(D.locations).filter(([k,v])=>!v.node&&k!=='The Farm').map(([k])=>k);
 console.log(JSON.stringify(out));
 """
 o=json.loads(subprocess.run(['node','-e',node_js],capture_output=True,text=True,check=True).stdout)
@@ -21,6 +23,7 @@ if '依 Joja 路線' not in o['shaneJojaNote']:fail('Joja 路線註記缺失')
 for k in ('shaneCC','shaneDefault'):
     if '玛妮的牧场' not in o[k]:fail(f'謝恩 {k} 未走牧場: {o[k]}')
 if '公交尚未修復' not in o['pamNote']:fail('busFixed 註記缺失: '+o['pamNote'])
+if o['badCoverage']:fail(f"行程地點缺世界節點（不可達）: {o['badCoverage']}")
 FILES=['app.jsx','world-nav-data-v87.js','npc-schedule-data-v91.js','lookup-data-v46.js','world-data-v70.js']
 for f in FILES:
     if '餐吧' in Path(f).read_text():fail(f'{f} 仍含「餐吧」')
@@ -28,7 +31,7 @@ if '星之果实酒吧' not in Path('world-nav-data-v87.js').read_text():fail('n
 if '星之果实酒吧' not in Path('npc-schedule-data-v91.js').read_text():fail('schedule 缺酒吧')
 if '星之果實酒吧' not in Path('lookup-data-v46.js').read_text():fail('lookup 缺酒吧')
 app=Path('app.jsx').read_text()
-for t in ['progressFlagsV92','按條件找人','npcFindViewV92','npcFindQueryV92','jojaClosedV92','已歇業','👤 找人','按地點','NPC_SIMP_V92','今天誰會來','TIME_SLOTS_V93','timeSlotV93:null','slotSelV93','去哪找','footerNpcV90&&npcChipsV90.length===0','跟手帳']:
+for t in ['progressFlagsV92','按條件找人','npcFindViewV92','npcFindQueryV92','jojaClosedV92','已歇業','👤 找人','按地點','NPC_SIMP_V92','今天誰會來','TIME_SLOTS_V93','timeSlotV93:null','slotSelV93','去哪找','footerNpcV90&&npcChipsV90.length===0','跟手帳','本區今天誰會來','FESTIVAL_VENUE_V94','weatherRowMovedV94','forenoon','festVenueLabelV94','會場：']:
     if t not in app:fail('app.jsx missing '+t)
 import re as _re
 mm=_re.search(r'NPC_SIMP_V92=(\{.*?\});',app)
