@@ -2847,6 +2847,19 @@ function StardewTracker() {
         <div style={{display:"grid",gridTemplateColumns:"38px minmax(0,1fr)",gap:7,alignItems:"center"}}><GameIcon file={place?.icon||"Map"} size={36}/><div style={{minWidth:0}}><span style={{fontSize:6.5,fontWeight:900,color:"#9A5B22",background:"#FFE8A8",borderRadius:7,padding:"1px 5px"}}>地點</span><b style={{display:"block",fontSize:11.5,color:C.darkBrown,lineHeight:1.2,marginTop:2}}>{p.label}</b>{hours&&<div style={{fontSize:7.6,color:C.muted,marginTop:2}}>{hours}</div>}</div></div>
         {requires&&<div style={{marginTop:6,padding:"5px 7px",borderRadius:7,background:"#FFF0C8",fontSize:8,color:C.brown,lineHeight:1.35}}><b>解鎖：</b>{requires}</div>}
         {jojaClosedV92&&<div style={{marginTop:6,padding:"6px 8px",borderRadius:7,background:"#EFE7DA",border:`1px dashed ${C.line}`,fontSize:8.2,color:C.brown,fontWeight:900}}>🚪 已歇業——社區中心修復完成後，Joja超市關門了。</div>}
+        {(()=>{const S=window.SDVNpcScheduleV91;if(!S?.resolve||jojaClosedV92)return null;
+          const day=Number(data.base.day||1);
+          const wd=["一","二","三","四","五","六","日"][(day-1)%7];
+          const fest=dayCalendarItems(day).find(x=>x.type==="festival");
+          const fmt=t=>{const h=Math.floor(t/100),m=t%100;return `${h>=24?h-24:h}:${String(m).padStart(2,"0")}`};
+          if(fest)return <div style={{marginTop:6,padding:"5px 7px",borderRadius:7,background:"#FFF1CF",fontSize:7.6,color:C.brown,fontWeight:900}}>🎪 {fest.text}：節日日以會場為準，平日到訪不適用。</div>;
+          const flags=progressFlagsV92(data);
+          const vis=[];
+          for(const nm of Object.keys(S.npcs)){const r=S.resolve(nm,{season:data.base.season,day,rain:todayWeatherV69==="雨",...flags});
+            r.entries.forEach((seg,i)=>{const loc=seg[1];if(loc.node===nodeId&&loc.pin===p.id){vis.push({nm,s:seg[0],e:r.entries[i+1]?.[0]})}})}
+          vis.sort((a,b)=>a.s-b.s||a.nm.localeCompare(b.nm));
+          if(!vis.length)return null;
+          return <div style={{marginTop:7}}><div style={{fontSize:7.5,color:C.muted,fontWeight:950,marginBottom:3}}>👥 今天誰會來（{data.base.season}{day}・週{wd}）</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{vis.map((v,i)=><button key={i} onClick={()=>openSocialNpcV55(v.nm)} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"2px 7px 2px 2px",display:"inline-flex",alignItems:"center",gap:3,fontSize:7.3,fontWeight:900,color:C.brown}}><GameIcon file={socialByZh[v.nm]?.english||"Friendship 101"} size={20}/>{(!v.e&&v.s<=600)?"整天":`${fmt(v.s)}${v.e?`–${fmt(v.e)}`:" 起"}`} {v.nm} ›</button>)}</div></div>})()}
         {description&&<div style={{fontSize:8,color:C.ink,lineHeight:1.4,marginTop:6}}>{description}</div>}
         {!jojaClosedV92&&services.length>0&&<div style={{marginTop:7}}><div style={{fontSize:7.5,color:C.muted,fontWeight:950,marginBottom:3}}>可以做什麼</div><div style={{display:"grid",gap:3}}>{services.map(x=><div key={x} style={{display:"grid",gridTemplateColumns:"10px 1fr",gap:3,fontSize:8.4,color:C.ink,lineHeight:1.35}}><span>•</span><span>{x}</span></div>)}</div></div>}
         {npcChipsV90.length>0&&<div style={{marginTop:7}}><div style={{fontSize:7.5,color:C.muted,fontWeight:950,marginBottom:4}}>相關人物</div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{npcChipsV90.map(m=>{const can=Boolean(m.key);return <button key={m.name} disabled={!can} onClick={()=>can&&openSocialNpcV55(m.key)} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"3px 6px 3px 3px",display:"inline-flex",alignItems:"center",gap:3,fontSize:7.8,fontWeight:900,color:C.brown,opacity:can?1:.7}}><GameIcon file={m.icon} size={22}/>{m.name}{can?" ›":""}</button>})}</div></div>}

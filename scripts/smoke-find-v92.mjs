@@ -41,5 +41,22 @@ if(!rb)fail('地點群缺羅賓 chip');
 rb.click(); await raf(2);
 if(!doc.getElementById('npc-card-羅賓'))fail('未跳到社交卡');
 console.log('按地點聚合 → 社交卡 OK');
+// ---- v92.1 地點卡「今天誰會來」 ----
+const pin=l=>[...doc.querySelectorAll('button[aria-label]')].find(b=>b.getAttribute('aria-label')===l&&b.style.position==='absolute');
+btn(t=>t==='查找').click(); await raf(2);
+const wE2=[...doc.querySelectorAll('button')].find(x=>(x.textContent||'').includes('世界')&&x.querySelector('img'));
+wE2.click(); await raf(2);
+let g=0;
+while(!pin('煤矿森林')&&g++<8){const back=[...doc.querySelectorAll('button')].find(b=>b.style.position!=='fixed'&&(b.textContent||'').includes('返回'));if(!back)break;back.click();await raf(2);}
+if(!pin('鹈鹕镇'))fail('根圖無鹈鹕镇');
+pin('鹈鹕镇').click(); await raf(2);
+const zap=pin('杂货店')||btn(t=>t.includes('杂货店'));
+if(!zap)fail('鎮上無杂货店入口');
+zap.click(); await raf(2);
+if(!doc.body.textContent.includes('今天誰會來'))fail('地點卡缺今天誰會來');
+if(!doc.body.textContent.includes('8:10–12:00')||!doc.body.textContent.includes('瑪妮'))fail('杂货店未列出瑪妮 8:10–12:00');
+btn(t=>t.includes('8:10–12:00')&&t.includes('瑪妮')).click(); await raf(2);
+if(!doc.getElementById('npc-card-瑪妮'))fail('到訪 chip 未跳社交卡');
+console.log('地點卡今天誰會來 → 社交卡 OK');
 if(doc.body.textContent.includes('餐吧'))fail('畫面仍出現餐吧');
 console.log('SMOKE OK');
