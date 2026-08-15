@@ -15,7 +15,7 @@ window.SDVWorldV70={
     willy:{id:"willy",name:"威利",aliases:["Willy"],icon:"Willy Icon",socialKeys:["威利"]},
     wizard:{id:"wizard",name:"法师",aliases:["法師","Wizard","Rasmodius"],icon:"Wizard Icon",socialKeys:["法師","法师"]},
     sandy:{id:"sandy",name:"桑迪",aliases:["Sandy"],icon:"Sandy Icon",socialKeys:["桑迪"]},
-    krobus:{id:"krobus",name:"科罗布斯",aliases:["克羅巴斯","Krobus"],icon:"Krobus Icon",socialKeys:["克羅巴斯","科罗布斯"]},
+    krobus:{id:"krobus",name:"科罗布斯",aliases:["科罗布斯","Krobus"],icon:"Krobus Icon",socialKeys:["科罗布斯","科罗布斯"]},
     marlon:{id:"marlon",name:"马龙",aliases:["馬龍","Marlon"],icon:"Marlon Icon",socialKeys:["馬龍","马龙"]},
     gunther:{id:"gunther",name:"冈瑟",aliases:["岡瑟","Gunther"],icon:"Gunther Icon",socialKeys:["岡瑟","冈瑟"]},
     lewis:{id:"lewis",name:"刘易斯",aliases:["劉易斯","Lewis"],icon:"Lewis Icon",socialKeys:["劉易斯","刘易斯"]},

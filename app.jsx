@@ -102,7 +102,7 @@ const BARN_ANIMALS = [
 const NPC_GROUPS = [
   { id: "single", name: "可交往對象", max: 14, list: ["阿比蓋爾", "艾蜜麗", "海莉", "莉亞", "瑪魯", "潘妮", "亞歷克斯", "艾利歐特", "哈維", "山姆", "塞巴斯蒂安", "謝恩"] },
   { id: "town", name: "村民", max: 10, list: ["卡洛琳", "克林特", "德米特里厄斯", "艾芙琳", "喬治", "格斯", "賈斯", "喬迪", "肯特", "劉易斯", "萊納斯", "瑪妮", "潘姆", "皮埃爾", "羅賓", "文森特", "威利", "法師"] },
-  { id: "special", name: "特殊角色", max: 10, list: ["桑迪", "克羅巴斯", "矮人", "雷歐"] },
+  { id: "special", name: "特殊角色", max: 10, list: ["桑迪", "科罗布斯", "矮人", "雷歐"] },
 ];
 
 /* 百科條目名對照（人物頁連結用） */
@@ -112,7 +112,7 @@ const NPC_WIKI = {
   卡洛琳: "卡洛琳", 克林特: "克林特", 德米特里厄斯: "德米特里厄斯", 艾芙琳: "艾芙琳", 喬治: "乔治", 格斯: "格斯",
   賈斯: "贾斯", 喬迪: "乔迪", 肯特: "肯特", 劉易斯: "刘易斯", 萊納斯: "莱纳斯", 瑪妮: "玛妮",
   潘姆: "潘姆", 皮埃爾: "皮埃尔", 羅賓: "罗宾", 文森特: "文森特", 威利: "威利", 法師: "法师",
-  桑迪: "桑迪", 克羅布斯: "科罗布斯", 克羅巴斯: "科罗布斯", 矮人: "矮人", 雷歐: "雷欧",
+  桑迪: "桑迪", 克羅布斯: "科罗布斯", 科罗布斯: "科罗布斯", 矮人: "矮人", 雷歐: "雷欧",
 };
 
 /* 送禮偏好簡記（Claude 整理）：最愛盡量完整；喜歡/討厭僅列代表項，完整以百科為準 */
@@ -148,7 +148,7 @@ const NPC_GIFTS = {
   威利: { love: ["鲶鱼", "钻石", "铱锭", "蜜蜂酒", "章鱼", "南瓜", "海参", "鲟鱼"], like: ["多数鱼类"], hate: ["（见百科）"] },
   法師: { love: ["紫蘑菇", "太阳精华", "大海参", "虚空精华"], like: ["（见百科）"], hate: ["（见百科）"] },
   桑迪: { love: ["番红花", "黄水仙", "甜豌豆", "芒果糯米饭"], like: ["花卉类"], hate: ["（见百科）"] },
-  克羅巴斯: { love: ["钻石", "铱锭", "南瓜", "虚空蛋", "虚空蛋黄酱", "野山葵"], like: ["（见百科）"], hate: ["（见百科）"] },
+  科罗布斯: { love: ["钻石", "铱锭", "南瓜", "虚空蛋", "虚空蛋黄酱", "野山葵"], like: ["（见百科）"], hate: ["（见百科）"] },
   矮人: { love: ["紫水晶", "海蓝宝石", "绿宝石", "翡翠", "红宝石", "黄玉", "柠檬石", "万象晶洞"], like: ["矿石类"], hate: ["（见百科）"] },
   雷歐: { love: ["鸭毛", "芒果", "鸵鸟蛋", "夏威夷芋泥"], like: ["水果"], hate: ["（见百科）"] },
 };
@@ -162,7 +162,7 @@ const WALLET_ITEMS = [
   { name: "俱樂部卡", desc: "完成「神秘的齊」任務後解鎖沙漠賭場" },
   { name: "特殊護符", desc: "秘密紙條 #20 任務：送卡車司機兔子的腳" },
   { name: "魔法墨水", desc: "把黑暗護符交給女巫小屋的法師之後" },
-  { name: "黑暗護符", desc: "法師任務：於下水道向克羅巴斯取得" },
+  { name: "黑暗護符", desc: "法師任務：於下水道向科罗布斯取得" },
   { name: "鎮上鑰匙", desc: "1.6：完成劉易斯的協助鎮民系列委託" },
 ];
 const ABILITIES = [
@@ -228,7 +228,7 @@ const NPC_ICON_FILES = {
   卡洛琳:"Caroline Icon", 克林特:"Clint Icon", 德米特里厄斯:"Demetrius Icon", 艾芙琳:"Evelyn Icon", 喬治:"George Icon", 格斯:"Gus Icon",
   賈斯:"Jas Icon", 喬迪:"Jodi Icon", 肯特:"Kent Icon", 劉易斯:"Lewis Icon", 萊納斯:"Linus Icon", 瑪妮:"Marnie Icon", 潘姆:"Pam Icon",
   皮埃爾:"Pierre Icon", 羅賓:"Robin Icon", 文森特:"Vincent Icon", 威利:"Willy Icon", 法師:"Wizard Icon", 桑迪:"Sandy Icon",
-  克羅巴斯:"Krobus Icon", 矮人:"Dwarf Icon", 雷歐:"Leo Icon"
+  科罗布斯:"Krobus Icon", 矮人:"Dwarf Icon", 雷歐:"Leo Icon"
 };
 
 function retryWikiImageV48(e){
@@ -687,7 +687,7 @@ const SOCIAL_EMPTY_RULES_V55 = {
   "莱纳斯":{likes:["All Universal Likes"],hates:["All Universal Hates (except Carp & Wild Bait)"]},"萊納斯":{likes:["All Universal Likes"],hates:["All Universal Hates (except Carp & Wild Bait)"]},
   "威利":{hates:["All Universal Hates (except Seafoam Pudding)"]},
   "法师":{hates:["All Universal Hates (except Slime)"]},"法師":{hates:["All Universal Hates (except Slime)"]},
-  "科罗布斯":{hates:["All Universal Hates (except Monster Musk, Seafoam Pudding, Strange Bun & Void Mayonnaise)"]},"克羅巴斯":{hates:["All Universal Hates (except Monster Musk, Seafoam Pudding, Strange Bun & Void Mayonnaise)"]},
+  "科罗布斯":{hates:["All Universal Hates (except Monster Musk, Seafoam Pudding, Strange Bun & Void Mayonnaise)"]},"科罗布斯":{hates:["All Universal Hates (except Monster Musk, Seafoam Pudding, Strange Bun & Void Mayonnaise)"]},
   "矮人":{hates:["All Universal Hates"]}
 };
 const NPC_SERVICES_V55 = {
@@ -748,7 +748,7 @@ const CALENDAR_DATA = {
     other: {8:"黑莓季",9:"黑莓季",10:"黑莓季",11:"黑莓季"}
   },
   冬: {
-    birthdays: {1:"克羅巴斯",3:"萊納斯",7:"卡洛琳",10:"塞巴斯蒂安",14:"哈維",17:"法師",20:"艾芙琳",23:"莉亞",26:"克林特"},
+    birthdays: {1:"科罗布斯",3:"萊納斯",7:"卡洛琳",10:"塞巴斯蒂安",14:"哈維",17:"法師",20:"艾芙琳",23:"莉亞",26:"克林特"},
     festivals: {8:"冰雪節",12:"魷魚節",13:"魷魚節",15:"夜市",16:"夜市",17:"夜市",25:"冬日星盛宴"},
     other: {}
   }
@@ -1030,7 +1030,18 @@ function switchNameV47(name,file=""){
 
 const TIME_SLOTS_V93=[{id:"morning",label:"早上",from:600,to:900,rep:700},{id:"forenoon",label:"上午",from:900,to:1200,rep:1000},{id:"noon",label:"中午",from:1200,to:1400,rep:1300},{id:"afternoon",label:"下午",from:1400,to:1700,rep:1500},{id:"evening",label:"晚上",from:1700,to:2200,rep:1900},{id:"night",label:"深夜",from:2200,to:2600,rep:2300}];
 const slotV93=id=>TIME_SLOTS_V93.find(x=>x.id===id)||null;
-const NPC_SIMP_V92={"阿比蓋爾":"阿比盖尔","亞歷克斯":"亚历克斯","艾利歐特":"艾利欧特","艾蜜麗":"艾米丽","喬治":"乔治","哈維":"哈维","賈斯":"贾斯","喬迪":"乔迪","莉亞":"莉亚","雷歐":"雷欧","劉易斯":"刘易斯","萊納斯":"莱纳斯","瑪妮":"玛妮","瑪魯":"玛鲁","皮埃爾":"皮埃尔","羅賓":"罗宾","謝恩":"谢恩","法師":"法师","克羅巴斯":"科罗布斯"}; /* 官方簡中人名（wiki zh langlinks 2026-08-15），供找人簡繁互查 */
+const cropOfV96=f=>{const C=window.SDVCropsV96;if(!C||!f)return null;if(C.crops[f])return{en:f,c:C.crops[f],isSeed:false};for(const en in C.crops){if(C.crops[en].seed===f)return{en,c:C.crops[en],isSeed:true}}return null};
+const cropPlanV96=(c,ctx)=>{const SEQ=["春","夏","秋","冬"];const season=ctx.season,day=Number(ctx.day||1);
+  if(!c.seasons||!c.seasons.length)return{kind:"special"};
+  if(!c.seasons.includes(season))return{kind:"off"};
+  let ei=SEQ.indexOf(season);while(c.seasons.includes(SEQ[ei+1]))ei++;
+  const chainEnd=(ei-SEQ.indexOf(season))*28+28;
+  const fmt=abs=>{const si=SEQ.indexOf(season)+Math.floor((abs-1)/28);return SEQ[si]+String(((abs-1)%28)+1)};
+  const lastAbs=chainEnd-c.grow;
+  return{kind:"ok",okToday:day<=lastAbs,lastPlant:lastAbs>=1?fmt(lastAbs):null,harvest:fmt(day+c.grow),chainEnd:fmt(chainEnd),daysLeft:lastAbs-day};
+};
+const NPC_LEGACY_V95={"科罗布斯":["克羅巴斯","克罗巴斯"]};
+const NPC_SIMP_V92={"阿比蓋爾":"阿比盖尔","亞歷克斯":"亚历克斯","艾利歐特":"艾利欧特","艾蜜麗":"艾米丽","喬治":"乔治","哈維":"哈维","賈斯":"贾斯","喬迪":"乔迪","莉亞":"莉亚","雷歐":"雷欧","劉易斯":"刘易斯","萊納斯":"莱纳斯","瑪妮":"玛妮","瑪魯":"玛鲁","皮埃爾":"皮埃尔","羅賓":"罗宾","謝恩":"谢恩","法師":"法师","科罗布斯":"科罗布斯"}; /* 官方簡中人名（wiki zh langlinks 2026-08-15），供找人簡繁互查 */
 /* ================= v88 全域搜尋：正規化與進度別名 ================= */
 const normalizeSearchV88 = s => String(s||"").normalize("NFKC").toLowerCase()
   .replace(/[\s·・．.，,、_'’\-—／/()（）「」【】]+/g,"")
@@ -1050,7 +1061,7 @@ const STARDROP_SOURCES_V26 = [
   {id:"fair",name:"星露谷展覽會",desc:"用 2,000 星幣購買。"},
   {id:"mine100",name:"礦井 100 層",desc:"開啟第 100 層寶箱取得。"},
   {id:"spouse",name:"配偶／室友",desc:"關係達到 12.5 心後取得。"},
-  {id:"krobus",name:"下水道・克羅巴斯",desc:"20,000g 購買。"},
+  {id:"krobus",name:"下水道・科罗布斯",desc:"20,000g 購買。"},
   {id:"cannoli",name:"秘密森林・老坎諾利大師",desc:"給雕像一顆寶石甜莓後取得。"},
   {id:"angler",name:"垂釣大師",desc:"釣到所有魚後，隔天收到威利寄來的星之果實。"},
   {id:"museum",name:"博物館全收集",desc:"捐滿全部 95 件館藏後取得。"}
@@ -1321,6 +1332,8 @@ function normalizeSaveV68(input){
   const raw=input&&typeof input==="object"&&!Array.isArray(input)?input:{};
   const hasSchema=Object.prototype.hasOwnProperty.call(raw,"schemaVersion");
   const parsed=Number(raw.schemaVersion);
+  if(raw.friendship&&raw.friendship["克羅巴斯"]!=null){if(raw.friendship["科罗布斯"]==null)raw.friendship["科罗布斯"]=raw.friendship["克羅巴斯"];delete raw.friendship["克羅巴斯"];}
+  if(raw.extras&&Array.isArray(raw.extras.favV88))raw.extras.favV88.forEach(f=>{if(f&&f.go&&f.go.n==="克羅巴斯")f.go.n="科罗布斯";if(f&&typeof f.label==="string")f.label=f.label.split("克羅巴斯").join("科罗布斯");});
   const sourceSchema=hasSchema&&Number.isInteger(parsed)&&parsed>=0?parsed:LEGACY_SCHEMA_VERSION_V68;
   let next={...raw};
   if(sourceSchema<2){
@@ -1499,6 +1512,7 @@ function StardewTracker() {
   const [favEditV88, setFavEditV88] = useState(false);
   const [worldQuickAllV90, setWorldQuickAllV90] = useState(true);
   const [worldQuickV71, setWorldQuickV71] = useState("");
+  const [profileEditV95,setProfileEditV95]=useState(false);
   const [npcFindTimeV92,setNpcFindTimeV92]=useState("auto");
   const [npcFindViewV92,setNpcFindViewV92]=useState("npc");
   const [npcFindQueryV92,setNpcFindQueryV92]=useState("");
@@ -1802,7 +1816,7 @@ function StardewTracker() {
     const push=(k,id,label,sub,icon,go,keys,extra)=>idx.push({k,id,label,sub,icon,go,keys:[...new Set(keys.filter(Boolean).map(normalizeSearchV88).filter(x=>x.length))],...(extra||{})});
     SEARCH_ALIAS_TABLE_V88.forEach(a=>push("alias",a.id,a.label,a.sub,a.icon,{t:"act",act:a.act},[...a.names,a.label]));
     const social=window.SDVSocialV50?.byZh||{};
-    NPC_GROUPS.forEach(g=>g.list.forEach(n=>{const en=social[n]?.english||"";push("npc",n,n,g.name,en||"Friendship 101",{t:"npc",n},[n,NPC_WIKI[n],en])}));
+    NPC_GROUPS.forEach(g=>g.list.forEach(n=>{const en=social[n]?.english||"";push("npc",n,n,g.name,en||"Friendship 101",{t:"npc",n},[n,NPC_WIKI[n],en,...(NPC_LEGACY_V95[n]||[])])}));
     const NAV=WORLD_NAV_V87();
     const worldDb=window.SDVWorldV70;
     const areas=(typeof FISH_AREAS_V4!=="undefined"?FISH_AREAS_V4:[]);
@@ -1864,7 +1878,7 @@ function StardewTracker() {
       <GameIcon file={e.icon} size={32}/>
       <button onClick={()=>runJumpV88(e.go)} style={{textAlign:"left",background:"transparent",border:0,padding:0,minWidth:0,cursor:"pointer"}}>
         <b style={{display:"block",fontSize:10.5,color:C.ink,lineHeight:1.2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.label}</b>
-        <span style={{display:"block",fontSize:7.4,color:C.muted,marginTop:2}}>{SEARCH_KIND_TAG_V88[e.k]||""}{e.sub?` · ${e.sub}`:""}</span>
+        <span style={{display:"block",fontSize:7.4,color:C.muted,marginTop:2}}>{SEARCH_KIND_TAG_V88[e.k]||""}{e.sub?` · ${e.sub}`:""}</span>{e.k==="npc"&&(()=>{const S=window.SDVNpcScheduleV91;if(!S?.resolve||!S.npcs[e.id])return null;const day=Number(data.base.day||1);const fest=dayCalendarItems(day).find(x=>x.type==="festival");const fmt=t=>{const h=Math.floor(t/100),m=t%100;return `${h>=24?h-24:h}:${String(m).padStart(2,"0")}`};if(fest)return <span style={{display:"block",fontSize:7.2,color:C.orange,fontWeight:900,marginTop:2}}>🎪 {fest.text}{festVenueLabelV94(fest.key)?`・${festVenueLabelV94(fest.key)}`:""}</span>;const r=S.resolve(e.id,{season:data.base.season,day,rain:todayWeatherV69==="雨",...progressFlagsV92(data)});if(!r)return null;let txt;if(slotSelV93){const cur=(()=>{let c=r.entries[0][1];for(const sg of r.entries){if(sg[0]<=slotSelV93.rep)c=sg[1];else break}return c})();txt=`${slotSelV93.label}：${cur.zh}`}else{txt=r.entries.slice(0,3).map(sg=>`${fmt(sg[0])} ${sg[1].zh}`).join(" › ")+(r.entries.length>3?" › …":"")}return <span style={{display:"block",fontSize:7.2,color:C.brown,fontWeight:900,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>📍 {txt}</span>})()}
       </button>
       <button aria-label={isFavV88(e.k,e.id)?"取消收藏":"加入收藏"} onClick={()=>toggleFavV88(e)} style={{border:0,background:"transparent",fontSize:16,lineHeight:1,color:isFavV88(e.k,e.id)?"#E8A814":C.line,cursor:"pointer",padding:"4px 2px"}}>{isFavV88(e.k,e.id)?"★":"☆"}</button>
     </div>
@@ -2390,6 +2404,7 @@ function StardewTracker() {
             <button onClick={()=>profileInputRef.current?.click()} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:6,padding:"3px 6px",fontWeight:900,color:C.brown,fontSize:8.5}}>{data.profilePortrait?"更換":"上傳"}</button>
             {data.profilePortrait&&<button onClick={()=>update({profilePortrait:""})} style={{border:0,background:"transparent",color:C.red,fontSize:8.5,fontWeight:900,padding:"3px 2px"}}>移除</button>}
           </div>
+          <button onClick={()=>setProfileEditV95(v=>!v)} style={{marginTop:4,border:`1px solid ${profileEditV95?C.orange:C.line}`,background:profileEditV95?"#FFE2A8":C.cream,borderRadius:6,padding:"3px 8px",fontWeight:900,color:C.brown,fontSize:8.5,width:"100%"}}>✎ 編輯資料</button>
           {profileOcrStatus&&<div style={{fontSize:7.5,color:profileOcrStatus.startsWith("⚠")?C.red:C.green,fontWeight:850,lineHeight:1.25,marginTop:3}}>{profileOcrStatus}</div>}
         </div>
         <div style={{minWidth:0}}>
@@ -2410,8 +2425,7 @@ function StardewTracker() {
           {/* weatherRowMovedV94 merged */}
           
         </div>
-        <details style={{gridColumn:"1 / -1",borderTop:`1px dashed ${C.line}`,paddingTop:5,marginTop:0}}>
-          <summary style={{fontSize:9.5,color:C.muted,fontWeight:900,cursor:"pointer",width:"fit-content"}}>✎ 編輯資料</summary>
+        {profileEditV95&&<div style={{gridColumn:"1 / -1",borderTop:`1px dashed ${C.line}`,paddingTop:6,marginTop:0}}>
           <div style={{display:"grid",gap:5,marginTop:6}}>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
               <input value={data.base.name||""} onChange={e=>updateBase({name:e.target.value,profileDataVerifiedV47:true})} placeholder="農夫名字" style={{minWidth:0,border:`1.5px solid ${C.line}`,background:"#FFFCF0",borderRadius:7,padding:"6px 7px",fontSize:10.5,fontWeight:800,color:C.ink}}/>
@@ -2422,7 +2436,7 @@ function StardewTracker() {
               <label style={{fontSize:8.5,color:C.muted,fontWeight:900}}>累計收入<div style={{marginTop:2}}><NumInput value={data.base.totalIncome} max={999999999} onChange={v=>updateBase({totalIncome:v,profileDataVerifiedV47:true})} suffix="g" width={118}/></div></label>
             </div>
           </div>
-        </details>
+        </div>}
       </div>
       <input ref={profileInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{handleProfileUpload(e.target.files?.[0]);e.target.value=""}}/>
     </Card>
@@ -2457,6 +2471,14 @@ function StardewTracker() {
       .filter(x=>x.items.length)
       .slice(0,4);
     return <>
+      {(()=>{const CD=window.SDVCropsV96;if(!CD)return null;const season=data.base.season,day=Number(data.base.day||1);
+        if(season==="冬")return <Card style={{padding:"7px 9px",marginBottom:8,fontSize:8.4,color:C.muted,fontWeight:900}}>⏳ 冬季無露天作物（溫室不受季節限制）。</Card>;
+        const list=Object.entries(CD.crops).filter(([en,c])=>!c.exclude&&c.seasons.includes(season)).map(([en,c])=>({en,c,plan:cropPlanV96(c,{season,day})})).filter(x=>x.plan.kind==="ok"&&x.plan.okToday).sort((a,b)=>a.plan.daysLeft-b.plan.daysLeft);
+        if(!list.length)return <Card style={{padding:"7px 9px",marginBottom:8,fontSize:8.4,color:C.muted,fontWeight:900}}>⏳ 本季（{season}{day}）已無來得及收成的露天作物。</Card>;
+        return <Card style={{padding:"7px 9px",marginBottom:8}}>
+          <div style={{fontSize:8.6,color:C.darkBrown,fontWeight:950,marginBottom:4}}>⏳ 還來得及種（{season}{day}）</div>
+          <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{list.slice(0,10).map(x=><button key={x.en} onClick={()=>openItemLookupV54(x.c.zh,x.en)} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"2px 7px",fontSize:7.4,fontWeight:900,color:C.brown}}>{x.c.zh} 至{x.plan.lastPlant} ›</button>)}{list.length>10&&<span style={{fontSize:7,color:C.muted,alignSelf:"center"}}>＋{list.length-10}</span>}</div>
+        </Card>})()}
       <SectionTitle icon="📅" right={`第 ${data.base.year} 年・${data.base.season}季`}>遊戲日曆</SectionTitle>
       <Card id="game-calendar-v69" style={{padding:7,overflow:"hidden",scrollMarginTop:"calc(70px + env(safe-area-inset-top))"}}>
         <div style={{position:"relative",width:"100%",borderRadius:8,overflow:"hidden",background:"#E7C58A"}}>
@@ -2927,7 +2949,7 @@ function StardewTracker() {
         const locAt=(es,t)=>{let cur=es[0][1];for(const seg of es){if(seg[0]<=t)cur=seg[1];else break}return cur};
         const NQ=(typeof normalizeSearchV88==="function")?normalizeSearchV88:(x=>String(x||"").trim().toLowerCase());
         const q=NQ(npcFindQueryV92);
-        const names=Object.keys(S.npcs).filter(n=>{if(!q)return true;const eng=String(socialByZh[n]?.english||"").toLowerCase();return NQ(n).includes(q)||String(NPC_SIMP_V92[n]||"").includes(q)||eng.includes(String(npcFindQueryV92).trim().toLowerCase())});
+        const names=Object.keys(S.npcs).filter(n=>{if(!q)return true;const eng=String(socialByZh[n]?.english||"").toLowerCase();return NQ(n).includes(q)||String(NPC_SIMP_V92[n]||"").includes(q)||(NPC_LEGACY_V95[n]||[]).some(a=>NQ(a).includes(q))||eng.includes(String(npcFindQueryV92).trim().toLowerCase())});
         const rows=names.map(n=>({n,r:S.resolve(n,{season,day,rain,...flags})}));
         const pill=(on)=>({border:`1px solid ${on?C.orange:C.line}`,background:on?"#FFE2A8":C.paper,borderRadius:8,padding:"3px 7px",fontSize:7.4,fontWeight:900,color:C.brown});
         const locBtn=(loc,extra)=>({border:`1px solid ${C.line}`,background:loc.node?C.cream:"#F3EDDE",borderRadius:8,fontWeight:900,color:C.brown,...extra});
@@ -3432,6 +3454,18 @@ function StardewTracker() {
         </div>}
         <div style={{fontSize:12,fontWeight:950,color:C.darkBrown,marginTop:9}}>用途</div>
         <div style={{display:"grid",gap:5,marginTop:5}}>{usageRowsV44.map(([icon,text],i)=><div key={i} style={{display:"grid",gridTemplateColumns:"18px 1fr",gap:4,alignItems:"start",fontSize:9.4,color:C.ink,lineHeight:1.45}}><span>{icon}</span><span>{text}</span></div>)}</div>
+        {(()=>{const hit=cropOfV96(selected.file);if(!hit)return null;const {c,isSeed}=hit;const plan=cropPlanV96(c,{season:data.base.season,day:data.base.day});
+          const fmtToday=`${data.base.season}${Number(data.base.day||1)}`;
+          return <div style={{marginTop:8}}>
+            <div style={{fontSize:7.5,color:C.muted,fontWeight:950,marginBottom:3}}>🌱 種植{isSeed?"（種子）":""}</div>
+            <div style={{fontSize:8.6,color:C.ink,lineHeight:1.55}}>
+              生長 {c.grow} 天・季節 {c.seasons.length?c.seasons.join("／"):"—"}{c.regrow?`・回收型：每 ${c.regrow} 天再收`:""}
+              {plan.kind==="ok"&&<div style={{marginTop:2,fontWeight:900,color:plan.okToday?C.green:C.red}}>{plan.okToday?`今天（${fmtToday}）種 → ${plan.harvest} 收成 ✓`:`最後可種日 ${plan.lastPlant??"—"} 已過 ✗`}{plan.okToday&&`（最後可種日 ${plan.lastPlant}）`}</div>}
+              {plan.kind==="off"&&<div style={{marginTop:2,fontWeight:900,color:C.muted}}>本季（{data.base.season}）不可種</div>}
+              {c.note&&<div style={{marginTop:2,color:C.brown}}>{c.note}</div>}
+              <div style={{fontSize:6.8,color:C.muted,marginTop:3}}>無肥料基準；溫室不受季節限制。</div>
+            </div>
+          </div>})()}
         {(()=>{const gf=giftFansV89(selected.file);if(!gf.loves.length&&!gf.likes.length)return null;const npcChip=n=><button key={n} onClick={()=>openSocialNpcV55(n)} style={{border:`1px solid ${C.line}`,background:C.cream,borderRadius:8,padding:"3px 6px 3px 3px",display:"inline-flex",alignItems:"center",gap:3,fontSize:8,fontWeight:900,color:C.brown,cursor:"pointer"}}><GameIcon file={(window.SDVSocialV50?.byZh?.[n]?.english)||"Friendship 101"} size={20}/>{n} ›</button>;return <div style={{marginTop:9}}>
           <div style={{fontSize:12,fontWeight:950,color:C.darkBrown}}>送禮</div>
           {gf.loves.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center",marginTop:5}}><span style={{fontSize:8.5,fontWeight:950,color:C.red,flex:"0 0 auto"}}>💗 最愛</span>{gf.loves.map(npcChip)}</div>}

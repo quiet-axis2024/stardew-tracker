@@ -64,13 +64,13 @@ if(!card.includes('矮人')||!card.includes('商店內容節選')) fail('礦井�
 if(!card.includes('稻草人')&&!card.includes('Rarecrow')) fail('矮人商店未列 Rarecrow');
 console.log('2b) 礦井矮人商店：NPC＋商店 OK');
 
-// 下水道克羅巴斯商店
+// 下水道科罗布斯商店
 await enterWorldRoot();
 pin('下水道').click(); await raf(2);
 pin('科罗布斯').click(); await raf(2);
 card=doc.body.textContent;
-if(!card.includes('克羅巴斯')||!card.includes('商店內容節選')) fail('克羅巴斯地點缺 NPC 或商店');
-console.log('2c) 下水道克羅巴斯：NPC＋商店 OK');
+if(!card.includes('科罗布斯')||!card.includes('商店內容節選')) fail('科罗布斯地點缺 NPC 或商店');
+console.log('2c) 下水道科罗布斯：NPC＋商店 OK');
 
 // ---- 3. 商店專售物品可搜（跳販售地點）----
 btn(x=>x.getAttribute('aria-label')==='全域搜尋').click(); await raf(3);

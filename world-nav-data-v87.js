@@ -106,7 +106,7 @@ skull_cavern:{id:'skull_cavern',name:'骷髅洞穴',summary:'沙漠西北角的�
   {id:'entry',label:'骷髅洞穴',x:43,y:18,description:'使用矿井 120 層取得的骷髅钥匙進入。'}]},
 
 sewer:{id:'sewer',name:'下水道',summary:'鎮南與煤礦森林南方兩個入口進入同一張地圖。',mapKey:'SewerDistances',places:[
-  {id:'krobus',label:'科罗布斯',x:76,y:38,npcs:['克羅巴斯'],description:'科罗布斯的商店。'},
+  {id:'krobus',label:'科罗布斯',x:76,y:38,npcs:['科罗布斯'],description:'科罗布斯的商店。'},
   {id:'statue',label:'不确定性雕像',x:20,y:41,description:'花 10,000g 重置職業選擇。'}],portals:[
   {id:'bug',label:'突变虫穴',to:'mutant_bug_lair',x:7,y:35,requires:'黑暗护身符（暗影人任務線）'}],spots:[
   {id:'sw',label:'下水道水域',fishAreaId:'sewer',x:52,y:74}]},

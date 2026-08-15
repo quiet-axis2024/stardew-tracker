@@ -9,7 +9,7 @@ node_js=r"""
 const fs=require('fs');global.window={};
 ['social-data-v50.js','world-nav-data-v87.js','npc-schedule-data-v91.js'].forEach(f=>eval(fs.readFileSync(f,'utf8')));
 const D=window.SDVNpcScheduleV91,NAV=window.SDVWorldNavV87,byZh=window.SDVSocialV50.byZh;
-const GROUPS=[["阿比蓋爾","艾蜜麗","海莉","莉亞","瑪魯","潘妮","亞歷克斯","艾利歐特","哈維","山姆","塞巴斯蒂安","謝恩"],["卡洛琳","克林特","德米特里厄斯","艾芙琳","喬治","格斯","賈斯","喬迪","肯特","劉易斯","萊納斯","瑪妮","潘姆","皮埃爾","羅賓","文森特","威利","法師"],["桑迪","克羅巴斯","矮人","雷歐"]].flat();
+const GROUPS=[["阿比蓋爾","艾蜜麗","海莉","莉亞","瑪魯","潘妮","亞歷克斯","艾利歐特","哈維","山姆","塞巴斯蒂安","謝恩"],["卡洛琳","克林特","德米特里厄斯","艾芙琳","喬治","格斯","賈斯","喬迪","肯特","劉易斯","萊納斯","瑪妮","潘姆","皮埃爾","羅賓","文森特","威利","法師"],["桑迪","科罗布斯","矮人","雷歐"]].flat();
 const out={missing:GROUPS.filter(n=>!D.npcs[n]),extra:Object.keys(D.npcs).filter(n=>!GROUPS.includes(n)),badLoc:[],badBind:[],fallbacks:0,checked:0,sent:{}};
 for(const [k,n] of Object.entries(D.npcs)){
   for(const r of n.rules)for(const [t,loc] of r.e){
