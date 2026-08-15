@@ -2173,10 +2173,10 @@ function StardewTracker() {
       const isPhoto43V62 = ratio > 1.15 && ratio < 1.55;
 
       const portraitCanvas = document.createElement("canvas");
-      portraitCanvas.width = 180; portraitCanvas.height = 240;
+      portraitCanvas.width = 316; portraitCanvas.height = 468;
       const pctx = portraitCanvas.getContext("2d");
       if (is16x9V62) {
-        const sx = img.width * 0.298, sy = img.height * 0.548, sw = img.width * 0.092, sh = img.height * 0.218;
+        const sx = img.width * 0.2990, sy = img.height * 0.5472, sw = img.width * 0.0822, sh = img.height * 0.2167; /* v97.4 依 Switch2 樣本實測畫框外緣（含 UI 縮放） */
         pctx.drawImage(img, sx, sy, sw, sh, 0, 0, portraitCanvas.width, portraitCanvas.height);
       } else if (isPhoto43V62) {
         const sx = img.width * 0.105, sy = img.height * 0.390, sw = img.width * 0.190, sh = img.height * 0.350;
@@ -2185,7 +2185,7 @@ function StardewTracker() {
         const sideW = Math.min(img.width, img.height * 0.76), sideH = Math.min(img.height, img.width / 0.76);
         pctx.drawImage(img, (img.width-sideW)/2, (img.height-sideH)/2, sideW, sideH, 0, 0, portraitCanvas.width, portraitCanvas.height);
       }
-      const portrait = portraitCanvas.toDataURL("image/jpeg", 0.84);
+      const portrait = portraitCanvas.toDataURL("image/png");
 
       if (!is16x9V62 && !isPhoto43V62) {
         setData(d => ({...d, profilePortrait:portrait}));
@@ -2426,7 +2426,7 @@ function StardewTracker() {
           <div style={{fontSize:10.5,color:C.muted,marginTop:1}}>累計 {(data.profilePortrait||data.base.profileDataVerifiedV47)?`${Number(data.base.totalIncome||0).toLocaleString()}g`:"—"}</div></div><div style={{display:"flex",alignItems:"center",gap:4}}><button onClick={()=>updateBase({year:Math.max(1,Number(data.base.year||1)-1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,width:26,height:25,fontWeight:950,color:C.brown,padding:0}}>−</button>
             <div style={{fontSize:10.5,fontWeight:950,color:C.darkBrown,textAlign:"center",minWidth:50}}>第 {data.base.year} 年</div>
             <button onClick={()=>updateBase({year:Math.min(99,Number(data.base.year||1)+1)})} style={{border:`1.5px solid ${C.line}`,background:C.cream,borderRadius:7,width:26,height:25,fontWeight:950,color:C.brown,padding:0}}>＋</button></div></div>
-          <div style={{display:"flex",gap:4,marginTop:7,flexWrap:"wrap",alignItems:"center"}}>{SEASONS.map(season=>{const active=data.base.season===season;return <button key={season} onClick={()=>updateBase({season})} aria-label={season} title={season} style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:34,height:30,border:`2px solid ${active?C.green:C.line}`,background:active?C.lightGreen:C.cream,borderRadius:9,padding:0}}><GameIcon file={SEASON_FILE_V97[season]} size={22}/></button>})}<span style={{width:1,height:14,background:C.line,margin:"0 3px"}}/>{/* weatherRowMovedV94 */}{[["晴","晴"],["雨","雨"]].map(([v,label])=>{const on=todayWeatherV69===v;return <button key={v} onClick={()=>setTodayWeatherV69(on?"":v)} aria-label={label} title={label} style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:34,height:30,border:`2px solid ${on?C.orange:C.line}`,background:on?"#FFE2A8":C.paper,borderRadius:9,padding:0}}><GameIcon file={WEATHER_FILE_V97[v]} size={22}/></button>})}</div>
+          <div style={{display:"flex",gap:4,marginTop:7,flexWrap:"wrap",alignItems:"center"}}>{SEASONS.map(season=>{const active=data.base.season===season;return <button key={season} onClick={()=>updateBase({season})} aria-label={season} title={season} style={{display:"inline-flex",alignItems:"center",justifyContent:"center",border:0,background:"transparent",padding:6}}><span style={{display:"inline-flex",filter:active?`drop-shadow(1.5px 0 0 ${C.green}) drop-shadow(-1.5px 0 0 ${C.green}) drop-shadow(0 1.5px 0 ${C.green}) drop-shadow(0 -1.5px 0 ${C.green})`:"none"}}><GameIcon file={SEASON_FILE_V97[season]} size={26}/></span></button>})}<span style={{width:1,height:14,background:C.line,margin:"0 3px"}}/>{/* weatherRowMovedV94 */}{[["晴","晴"],["雨","雨"]].map(([v,label])=>{const on=todayWeatherV69===v;return <button key={v} onClick={()=>setTodayWeatherV69(on?"":v)} aria-label={label} title={label} style={{display:"inline-flex",alignItems:"center",justifyContent:"center",border:0,background:"transparent",padding:6}}><span style={{display:"inline-flex",filter:on?`drop-shadow(1.5px 0 0 ${C.orange}) drop-shadow(-1.5px 0 0 ${C.orange}) drop-shadow(0 1.5px 0 ${C.orange}) drop-shadow(0 -1.5px 0 ${C.orange})`:"none"}}><GameIcon file={WEATHER_FILE_V97[v]} size={26}/></span></button>})}</div>
           <div style={{display:"flex",gap:3,marginTop:6,flexWrap:"wrap",alignItems:"center"}}>{TIME_SLOTS_V93.map(x=>{const active=(data.base.timeSlotV93||null)===x.id;return <button key={x.id} onClick={()=>updateBase({timeSlotV93:active?null:x.id})} style={{border:`1.5px solid ${active?C.orange:C.line}`,background:active?"#FFE2A8":C.cream,borderRadius:12,padding:"3px 8px",fontSize:8.2,fontWeight:900,color:active?C.brown:C.ink}}>{x.label}</button>})}</div>
           <div style={{marginTop:7}}><div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:3,marginTop:6}}>{[["技能",`${skillTotal}/50`],["社區",`${rp.done}/30`],(Number(data.mine?.skullBest||0)>0?["骷髏洞",`${Number(data.mine.skullBest)}層`]:["礦井",`${Math.min(120,Number(data.mine?.normal||0))}/120`]),["動物",`${totalAnimals}`]].map(([k,v])=><div key={k} style={{background:"#FFF4D8",border:`1px solid ${C.line}`,borderRadius:7,padding:"3px 2px",textAlign:"center",minWidth:0}}><div style={{fontSize:6.5,color:C.muted,fontWeight:900}}>{k}</div><b style={{display:"block",fontSize:8.5,color:C.brown,lineHeight:1.15,marginTop:1}}>{v}</b></div>)}</div></div>
           <div style={{fontSize:6.5,color:C.muted,marginTop:4,lineHeight:1.5}}>☀ 晴含雪／風天；🌧 雨含雷雨。已選的天氣或時段再按一次即取消。</div>
