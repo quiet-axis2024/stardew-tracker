@@ -31,7 +31,7 @@ if '星之果实酒吧' not in Path('world-nav-data-v87.js').read_text():fail('n
 if '星之果实酒吧' not in Path('npc-schedule-data-v91.js').read_text():fail('schedule 缺酒吧')
 if '星之果實酒吧' not in Path('lookup-data-v46.js').read_text():fail('lookup 缺酒吧')
 app=Path('app.jsx').read_text()
-for t in ['progressFlagsV92','按條件找人','npcFindViewV92','npcFindQueryV92','jojaClosedV92','已歇業','👤 找人','按地點','NPC_SIMP_V92','今天誰會來','TIME_SLOTS_V93','timeSlotV93:null','slotSelV93','去哪找','footerNpcV90&&npcChipsV90.length===0','跟手帳','本區今天誰會來','FESTIVAL_VENUE_V94','weatherRowMovedV94','forenoon','festVenueLabelV94','會場：','NPC_LEGACY_V95','raw.friendship["科罗布斯"]','profileEditV95','📍 {txt}','tomorrow-birthday','travel-cart','game:Budget TV','SEASON_FILE_V97','WEATHER_FILE_V97']:
+for t in ['progressFlagsV92','按條件找人','npcFindViewV92','npcFindQueryV92','jojaClosedV92','已歇業','👤 找人','按地點','NPC_SIMP_V92','今天誰會來','TIME_SLOTS_V93','timeSlotV93:null','slotSelV93','去哪找','footerNpcV90&&npcChipsV90.length===0','跟手帳','本區今天誰會來','FESTIVAL_VENUE_V94','weatherRowMovedV94','forenoon','festVenueLabelV94','會場：','NPC_LEGACY_V95','raw.friendship["科罗布斯"]','profileEditV95','📍 {txt}','tomorrow-birthday','travel-cart','game:Budget TV','SEASON_FILE_V97','WEATHER_FILE_V97','aria-label={season}']:
     if t not in app:fail('app.jsx missing '+t)
 import re as _re
 mm=_re.search(r'NPC_SIMP_V92=(\{.*?\});',app)

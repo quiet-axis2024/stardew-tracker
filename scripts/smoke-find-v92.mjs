@@ -136,7 +136,7 @@ if(!doc.body.textContent.includes('鹈鹕镇'))fail('會場跳轉未到鎮上');
 console.log('節日會場跳轉 OK');
 // ---- v94 天氣 pills 在日期卡 ----
 btn(t=>t==='總覽').click(); await raf(2);
-const rainPill=btn(t=>t==='雨');
+const rainPill=[...doc.querySelectorAll('button[aria-label="雨"]')][0];
 if(!rainPill)fail('日期卡缺天氣列');
 console.log('設定卡集中 OK');
 // ---- v95 搜尋結果帶行程 ----
